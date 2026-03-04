@@ -95,8 +95,9 @@ if (strpos($_SERVER['REQUEST_URI'] ?? '', '/nzpostSuggest') !== false) {
 // ---------------------------------------------------------------------------
 use Manhattan\HtmlHelper;
 
-// Configure Manhattan to serve assets from /assets/ (standalone demo path)
-HtmlHelper::configure('/assets/css', '/assets/js');
+// Configure Manhattan to serve assets from /assets/ (standalone demo path).
+// Font Awesome is served directly from vendor/ when running the demo locally.
+HtmlHelper::configure('/assets/css', '/assets/js', '/vendor/components/font-awesome');
 
 $m = HtmlHelper::getInstance();
 
@@ -137,10 +138,6 @@ $toggleUrl = '/demo/toggleTheme';
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manhattan UI — Component Demo</title>
-    <!-- Font Awesome (CDN for standalone demo) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-          integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkA=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
     <?= $m->renderStyles() ?>
     <?php if ($mDemoIsDark): ?>
     <?= $m->renderDarkStyles() ?>

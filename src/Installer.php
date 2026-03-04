@@ -51,6 +51,21 @@ class Installer
 
         self::copyDirectory($assetSrc, $assetDest, $io);
 
+        // Publish Font Awesome Free (components/font-awesome) alongside Manhattan assets.
+        $faSrc = $vendorDir . '/components/font-awesome';
+        if (is_dir($faSrc)) {
+            $faDest = $projectRoot . '/' . ltrim($publicDir, '/') . '/Manhattan/fontawesome';
+            // Only publish the files browsers need: css/ and webfonts/
+            foreach (['css', 'webfonts'] as $faSubDir) {
+                if (is_dir($faSrc . '/' . $faSubDir)) {
+                    self::copyDirectory($faSrc . '/' . $faSubDir, $faDest . '/' . $faSubDir, $io);
+                }
+            }
+            $io->write('<info>Manhattan: Font Awesome assets published to ' . $publicDir . '/Manhattan/fontawesome/</info>');
+        } else {
+            $io->writeError('<warning>Manhattan: components/font-awesome not found in vendor — run `composer require components/font-awesome` or Font Awesome icons will not render.</warning>');
+        }
+
         $io->write(sprintf(
             '<info>Manhattan: assets published to %s/Manhattan/</info>',
             $publicDir

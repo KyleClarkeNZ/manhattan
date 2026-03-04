@@ -7,6 +7,23 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.1.0] — 2026-03-04
+
+### Added
+- Bundled **Font Awesome Free 6.x** (`components/font-awesome`) as a Composer
+  dependency — no CDN required.
+- `Installer::publishAssets()` now copies Font Awesome `css/` and `webfonts/`
+  into `<public-dir>/Manhattan/fontawesome/` alongside Manhattan assets.
+- `HtmlHelper::configure()` accepts an optional third argument
+  `$fontAwesomeUrl` to override the public URL for the Font Awesome directory.
+- `HtmlHelper::renderStyles()` now emits the Font Awesome stylesheet link
+  automatically.
+
+### Changed
+- Demo no longer loads Font Awesome from a CDN; it is served from `vendor/`.
+
+---
+
 ## [1.0.0] — 2026-03-04
 
 ### Added

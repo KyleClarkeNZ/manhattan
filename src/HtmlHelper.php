@@ -19,6 +19,13 @@ class HtmlHelper
     private static string $jsUrl = '/Manhattan/JS';
 
     /**
+     * Base URL for the Font Awesome package directory (the folder containing css/ and webfonts/).
+     * Defaults to the path published by the Manhattan Installer.
+     * Override via configure() when serving assets from a different location.
+     */
+    private static string $fontAwesomeUrl = '/Manhattan/fontawesome';
+
+    /**
      * Configure the public asset URL paths.
      *
      * Call this once during application bootstrap, before any views are rendered.
@@ -29,16 +36,22 @@ class HtmlHelper
      * Example (after Composer install with public-dir = "."):
      *   HtmlHelper::configure('/Manhattan/assets/css', '/Manhattan/assets/js');
      *
-     * Example (standalone demo via php -S):
-     *   HtmlHelper::configure('/assets/css', '/assets/js');
+     * Example (standalone demo via php -S — FA served directly from vendor):
+     *   HtmlHelper::configure('/assets/css', '/assets/js', '/vendor/components/font-awesome');
      *
-     * @param string $cssUrl  Web-root-relative URL to the CSS directory (no trailing slash).
-     * @param string $jsUrl   Web-root-relative URL to the JS directory (no trailing slash).
+     * @param string $cssUrl          Web-root-relative URL to the CSS directory (no trailing slash).
+     * @param string $jsUrl           Web-root-relative URL to the JS directory (no trailing slash).
+     * @param string|null $fontAwesomeUrl  Web-root-relative URL to the Font Awesome package root
+     *                                     (the folder containing css/ and webfonts/). When null the
+     *                                     default published path is used.
      */
-    public static function configure(string $cssUrl, string $jsUrl): void
+    public static function configure(string $cssUrl, string $jsUrl, ?string $fontAwesomeUrl = null): void
     {
         self::$cssUrl = rtrim($cssUrl, '/');
         self::$jsUrl  = rtrim($jsUrl, '/');
+        if ($fontAwesomeUrl !== null) {
+            self::$fontAwesomeUrl = rtrim($fontAwesomeUrl, '/');
+        }
     }
 
     /**
@@ -451,13 +464,15 @@ HTML;
     }
 
     /**
-     * Render Manhattan CSS includes
-     * Should be called in layout <head> section
+     * Render Manhattan CSS includes (including Font Awesome).
+     * Should be called in layout <head> section.
      */
     public function renderStyles(): string
     {
         $css = self::$cssUrl;
-        return "<link rel=\"stylesheet\" href=\"{$css}/manhattan.css\">\n";
+        $fa  = self::$fontAwesomeUrl;
+        return "<link rel=\"stylesheet\" href=\"{$fa}/css/all.min.css\">\n"
+             . "<link rel=\"stylesheet\" href=\"{$css}/manhattan.css\">\n";
     }
 
     /**
