@@ -1,7 +1,20 @@
 # Manhattan UI
 
-A server-rendered PHP + vanilla-JS UI component library.  
-PHP 7.4+, no build tools, zero runtime dependencies.
+Manhattan is a server-rendered PHP + vanilla-JS UI component library. Drop it into any PHP project and get a consistent, themeable set of UI components without needing a build pipeline.
+
+**PHP 7.4+ · No build tools · jQuery ≥ 3.4.1 required · Font Awesome 6.x included**
+
+---
+
+## Requirements
+
+| Dependency | Version | Notes |
+|---|---|---|
+| PHP | ≥ 7.4 | Server-side rendering |
+| jQuery | ≥ 3.4.1 | Must be loaded by your application — not bundled |
+| Font Awesome | 6.x | Bundled via Composer, served automatically |
+
+> jQuery is the only dependency you need to bring yourself. Everything else is handled by Manhattan.
 
 ---
 
@@ -44,19 +57,9 @@ PHP 7.4+, no build tools, zero runtime dependencies.
 
 ## Installation
 
-Manhattan is distributed as a **private Composer package** hosted on GitHub.
+Manhattan is a public Composer package hosted on GitHub. No authentication is required.
 
-### 1 — Authenticate with GitHub
-
-Generate a [GitHub personal access token](https://github.com/settings/tokens) with
-`read:packages` (and `repo` scope for private repositories), then add it to your
-Composer auth config **once** on each machine / CI server:
-
-```bash
-composer config --global github-oauth.github.com <YOUR_TOKEN>
-```
-
-### 2 — Add the VCS repository to your project's `composer.json`
+### 1 — Add Manhattan to your `composer.json`
 
 ```json
 {
@@ -81,36 +84,43 @@ composer config --global github-oauth.github.com <YOUR_TOKEN>
 }
 ```
 
-> **`public-dir`** is the folder relative to your project root where web-accessible
-> files live.  Use `"."` for legacy PHP projects where `index.php` is at the root.
-> Use `"public"` for Laravel/Symfony-style layouts.  After installation, assets will
-> be available at `<public-dir>/Manhattan/assets/css/` and
-> `<public-dir>/Manhattan/assets/js/`.
+> **`public-dir`** is the folder relative to your project root where web-accessible files live. Use `"."` for legacy PHP projects where `index.php` sits at the root, or `"public"` for Laravel/Symfony-style layouts. After install, assets (including Font Awesome) will be published to `<public-dir>/Manhattan/`.
 
-### 3 — Install
+### 2 — Install
 
 ```bash
 composer install
 ```
 
-Assets are copied to `<public-dir>/Manhattan/` automatically.
+Manhattan's CSS, JS, and Font Awesome assets are copied to `<public-dir>/Manhattan/` automatically.
 
-### 4 — Configure asset URLs in your bootstrap
+### 3 — Configure asset paths in your bootstrap
+
+Call this once before any views are rendered, adjusting the paths to match your `public-dir`:
 
 ```php
 use Manhattan\HtmlHelper;
 
-// Adjust paths to match where composer published the assets
 HtmlHelper::configure(
-    '/Manhattan/assets/css',  // web-root-relative CSS path
-    '/Manhattan/assets/js'    // web-root-relative JS path
+    '/Manhattan/assets/css',   // web-root-relative path to Manhattan CSS
+    '/Manhattan/assets/js'     // web-root-relative path to Manhattan JS
 );
 ```
 
-### 5 — Include styles & scripts in your layout
+If you're serving Font Awesome from a non-standard location, pass the path as a third argument:
 
 ```php
-// In <head>:
+HtmlHelper::configure(
+    '/Manhattan/assets/css',
+    '/Manhattan/assets/js',
+    '/custom/fontawesome'      // optional: override Font Awesome public path
+);
+```
+
+### 4 — Include styles & scripts in your layout
+
+```php
+// In <head> — renders Manhattan CSS + Font Awesome automatically:
 <?= $m->renderStyles() ?>
 <?php if ($isDarkTheme): echo $m->renderDarkStyles(); endif; ?>
 
@@ -144,6 +154,8 @@ Then open **http://localhost:8080/demo/** in your browser.
 
 ## Usage
 
+Manhattan uses a simple singleton pattern — grab the `HtmlHelper` instance and start rendering components using the fluent API:
+
 ```php
 use Manhattan\HtmlHelper;
 
@@ -168,12 +180,24 @@ echo $m->datepicker('dueDate')->value(date('Y-m-d'))->min(date('Y-m-d'));
 
 ## Theming
 
-Manhattan ships with a light theme (`manhattan.css`) and a dark theme
-(`manhattan-dark.css`).  Include both files and toggle the `m-dark` class on
-`<body>` (or `<html>`) to switch at runtime.
+Manhattan ships with a light theme (`manhattan.css`) and a dark theme (`manhattan-dark.css`). Both are included automatically via `renderStyles()` — toggle the `m-dark` class on `<body>` (or `<html>`) to switch themes at runtime.
+
+---
+
+## Icons
+
+Font Awesome Free 6.x is bundled as a Composer dependency and published alongside Manhattan's assets. No CDN or separate download needed — just use Font Awesome class names in your components as normal:
+
+```php
+echo $m->button('deleteBtn', 'Delete')->danger()->icon('fa-trash');
+```
+
+Font Awesome is licensed under the [MIT License](https://opensource.org/licenses/MIT) (icons) and [SIL OFL 1.1](https://scripts.sil.org/OFL) (fonts).
 
 ---
 
 ## License
 
-Proprietary — © Kyle Clarke.  All rights reserved.
+Manhattan is open source and released under the [MIT License](LICENSE).
+
+© Kyle Clarke
