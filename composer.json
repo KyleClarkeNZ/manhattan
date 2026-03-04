@@ -1,0 +1,28 @@
+{
+    "name": "kyleclarkenz/manhattan",
+    "description": "Manhattan — a server-rendered PHP + vanilla-JS UI component library.",
+    "type": "library",
+    "license": "proprietary",
+    "version": "1.0.0",
+    "keywords": ["ui", "components", "php", "javascript", "framework"],
+    "authors": [
+        {
+            "name": "Kyle Clarke",
+            "homepage": "https://github.com/KyleClarkeNZ"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "composer/composer": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Manhattan\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
