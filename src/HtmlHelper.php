@@ -12,11 +12,11 @@ class HtmlHelper
 {
     private static ?HtmlHelper $instance = null;
 
-    /** Base URL for Manhattan CSS files, e.g. "/Manhattan/CSS" or "/assets/css". */
-    private static string $cssUrl = '/Manhattan/CSS';
+    /** Base URL for Manhattan CSS files, e.g. "/Manhattan/css" or "/assets/css". */
+    private static string $cssUrl = '/Manhattan/css';
 
-    /** Base URL for Manhattan JS files, e.g. "/Manhattan/JS" or "/assets/js". */
-    private static string $jsUrl = '/Manhattan/JS';
+    /** Base URL for Manhattan JS files, e.g. "/Manhattan/js" or "/assets/js". */
+    private static string $jsUrl = '/Manhattan/js';
 
     /**
      * Base URL for the Font Awesome package directory (the folder containing css/ and webfonts/).
@@ -31,7 +31,7 @@ class HtmlHelper
      * Call this once during application bootstrap, before any views are rendered.
      *
      * Example (MyDay default):
-     *   HtmlHelper::configure('/Manhattan/CSS', '/Manhattan/JS');
+     *   HtmlHelper::configure('/Manhattan/css', '/Manhattan/js');
      *
      * Example (after Composer install with public-dir = "."):
      *   HtmlHelper::configure('/Manhattan/assets/css', '/Manhattan/assets/js');
