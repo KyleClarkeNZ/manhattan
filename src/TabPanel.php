@@ -28,6 +28,9 @@ class TabPanel
     /** @var bool Whether this tab is disabled */
     private bool $disabled = false;
 
+    /** @var string|null URL to fetch HTML content from on first activation */
+    private ?string $remoteUrl = null;
+
     public function __construct(string $key, string $label)
     {
         $this->key = $key;
@@ -98,5 +101,26 @@ class TabPanel
     {
         $this->disabled = $disabled;
         return $this;
+    }
+
+    /**
+     * Set a URL from which the panel content is fetched on first activation.
+     * When set, the panel renders empty (with a loader) and the JS layer
+     * performs a GET request to $url and injects the response HTML.
+     *
+     * @param string $url Server-side endpoint returning an HTML fragment.
+     */
+    public function remoteUrl(string $url): self
+    {
+        $this->remoteUrl = $url;
+        return $this;
+    }
+
+    /**
+     * Return the remote URL, or null if none is set.
+     */
+    public function getRemoteUrl(): ?string
+    {
+        return $this->remoteUrl;
     }
 }

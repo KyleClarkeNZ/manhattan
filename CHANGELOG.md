@@ -14,7 +14,14 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 - `DataGrid` JS: `_extraParams` internal state (initialised from PHP config); `setExtraParams(params, merge?)` public method returns `this` for chaining then auto-refreshes the grid; `getExtraParams()` returns a copy of the current extra params.
 
 ---
+## [1.2.3] — 2026-03-10
 
+### Added
+- `Tabs` / `TabPanel`: `remoteUrl(string $url)` builder — lazy-fetches HTML into the panel on first activation via AJAX. The panel renders with a centred loader spinner until the request completes.
+- `tabs.js`: `loadRemotePanel()` helper; `activateTab()` checks `data-remote-url` / `data-remote-loaded` and fires the new `m-tab-content-loaded` event after inject; the initially-active tab is also auto-loaded on `initSingleTabs()`.
+- CSS: `.m-tabs-loader` centred flex container for the loading state.
+
+---
 ## [1.2.1] — 2026-03-10
 
 ### Added

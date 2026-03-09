@@ -104,6 +104,20 @@ class Tabs extends Component
     }
 
     /**
+     * Set a remote URL on the current tab panel.
+     * The panel content will be fetched via AJAX on first activation.
+     *
+     * @param string $url Endpoint returning an HTML fragment.
+     */
+    public function remoteUrl(string $url): self
+    {
+        if ($this->currentPanel !== null) {
+            $this->currentPanel->remoteUrl($url);
+        }
+        return $this;
+    }
+
+    /**
      * Add a numeric badge to a tab by its key.
      */
     public function badge(string $key, int $count): self
@@ -209,8 +223,18 @@ HTML;
             $tabId = $idAttr . '_tab_' . $key;
             $hiddenAttr = $panel->isActive() ? '' : ' hidden';
 
+            $remoteAttr = '';
+            $panelContent = $panel->getContentHtml();
+            if ($panel->getRemoteUrl() !== null) {
+                $safeUrl = htmlspecialchars((string)$panel->getRemoteUrl(), ENT_QUOTES, 'UTF-8');
+                $remoteAttr = ' data-remote-url="' . $safeUrl . '"';
+                if ($panelContent === '') {
+                    $panelContent = '<div class="m-tabs-loader"><span class="m-loader" aria-hidden="true"></span></div>';
+                }
+            }
+
             $tabPanels .= <<<HTML
-<div id="{$panelId}" class="m-tabs-panel" role="tabpanel" aria-labelledby="{$tabId}" data-tab-key="{$key}"{$hiddenAttr}>{$panel->getContentHtml()}</div>
+<div id="{$panelId}" class="m-tabs-panel" role="tabpanel" aria-labelledby="{$tabId}" data-tab-key="{$key}"{$remoteAttr}{$hiddenAttr}>{$panelContent}</div>
 HTML;
         }
 

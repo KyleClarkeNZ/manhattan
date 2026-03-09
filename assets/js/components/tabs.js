@@ -29,6 +29,22 @@
             });
         }
 
+        // Auto-load the initially active tab if it has a remote URL
+        var activeTab = container.querySelector('.m-tabs-tab.m-active');
+        if (activeTab) {
+            var activeKey = activeTab.getAttribute('data-tab-key');
+            var activePanel = activeKey
+                ? container.querySelector('.m-tabs-panel[data-tab-key="' + activeKey + '"]')
+                : null;
+            if (activePanel) {
+                var initRemoteUrl = activePanel.getAttribute('data-remote-url');
+                if (initRemoteUrl && !activePanel.getAttribute('data-remote-loaded')) {
+                    activePanel.setAttribute('data-remote-loaded', 'true');
+                    loadRemotePanel(activePanel, initRemoteUrl, container, activeKey);
+                }
+            }
+        }
+
         // Keyboard navigation (Arrow Left/Right, Home, End)
         var strip = container.querySelector('.m-tabs-strip');
         if (strip) {
@@ -90,12 +106,43 @@
         var panel = container.querySelector('.m-tabs-panel[data-tab-key="' + key + '"]');
         if (panel) {
             panel.removeAttribute('hidden');
+
+            // Remote-load on first activation
+            var remoteUrl = panel.getAttribute('data-remote-url');
+            if (remoteUrl && !panel.getAttribute('data-remote-loaded')) {
+                panel.setAttribute('data-remote-loaded', 'true');
+                loadRemotePanel(panel, remoteUrl, container, key);
+            }
         }
 
         // Fire custom event
         if (window.m && window.m.utils && window.m.utils.trigger) {
             window.m.utils.trigger(container, 'm-tab-change', { key: key, tab: tab, panel: panel });
         }
+    }
+
+    function loadRemotePanel(panel, url, container, key) {
+        if (window.m && window.m.ajax) {
+            window.m.ajax(url, { method: 'GET' })
+                .then(function(resp) {
+                    var html = (typeof resp === 'string') ? resp : (resp && resp.html ? resp.html : '');
+                    panel.innerHTML = html;
+                    if (window.m.utils && window.m.utils.trigger) {
+                        window.m.utils.trigger(container, 'm-tab-content-loaded', { key: key, panel: panel });
+                    }
+                })
+                ['catch'](function() {
+                    panel.innerHTML = '<div class="m-alert m-alert--error">Failed to load content.</div>';
+                });
+            return;
+        }
+        // Fallback: plain fetch
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.text(); })
+            .then(function(html) { panel.innerHTML = html; })
+            ['catch'](function() {
+                panel.innerHTML = '<div class="m-alert m-alert--error">Failed to load content.</div>';
+            });
     }
 
     function getEnabledTabs(tabs) {

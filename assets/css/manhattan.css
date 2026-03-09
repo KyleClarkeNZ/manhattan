@@ -1011,6 +1011,14 @@
     display: none;
 }
 
+.m-tabs-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    min-height: 120px;
+}
+
 /* --- Pills Variant --- */
 .m-tabs-pills .m-tabs-strip {
     border-bottom: none;
