@@ -2966,6 +2966,37 @@ body::-webkit-scrollbar-thumb:hover {
     align-items: center;
 }
 
+/* Filter row */
+.m-datagrid-filter-row th.m-datagrid-filter-cell {
+    padding: 4px 6px;
+    background: var(--m-datagrid-header-bg, #f8f9fa);
+    border-bottom: 1px solid var(--m-border-color, #dee2e6);
+}
+
+.m-datagrid-filter-input {
+    width: 100%;
+    padding: 4px 8px;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    border: 1px solid var(--m-border-color, #ced4da);
+    border-radius: 4px;
+    background: var(--m-input-bg, #fff);
+    color: var(--m-text-color, #333);
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.m-datagrid-filter-input:focus {
+    border-color: var(--m-primary, #118AB2);
+    box-shadow: 0 0 0 2px rgba(17, 138, 178, 0.15);
+}
+
+.m-datagrid-filter-input::placeholder {
+    color: var(--m-text-muted, #adb5bd);
+    opacity: 1;
+}
+
 /* =====================================================================
    RATING
    ===================================================================== */

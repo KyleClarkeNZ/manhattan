@@ -204,6 +204,9 @@
         this._loading    = false;
         this._selectedRow = null;
 
+        // Filter state: { field: value, ... } — empty string means no filter on that column
+        this._filterValues = {};
+
         // DOM refs (assigned during build)
         this._dom = {};
     }
@@ -257,6 +260,11 @@
         this._dom.thead = thead;
         this._renderHeader();
 
+        // Filter row (inserted into thead after the header row)
+        if (cfg.filterable) {
+            this._buildFilterRow(thead);
+        }
+
         // Tbody
         var tbody = document.createElement('tbody');
         table.appendChild(tbody);
@@ -304,6 +312,56 @@
         });
 
         return bar;
+    };
+
+    // ─── Filter row ───────────────────────────────────────────────────────────
+
+    DataGrid.prototype._buildFilterRow = function (thead) {
+        var self = this;
+        var tr   = document.createElement('tr');
+        tr.className = 'm-datagrid-filter-row';
+
+        this.columns.forEach(function (col) {
+            var th = document.createElement('th');
+            th.className = 'm-datagrid-th m-datagrid-filter-cell';
+            if (col.width) {
+                th.style.width    = col.width + 'px';
+                th.style.minWidth = col.width + 'px';
+            }
+
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'm-datagrid-filter-input';
+            input.placeholder = col.title || '';
+            input.setAttribute('aria-label', 'Filter ' + (col.title || col.field));
+
+            if (self._filterValues[col.field]) {
+                input.value = self._filterValues[col.field];
+            }
+
+            input.addEventListener('input', debounce(function () {
+                var query = input.value.trim();
+                if (query === '') {
+                    delete self._filterValues[col.field];
+                } else {
+                    self._filterValues[col.field] = query;
+                }
+                self._page = 1;
+                if (self.config.remote) {
+                    self.refresh();
+                } else {
+                    self._processLocal();
+                    self._renderBody();
+                    self._renderPager();
+                }
+            }, 250));
+
+            th.appendChild(input);
+            tr.appendChild(th);
+        });
+
+        thead.appendChild(tr);
+        this._dom.filterRow = tr;
     };
 
     // ─── Group drop zone ──────────────────────────────────────────────────────
@@ -589,6 +647,19 @@
         var self = this;
         var data = this._allData.slice();
 
+        // Filter
+        var filterKeys = Object.keys(this._filterValues);
+        if (filterKeys.length > 0) {
+            data = data.filter(function (row) {
+                return filterKeys.every(function (field) {
+                    var query = String(self._filterValues[field]).toLowerCase();
+                    var val   = row[field];
+                    if (val === undefined || val === null) return false;
+                    return String(val).toLowerCase().indexOf(query) !== -1;
+                });
+            });
+        }
+
         // Sort
         if (this._sortField) {
             var field = this._sortField;
@@ -636,6 +707,12 @@
         if (this._groupField) {
             params.groupField = this._groupField;
         }
+
+        // Filter values — send each active filter as filterField[<field>]=<value>
+        var filterKeys = Object.keys(this._filterValues);
+        filterKeys.forEach(function (field) {
+            params['filterField[' + field + ']'] = self._filterValues[field];
+        });
 
         var qs = Object.keys(params).map(function (k) {
             return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
@@ -1158,6 +1235,20 @@
     DataGrid.prototype.clearSort = function () {
         this._sortField = null;
         this._updateSortIcons();
+        this.refresh();
+    };
+
+    /**
+     * Clear all active column filters and refresh the grid.
+     */
+    DataGrid.prototype.clearFilters = function () {
+        this._filterValues = {};
+        // Clear visible inputs
+        if (this._dom.filterRow) {
+            var inputs = this._dom.filterRow.querySelectorAll('.m-datagrid-filter-input');
+            inputs.forEach(function (inp) { inp.value = ''; });
+        }
+        this._page = 1;
         this.refresh();
     };
 

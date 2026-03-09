@@ -7,6 +7,21 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.1] — 2026-03-10
+
+### Added
+- **DataGrid `filterable()`** — adds a per-column live-search input row
+  beneath the column headers.
+  - Local data: client-side substring filtering across all active filter
+    inputs, debounced at 250 ms. Resets to page 1 on each keystroke.
+  - Remote data: active filters are appended to the request as
+    `filterField[<field>]=<value>` query/body params for server-side handling.
+  - Public API: `m.dataGrid('id').clearFilters()` clears all active filters
+    and refreshes the grid.
+  - Light and dark theme styles included.
+
+---
+
 ## [1.1.0] — 2026-03-04
 
 ### Added

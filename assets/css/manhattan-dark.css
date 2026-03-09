@@ -1269,5 +1269,29 @@ body.theme-dark .m-datagrid-cell-progress .m-progress-track {
     background: #21293a;
 }
 
+/* Filter row inputs in dark */
+body.m-dark .m-datagrid-filter-row th.m-datagrid-filter-cell,
+body.theme-dark .m-datagrid-filter-row th.m-datagrid-filter-cell {
+    background: #1a2337;
+}
+
+body.m-dark .m-datagrid-filter-input,
+body.theme-dark .m-datagrid-filter-input {
+    background: #1e2a3a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+body.m-dark .m-datagrid-filter-input::placeholder,
+body.theme-dark .m-datagrid-filter-input::placeholder {
+    color: #64748b;
+}
+
+body.m-dark .m-datagrid-filter-input:focus,
+body.theme-dark .m-datagrid-filter-input:focus {
+    border-color: #118AB2;
+    box-shadow: 0 0 0 2px rgba(17, 138, 178, 0.25);
+}
+
 /* Checkbox indicator in dark (read-only cells show the native indicator,
    colour already handled by the existing m-choice dark rules — no extra needed) */

@@ -69,6 +69,7 @@ final class DataGrid extends Component
     private bool $isGroupable   = false;
     private bool $isSelectable  = false;
     private bool $showToolbar   = false;
+    private bool $isFilterable  = false;
 
     // ── Appearance ────────────────────────────────────────────────────────────
 
@@ -237,6 +238,18 @@ final class DataGrid extends Component
     }
 
     /**
+     * Add a live-search filter row beneath the column headers.
+     *
+     * For local data the filter is applied entirely client-side.
+     * For remote data a 'filterField'/'filterValue' param is appended to each request.
+     */
+    public function filterable(): self
+    {
+        $this->isFilterable = true;
+        return $this;
+    }
+
+    /**
      * Set a fixed grid height (enables a scrollable body).
      * Example: '400px', '50vh'
      */
@@ -385,6 +398,7 @@ HTML;
             'reorderable' => $this->isReorderable,
             'groupable'   => $this->isGroupable,
             'selectable'  => $this->isSelectable,
+            'filterable'  => $this->isFilterable,
             'toolbar'     => $this->showToolbar ? $this->toolbarButtons : [],
             'emptyState'  => [
                 'title'   => $this->emptyTitle,
