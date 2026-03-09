@@ -207,6 +207,9 @@
         // Filter state: { field: value, ... } — empty string means no filter on that column
         this._filterValues = {};
 
+        // Extra params merged into every remote request — can be updated at runtime via setExtraParams()
+        this._extraParams = utils.extend({}, config.extraParams || {});
+
         // DOM refs (assigned during build)
         this._dom = {};
     }
@@ -713,6 +716,10 @@
         filterKeys.forEach(function (field) {
             params['filterField[' + field + ']'] = self._filterValues[field];
         });
+
+        // Merge extra params (custom caller-supplied params, lowest priority)
+        // built-in params (page, sort, etc.) take precedence over extraParams
+        utils.extend(params, utils.extend({}, this._extraParams, params));
 
         var qs = Object.keys(params).map(function (k) {
             return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
@@ -1250,6 +1257,31 @@
         }
         this._page = 1;
         this.refresh();
+    };
+
+    /**
+     * Set (or replace) extra params that are merged into every remote request.
+     * Chainable — returns `this` so you can call .setExtraParams({...}).refresh().
+     *
+     * @param {Object} params  Key/value pairs to send with requests.
+     * @param {boolean} [merge=false]  When true, merges into existing extra params
+     *                                 rather than replacing them.
+     */
+    DataGrid.prototype.setExtraParams = function (params, merge) {
+        if (merge) {
+            utils.extend(this._extraParams, params);
+        } else {
+            this._extraParams = utils.extend({}, params);
+        }
+        return this;
+    };
+
+    /**
+     * Return a copy of the current extra params object.
+     * @return {Object}
+     */
+    DataGrid.prototype.getExtraParams = function () {
+        return utils.extend({}, this._extraParams);
     };
 
     /**

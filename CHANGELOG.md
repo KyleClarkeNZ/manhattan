@@ -7,6 +7,14 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.2] — 2026-06-27
+
+### Added
+- `DataGrid::extraParams(array $params)` PHP builder — pass custom key/value pairs that are merged into every remote data request.
+- `DataGrid` JS: `_extraParams` internal state (initialised from PHP config); `setExtraParams(params, merge?)` public method returns `this` for chaining then auto-refreshes the grid; `getExtraParams()` returns a copy of the current extra params.
+
+---
+
 ## [1.2.1] — 2026-03-10
 
 ### Added

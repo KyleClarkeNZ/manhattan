@@ -71,6 +71,11 @@ final class DataGrid extends Component
     private bool $showToolbar   = false;
     private bool $isFilterable  = false;
 
+    // ── Extra params sent with every remote request ────────────────────────────
+
+    /** @var array<string, mixed> */
+    private array $extraParams = [];
+
     // ── Appearance ────────────────────────────────────────────────────────────
 
     private ?string $height     = null;
@@ -238,6 +243,23 @@ final class DataGrid extends Component
     }
 
     /**
+     * Add extra parameters that are merged into every remote data request.
+     *
+     * Useful for passing a static filter or context value alongside the
+     * auto-generated pagination/sort/group params.
+     * These can be updated at runtime via the JS `setExtraParams()` API.
+     *
+     * Example: ->extraParams(['filter' => 'active'])
+     *
+     * @param array<string, mixed> $params
+     */
+    public function extraParams(array $params): self
+    {
+        $this->extraParams = $params;
+        return $this;
+    }
+
+    /**
      * Add a live-search filter row beneath the column headers.
      *
      * For local data the filter is applied entirely client-side.
@@ -399,6 +421,7 @@ HTML;
             'groupable'   => $this->isGroupable,
             'selectable'  => $this->isSelectable,
             'filterable'  => $this->isFilterable,
+            'extraParams' => $this->extraParams ?: null,
             'toolbar'     => $this->showToolbar ? $this->toolbarButtons : [],
             'emptyState'  => [
                 'title'   => $this->emptyTitle,
