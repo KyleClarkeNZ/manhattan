@@ -131,17 +131,37 @@
                         window.m.utils.trigger(container, 'm-tab-content-loaded', { key: key, panel: panel });
                     }
                 })
-                ['catch'](function() {
-                    panel.innerHTML = '<div class="m-alert m-alert--error">Failed to load content.</div>';
+                ['catch'](function(error) {
+                    // Use the HTML body returned by the server (e.g. a styled error fragment)
+                    // rather than a generic fallback wherever possible.
+                    var html = (error && error.data && typeof error.data === 'string')
+                        ? error.data
+                        : '<div class="partial-error"><div class="partial-error__icon">'
+                          + '<i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>'
+                          + '<div class="partial-error__body">'
+                          + '<p class="partial-error__message">Failed to load content.</p></div></div>';
+                    injectHtml(panel, html);
                 });
             return;
         }
         // Fallback: plain fetch
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function(r) { return r.text(); })
-            .then(function(html) { injectHtml(panel, html); })
+            .then(function(r) {
+                return r.text().then(function(html) {
+                    if (!r.ok) {
+                        // Server returned an error — inject whatever it sent
+                        injectHtml(panel, html || '<div class="partial-error"><div class="partial-error__icon">'
+                            + '<i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>'
+                            + '<div class="partial-error__body"><p class="partial-error__message">Failed to load content.</p></div></div>');
+                    } else {
+                        injectHtml(panel, html);
+                    }
+                });
+            })
             ['catch'](function() {
-                panel.innerHTML = '<div class="m-alert m-alert--error">Failed to load content.</div>';
+                panel.innerHTML = '<div class="partial-error"><div class="partial-error__icon">'
+                    + '<i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>'
+                    + '<div class="partial-error__body"><p class="partial-error__message">Failed to load content.</p></div></div>';
             });
     }
 

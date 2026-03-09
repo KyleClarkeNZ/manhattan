@@ -14,6 +14,13 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 - `DataGrid` JS: `_extraParams` internal state (initialised from PHP config); `setExtraParams(params, merge?)` public method returns `this` for chaining then auto-refreshes the grid; `getExtraParams()` returns a copy of the current extra params.
 
 ---
+## [1.2.5] — 2026-03-10
+
+### Changed
+- `tabs.js` `loadRemotePanel()`: on a non-2xx response, inject the server's HTML body (e.g. a styled error fragment) into the panel instead of a generic "Failed to load content" string. Both the `m.ajax` path (`error.data`) and the plain-`fetch` fallback now forward the response body.
+
+---
+
 ## [1.2.4] — 2026-03-10
 
 ### Fixed
