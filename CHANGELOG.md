@@ -14,6 +14,13 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 - `DataGrid` JS: `_extraParams` internal state (initialised from PHP config); `setExtraParams(params, merge?)` public method returns `this` for chaining then auto-refreshes the grid; `getExtraParams()` returns a copy of the current extra params.
 
 ---
+## [1.2.4] — 2026-03-10
+
+### Fixed
+- `tabs.js`: replaced `innerHTML = html` with `createContextualFragment` + `appendChild` in `loadRemotePanel()`, `setContent()`, and `refreshContent()` so that `<script>` tags embedded in remotely-loaded tab content are executed correctly.
+
+---
+
 ## [1.2.3] — 2026-03-10
 
 ### Added

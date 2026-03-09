@@ -126,7 +126,7 @@
             window.m.ajax(url, { method: 'GET' })
                 .then(function(resp) {
                     var html = (typeof resp === 'string') ? resp : (resp && resp.html ? resp.html : '');
-                    panel.innerHTML = html;
+                    injectHtml(panel, html);
                     if (window.m.utils && window.m.utils.trigger) {
                         window.m.utils.trigger(container, 'm-tab-content-loaded', { key: key, panel: panel });
                     }
@@ -139,10 +139,25 @@
         // Fallback: plain fetch
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.text(); })
-            .then(function(html) { panel.innerHTML = html; })
+            .then(function(html) { injectHtml(panel, html); })
             ['catch'](function() {
                 panel.innerHTML = '<div class="m-alert m-alert--error">Failed to load content.</div>';
             });
+    }
+
+    /**
+     * Inject HTML into an element, executing any embedded <script> tags.
+     * Unlike innerHTML assignment, createContextualFragment preserves script execution.
+     */
+    function injectHtml(el, html) {
+        el.innerHTML = '';
+        try {
+            var frag = document.createRange().createContextualFragment(html);
+            el.appendChild(frag);
+        } catch (e) {
+            // Fallback for environments that don't support createContextualFragment
+            el.innerHTML = html;
+        }
     }
 
     function getEnabledTabs(tabs) {
@@ -183,7 +198,7 @@
                 setContent: function(key, html) {
                     var panel = el.querySelector('.m-tabs-panel[data-tab-key="' + key + '"]');
                     if (panel) {
-                        panel.innerHTML = html;
+                        injectHtml(panel, html);
                     }
                     return api;
                 },
@@ -198,7 +213,7 @@
                             method: 'GET'
                         }, opts || {})).then(function(resp) {
                             var html = (typeof resp === 'string') ? resp : (resp && resp.html ? resp.html : '');
-                            panel.innerHTML = html;
+                            injectHtml(panel, html);
                             if (window.m.utils && window.m.utils.trigger) {
                                 window.m.utils.trigger(el, 'm-tab-content-refresh', { key: key, panel: panel });
                             }
@@ -207,7 +222,7 @@
                     }
 
                     return fetch(url).then(function(r) { return r.text(); }).then(function(html) {
-                        panel.innerHTML = html;
+                        injectHtml(panel, html);
                         return html;
                     });
                 },
