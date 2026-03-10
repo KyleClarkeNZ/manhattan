@@ -174,11 +174,11 @@
                 if (titleEl) titleEl.innerHTML = html;
             },
             setContent: function(html) {
-                var bodyEl = windowEl.querySelector('.m-window-body');
+                var bodyEl = windowEl.querySelector('.m-window-content');
                 if (bodyEl) injectHtml(bodyEl, html);
             },
             loadContent: function(url, fetchOpts) {
-                var bodyEl = windowEl.querySelector('.m-window-body');
+                var bodyEl = windowEl.querySelector('.m-window-content');
                 if (!bodyEl) return Promise.resolve(null);
                 if (m.ajax) {
                     return m.ajax(url, utils.extend({ method: 'GET' }, fetchOpts || {}))
