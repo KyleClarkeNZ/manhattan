@@ -14,6 +14,17 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 - `DataGrid` JS: `_extraParams` internal state (initialised from PHP config); `setExtraParams(params, merge?)` public method returns `this` for chaining then auto-refreshes the grid; `getExtraParams()` returns a copy of the current extra params.
 
 ---
+## [1.2.8] — 2026-03-10
+
+### Added
+- `m.dialog.confirm(message, title, iconClass)` — fully implemented. Returns a `Promise<boolean>` that resolves `true` on confirm, `false` on cancel / overlay click / Escape key. Uses the existing `.m-dialog-*` CSS classes with transition animation.
+- `m.dialog.alert(message, title, iconClass)` — single-button alert dialog. Returns a `Promise<void>`.
+
+### Fixed
+- Both dialog methods were previously just a comment stub, causing a `TypeError` when called.
+
+---
+
 ## [1.2.7] — 2026-03-10
 
 ### Fixed

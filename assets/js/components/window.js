@@ -216,6 +216,103 @@
 
     /**
      * Dialog Component - Alert, Confirm, Prompt
+     * Pure-JS overlays using the existing .m-dialog-* CSS classes.
      */
+
+    function escDialogText(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str == null ? '' : String(str)));
+        return div.innerHTML;
+    }
+
+    function openDialogOverlay() {
+        var overlay = document.createElement('div');
+        overlay.className = 'm-dialog-overlay';
+        var dialog = document.createElement('div');
+        dialog.className = 'm-dialog';
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        // Double rAF to trigger CSS transition
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                overlay.classList.add('m-dialog-active');
+            });
+        });
+        return { overlay: overlay, dialog: dialog };
+    }
+
+    function closeDialogOverlay(overlay) {
+        overlay.classList.remove('m-dialog-active');
+        setTimeout(function() {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 300);
+    }
+
+    function dialogHeader(title, iconClass) {
+        var iconHtml = iconClass
+            ? '<i class="fas ' + escDialogText(iconClass) + ' m-dialog-icon" aria-hidden="true"></i>'
+            : '';
+        return '<div class="m-dialog-header">' + iconHtml + '<h3>' + escDialogText(title) + '</h3></div>';
+    }
+
+    m.dialog = {
+        confirm: function(message, title, iconClass) {
+            return new Promise(function(resolve) {
+                var parts   = openDialogOverlay();
+                var overlay = parts.overlay;
+                var dialog  = parts.dialog;
+
+                dialog.innerHTML = dialogHeader(title || 'Confirm', iconClass || 'fa-question-circle')
+                    + '<div class="m-dialog-body"><p>' + escDialogText(message) + '</p></div>'
+                    + '<div class="m-dialog-footer">'
+                    + '<button class="m-button m-dlg-cancel-btn">Cancel</button>'
+                    + '<button class="m-button m-button-primary m-dlg-confirm-btn">Confirm</button>'
+                    + '</div>';
+
+                var done = false;
+                function finish(result) {
+                    if (done) return;
+                    done = true;
+                    closeDialogOverlay(overlay);
+                    resolve(result);
+                }
+
+                dialog.querySelector('.m-dlg-confirm-btn').addEventListener('click', function() { finish(true); });
+                dialog.querySelector('.m-dlg-cancel-btn').addEventListener('click', function() { finish(false); });
+                overlay.addEventListener('click', function(e) { if (e.target === overlay) finish(false); });
+                document.addEventListener('keydown', function onKey(e) {
+                    if (!done && e.key === 'Escape') { document.removeEventListener('keydown', onKey); finish(false); }
+                });
+            });
+        },
+
+        alert: function(message, title, iconClass) {
+            return new Promise(function(resolve) {
+                var parts   = openDialogOverlay();
+                var overlay = parts.overlay;
+                var dialog  = parts.dialog;
+
+                dialog.innerHTML = dialogHeader(title || 'Alert', iconClass || 'fa-info-circle')
+                    + '<div class="m-dialog-body"><p>' + escDialogText(message) + '</p></div>'
+                    + '<div class="m-dialog-footer">'
+                    + '<button class="m-button m-button-primary m-dlg-ok-btn">OK</button>'
+                    + '</div>';
+
+                var done = false;
+                function finish() {
+                    if (done) return;
+                    done = true;
+                    closeDialogOverlay(overlay);
+                    resolve();
+                }
+
+                dialog.querySelector('.m-dlg-ok-btn').addEventListener('click', finish);
+                overlay.addEventListener('click', function(e) { if (e.target === overlay) finish(); });
+                document.addEventListener('keydown', function onKey(e) {
+                    if (!done && e.key === 'Escape') { document.removeEventListener('keydown', onKey); finish(); }
+                });
+            });
+        }
+    };
 
 })(window);
