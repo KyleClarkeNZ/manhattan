@@ -122,6 +122,9 @@
     }
 
     function loadRemotePanel(panel, url, container, key) {
+        // Show spinner while the initial remote content loads
+        injectHtml(panel, '<div class="m-tabs-loader"><span class="m-loader-spinner" aria-hidden="true"></span></div>');
+
         if (window.m && window.m.ajax) {
             window.m.ajax(url, { method: 'GET' })
                 .then(function(resp) {

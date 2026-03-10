@@ -1007,6 +1007,11 @@
     box-sizing: border-box;
 }
 
+/* Reserve space on remote panels before first load so the spinner is visible */
+.m-tabs-panel[data-remote-url] {
+    min-height: 180px;
+}
+
 .m-tabs-panel[hidden] {
     display: none;
 }

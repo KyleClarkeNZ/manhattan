@@ -7,6 +7,13 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.3.0] — 2026-07-10
+
+### Added
+- `tabs.js`: `loadRemotePanel()` now injects the `.m-tabs-loader` spinner before fetching, consistent with `refreshContent()`. Panel is no longer blank during initial remote load.
+- `manhattan.css`: `.m-tabs-panel[data-remote-url]` gets `min-height: 180px`, ensuring the spinner is visible before JS injects it and on panels not yet activated.
+
+---
 ## [1.2.2] — 2026-06-27
 
 ### Added
