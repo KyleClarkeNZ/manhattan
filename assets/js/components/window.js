@@ -139,6 +139,25 @@
             });
         });
 
+        /**
+         * Inject HTML into an element, executing any embedded <script> tags.
+         * Unlike innerHTML assignment, createContextualFragment preserves script execution.
+         */
+        function injectHtml(el, html) {
+            el.innerHTML = '';
+            try {
+                var frag = document.createRange().createContextualFragment(html);
+                el.appendChild(frag);
+            } catch (e) {
+                el.innerHTML = html;
+            }
+        }
+
+        var fallbackErrorHtml = '<div class="partial-error">'
+            + '<div class="partial-error__icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>'
+            + '<div class="partial-error__body"><p class="partial-error__message">Failed to load content.</p></div>'
+            + '</div>';
+
         return {
             open,
             close,
@@ -156,23 +175,41 @@
             },
             setContent: function(html) {
                 var bodyEl = windowEl.querySelector('.m-window-body');
-                if (bodyEl) bodyEl.innerHTML = html;
+                if (bodyEl) injectHtml(bodyEl, html);
             },
             loadContent: function(url, fetchOpts) {
                 var bodyEl = windowEl.querySelector('.m-window-body');
                 if (!bodyEl) return Promise.resolve(null);
                 if (m.ajax) {
-                    return m.ajax(url, utils.extend({ method: 'GET' }, fetchOpts || {})).then(function(resp) {
-                        var html = (typeof resp === 'string') ? resp : (resp && resp.html ? resp.html : '');
-                        bodyEl.innerHTML = html;
-                        utils.trigger(windowEl, 'm:window:content-loaded', { id: id });
-                        return resp;
-                    });
+                    return m.ajax(url, utils.extend({ method: 'GET' }, fetchOpts || {}))
+                        .then(function(resp) {
+                            var html = (typeof resp === 'string') ? resp : (resp && resp.html ? resp.html : '');
+                            injectHtml(bodyEl, html);
+                            utils.trigger(windowEl, 'm:window:content-loaded', { id: id });
+                            return resp;
+                        })
+                        ['catch'](function(error) {
+                            var html = (error && error.data && typeof error.data === 'string')
+                                ? error.data
+                                : fallbackErrorHtml;
+                            injectHtml(bodyEl, html);
+                        });
                 }
-                return fetch(url).then(function(r) { return r.text(); }).then(function(html) {
-                    bodyEl.innerHTML = html;
-                    return html;
-                });
+                // Fallback: plain fetch
+                return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(function(r) {
+                        return r.text().then(function(html) {
+                            if (!r.ok) {
+                                injectHtml(bodyEl, html || fallbackErrorHtml);
+                            } else {
+                                injectHtml(bodyEl, html);
+                            }
+                            return html;
+                        });
+                    })
+                    ['catch'](function() {
+                        injectHtml(bodyEl, fallbackErrorHtml);
+                    });
             }
         };
     };

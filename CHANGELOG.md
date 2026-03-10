@@ -14,6 +14,15 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 - `DataGrid` JS: `_extraParams` internal state (initialised from PHP config); `setExtraParams(params, merge?)` public method returns `this` for chaining then auto-refreshes the grid; `getExtraParams()` returns a copy of the current extra params.
 
 ---
+## [1.2.6] — 2026-03-10
+
+### Changed
+- `window.js` `setContent()`: switched from `innerHTML` assignment to `createContextualFragment` + `appendChild` so that `<script>` tags embedded in lazily-loaded partial views are executed.
+- `window.js` `loadContent()`: added `.catch()` handler — on a non-2xx response the server's HTML body (`error.data` from `m.ajax`, or raw text from the plain-fetch fallback) is injected into `.m-window-body` instead of failing silently. A styled `.partial-error` fallback is used when no body is available.
+- Plain-`fetch` fallback in `loadContent()` now checks `r.ok` and injects error content on non-2xx, consistent with the `m.ajax` path.
+
+---
+
 ## [1.2.5] — 2026-03-10
 
 ### Changed
