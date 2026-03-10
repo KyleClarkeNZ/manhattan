@@ -455,6 +455,47 @@ body.theme-dark .m-toast-close:hover {
     background: rgba(255, 255, 255, 0.08);
 }
 
+/* Type variants — colour-coded left border + icon */
+body.m-dark .m-toast-success,
+body.theme-dark .m-toast-success {
+    border-left-color: #4CAF50;
+}
+
+body.m-dark .m-toast-success .m-toast-icon,
+body.theme-dark .m-toast-success .m-toast-icon {
+    color: #4CAF50;
+}
+
+body.m-dark .m-toast-error,
+body.theme-dark .m-toast-error {
+    border-left-color: #f85149;
+}
+
+body.m-dark .m-toast-error .m-toast-icon,
+body.theme-dark .m-toast-error .m-toast-icon {
+    color: #f85149;
+}
+
+body.m-dark .m-toast-warning,
+body.theme-dark .m-toast-warning {
+    border-left-color: #e3a000;
+}
+
+body.m-dark .m-toast-warning .m-toast-icon,
+body.theme-dark .m-toast-warning .m-toast-icon {
+    color: #e3a000;
+}
+
+body.m-dark .m-toast-info,
+body.theme-dark .m-toast-info {
+    border-left-color: #58a6ff;
+}
+
+body.m-dark .m-toast-info .m-toast-icon,
+body.theme-dark .m-toast-info .m-toast-icon {
+    color: #58a6ff;
+}
+
 /* ========================================
    Toggle Switch
    ======================================== */
