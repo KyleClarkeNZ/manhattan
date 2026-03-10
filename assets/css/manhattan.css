@@ -505,6 +505,7 @@
     max-width: none;
     width: 100%;
     pointer-events: auto;
+    margin-bottom: 1rem;
 }
 
 /* Preserve existing alert look; just avoid trailing whitespace */
