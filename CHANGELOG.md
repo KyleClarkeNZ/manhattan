@@ -14,6 +14,15 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 - `DataGrid` JS: `_extraParams` internal state (initialised from PHP config); `setExtraParams(params, merge?)` public method returns `this` for chaining then auto-refreshes the grid; `getExtraParams()` returns a copy of the current extra params.
 
 ---
+## [1.2.9] — 2026-03-10
+
+### Added
+- `button.js`: `setLoading(bool)` public API method — `true` adds `m-button-loading` class and sets `disabled`; `false` reverses both. Prevents double-submission and provides visual feedback during AJAX calls.
+- `window.js` `loadContent()`: shows a centred `.m-loader-spinner` inside `.m-window-content` immediately before the fetch starts; replaced by real content (or the styled error fragment) in all paths — success, non-2xx server error, and network failure.
+- `tabs.js` `refreshContent()`: same loader-before-fetch behaviour; also adds error injection on non-2xx (was missing previously).
+
+---
+
 ## [1.2.8] — 2026-03-10
 
 ### Added

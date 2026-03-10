@@ -180,6 +180,10 @@
             loadContent: function(url, fetchOpts) {
                 var bodyEl = windowEl.querySelector('.m-window-content');
                 if (!bodyEl) return Promise.resolve(null);
+
+                // Show spinner immediately before the fetch starts
+                injectHtml(bodyEl, '<div class="m-tabs-loader"><span class="m-loader-spinner" aria-hidden="true"></span></div>');
+
                 if (m.ajax) {
                     return m.ajax(url, utils.extend({ method: 'GET' }, fetchOpts || {}))
                         .then(function(resp) {

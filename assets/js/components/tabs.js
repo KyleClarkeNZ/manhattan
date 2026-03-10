@@ -228,6 +228,9 @@
                     var panel = el.querySelector('.m-tabs-panel[data-tab-key="' + key + '"]');
                     if (!panel) return Promise.resolve(null);
 
+                    // Show spinner while refreshing
+                    injectHtml(panel, '<div class="m-tabs-loader"><span class="m-loader-spinner" aria-hidden="true"></span></div>');
+
                     if (window.m && window.m.ajax) {
                         return window.m.ajax(url, window.m.utils.extend({
                             method: 'GET'
@@ -238,12 +241,23 @@
                                 window.m.utils.trigger(el, 'm-tab-content-refresh', { key: key, panel: panel });
                             }
                             return resp;
+                        })['catch'](function(error) {
+                            var html = (error && error.data && typeof error.data === 'string')
+                                ? error.data
+                                : '<div class="partial-error"><div class="partial-error__icon">'
+                                  + '<i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>'
+                                  + '<div class="partial-error__body"><p class="partial-error__message">Failed to load content.</p></div></div>';
+                            injectHtml(panel, html);
                         });
                     }
 
-                    return fetch(url).then(function(r) { return r.text(); }).then(function(html) {
-                        injectHtml(panel, html);
-                        return html;
+                    return fetch(url).then(function(r) {
+                        return r.text().then(function(html) {
+                            injectHtml(panel, r.ok ? html : (html || '<div class="partial-error"><div class="partial-error__body"><p class="partial-error__message">Failed to load content.</p></div></div>'));
+                            return html;
+                        });
+                    })['catch'](function() {
+                        injectHtml(panel, '<div class="partial-error"><div class="partial-error__body"><p class="partial-error__message">Failed to load content.</p></div></div>');
                     });
                 },
 

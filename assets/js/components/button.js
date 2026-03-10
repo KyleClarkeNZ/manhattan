@@ -81,6 +81,17 @@
                 return this;
             },
 
+            setLoading: function(loading) {
+                if (loading) {
+                    element.classList.add('m-button-loading');
+                    element.disabled = true;
+                } else {
+                    element.classList.remove('m-button-loading');
+                    element.disabled = false;
+                }
+                return this;
+            },
+
             icon: function(faName, positionOrOptions, maybeOptions) {
                 let position = 'left';
                 let iconOptions = {};
