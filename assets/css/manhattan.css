@@ -889,12 +889,14 @@
 
 .m-radio-input:checked + .m-choice-indicator::after {
     content: '';
-    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
     width: 8px;
     height: 8px;
     background: #2196F3;
     border-radius: 999px;
-    transform: translate(3px, 3px);
+    transform: translate(-50%, -50%);
 }
 
 .m-choice-input:focus-visible + .m-choice-indicator {
