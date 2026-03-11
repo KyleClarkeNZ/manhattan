@@ -15,8 +15,7 @@ The Manhattan build system automates PHP 7.4 compatibility testing and creates p
 This will:
 1. ✅ Run PHP 7.4 compatibility checks
 2. 📦 Create `dist/manhattan-demo.zip` with demo files
-3. 🔢 Auto-increment version number
-4. 📊 Display build summary
+3. � Display build summary
 
 ### Output
 
@@ -25,6 +24,35 @@ This will:
 - **Size**: ~896KB compressed (~2.5MB uncompressed)
 - **Files**: ~104 files (production-ready)
 - **Contents**: Production-ready demo application
+
+## Versioning
+
+Manhattan uses **git tags** for version management:
+- Versions follow semantic versioning: `vX.Y.Z`
+- Tag releases manually or use GitHub Actions
+- Update `composer.json` version when tagging
+
+### Manual Tagging
+
+```bash
+# Update version in composer.json
+vim composer.json  # Edit version field
+
+# Commit the version bump
+git add composer.json
+git commit -m "Bump version to 1.3.11"
+
+# Create tag
+git tag -a v1.3.11 -m "Release v1.3.11"
+
+# Push both
+git push origin master
+git push origin v1.3.11
+```
+
+### Automated Tagging (GitHub Actions)
+
+A GitHub Actions workflow in `.github/workflows/auto-tag.yml` automatically creates version tags based on commit messages using conventional commits.
 
 ## What Gets Included
 
@@ -41,10 +69,10 @@ The build package includes **only production-required files**:
 The following are **not** included in production builds:
 - ❌ `bin/` - Development scripts
 - ❌ `scripts/` - Development/build tools
-- ❌ `.git/` - Version control
+- ❌ `.git/`, `.github/` - Version control and CI/CD
 - ❌ `composer.json` / `composer.lock` - Not needed (vendor/ is pre-built)
 - ❌ `CHANGELOG.md`, `README.md`, `BUILD.md` - Documentation
-- ❌ `build.sh`, `VERSION` - Build tools
+- ❌ `build.sh` - Build tools
 - ❌ IDE files (`.vscode/`, `.idea/`)
 - ❌ Log files (`*.log`)
 - ❌ Backup files (`*.bak`, `*.backup`)
@@ -63,13 +91,6 @@ If `scripts/check_php74_compatibility.php` exists, scans all PHP files for PHP 8
 - `str_contains()`, `str_starts_with()`, `str_ends_with()`
 - Union types (beyond nullable)
 - Mixed type hints
-
-### 2. Version Bumping
-Automatically increments the patch version in `VERSION` file:
-- Format: `major.minor.patch` (e.g., 1.3.02)
-- Patch is zero-padded to 2 digits
-- Auto-increments patch on each build
-- Rolls over to next minor/major when reaching 99
 
 ## Deployment Workflow
 

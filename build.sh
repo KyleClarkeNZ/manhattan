@@ -44,31 +44,8 @@ if [ $ERRORS -gt 0 ]; then
     exit 1
 fi
 
-# Step 2: Bump version (major.minor.patch — patch is zero-padded to 2 digits)
-echo -e "${BLUE}Step 2: Bumping version...${NC}"
-VERSION_FILE="$SCRIPT_DIR/VERSION"
-if [ ! -f "$VERSION_FILE" ]; then
-    echo "1.3.00" > "$VERSION_FILE"
-fi
-CURRENT_VERSION=$(cat "$VERSION_FILE")
-IFS='.' read -r VER_MAJOR VER_MINOR VER_PATCH <<< "$CURRENT_VERSION"
-VER_PATCH=$((10#$VER_PATCH + 1))
-if [ "$VER_PATCH" -gt 99 ]; then
-    VER_PATCH=0
-    VER_MINOR=$((VER_MINOR + 1))
-fi
-if [ "$VER_MINOR" -gt 99 ]; then
-    VER_MINOR=0
-    VER_MAJOR=$((VER_MAJOR + 1))
-fi
-VER_PATCH=$(printf '%02d' "$VER_PATCH")
-NEW_VERSION="${VER_MAJOR}.${VER_MINOR}.${VER_PATCH}"
-echo "$NEW_VERSION" > "$VERSION_FILE"
-echo -e "${GREEN}✓ Version: ${CURRENT_VERSION} → ${NEW_VERSION}${NC}"
-echo ""
-
-# Step 3: Install Composer dependencies (no dev, optimised autoloader)
-echo -e "${BLUE}Step 3: Installing Composer dependencies (no-dev)...${NC}"
+# Step 2: Install Composer dependencies (no dev, optimised autoloader)
+echo -e "${BLUE}Step 2: Installing Composer dependencies (no-dev)...${NC}"
 if command -v composer &>/dev/null; then
     COMPOSER_CMD="composer"
 elif [ -f "/home/kyle/composer" ]; then
@@ -88,8 +65,8 @@ else
 fi
 echo ""
 
-# Step 4: Create build directory
-echo -e "${BLUE}Step 4: Preparing build directory...${NC}"
+# Step 3: Create build directory
+echo -e "${BLUE}Step 3: Preparing build directory...${NC}"
 if [ -d "$BUILD_DIR" ]; then
     rm -rf "$BUILD_DIR"
 fi
@@ -97,8 +74,8 @@ mkdir -p "$BUILD_DIR"
 echo -e "${GREEN}✓ Build directory created${NC}"
 echo ""
 
-# Step 5: Package demo files
-echo -e "${BLUE}Step 5: Packaging demo files...${NC}"
+# Step 4: Package demo files
+echo -e "${BLUE}Step 4: Packaging demo files...${NC}"
 
 # Create demo package with production-required files
 # NOTE: src/ is required because Composer autoloader maps Manhattan\ namespace to src/
@@ -137,8 +114,8 @@ else
 fi
 echo ""
 
-# Step 6: Create .htaccess for production (if it doesn't exist)
-echo -e "${BLUE}Step 6: Checking production .htaccess...${NC}"
+# Step 5: Checking production .htaccess...
+echo -e "${BLUE}Step 5: Checking production .htaccess...${NC}"
 if [ ! -f ".htaccess" ]; then
     cat > .htaccess << 'HTACCESS'
 # Manhattan Demo .htaccess
@@ -178,14 +155,13 @@ else
 fi
 echo ""
 
-# Step 7: Build summary
+# Build summary
 echo -e "${BLUE}========================================================"
 echo "  Build Complete!"
 echo "========================================================${NC}"
 echo ""
 echo -e "📦 Package:     ${GREEN}$BUILD_DIR/$ZIP_NAME${NC}"
 echo -e "📏 Size:        ${GREEN}$SIZE${NC}"
-echo -e "🔢 Version:     ${GREEN}$NEW_VERSION${NC}"
 echo ""
 echo -e "${YELLOW}Deployment Instructions:${NC}"
 echo "1. Upload to manhattan.kyleclarke.co.nz"
