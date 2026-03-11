@@ -252,8 +252,13 @@ final class Chart extends Component
             $goalLabel = htmlspecialchars($this->goalLine['label'], ENT_QUOTES, 'UTF-8');
             $goalY = $axisY - (min($goalVal, $yMax) / $yMax) * $plotH;
             $goalY = round($goalY, 2);
-            $goalSvg = '<line class="m-chart-goal" x1="' . $axisX1 . '" y1="' . $goalY . '" x2="' . $axisX2 . '" y2="' . $goalY . '" stroke="' . $goalColor . '" stroke-dasharray="6 3" stroke-width="2" />';
-            $goalSvg .= '<text class="m-chart-goal-label" x="' . ($axisX2 + 2) . '" y="' . ($goalY + 4) . '" fill="' . $goalColor . '" font-size="10" text-anchor="start">' . $goalLabel . '</text>';
+            
+            // Tooltip for goal line
+            $goalTip = htmlspecialchars($this->goalLine['label'] . ': ' . $formatValue($goalVal), ENT_QUOTES, 'UTF-8');
+            
+            $goalSvg = '<line class="m-chart-goal" x1="' . $axisX1 . '" y1="' . $goalY . '" x2="' . $axisX2 . '" y2="' . $goalY . '" stroke="' . $goalColor . '" stroke-dasharray="6 3" stroke-width="2" data-m-tooltip="' . $goalTip . '" data-m-tooltip-position="top" />';
+            // Position label with better visibility - anchored to right side with padding
+            $goalSvg .= '<text class="m-chart-goal-label" x="' . ($axisX2 - 6) . '" y="' . ($goalY - 6) . '" fill="' . $goalColor . '" font-size="11" font-weight="600" text-anchor="end" data-m-tooltip="' . $goalTip . '" data-m-tooltip-position="top">' . $goalLabel . '</text>';
         }
 
         $svg = <<<SVG

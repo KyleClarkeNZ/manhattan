@@ -1,0 +1,36 @@
+# Manhattan Demo .htaccess
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Root is handled by index.php (no redirect needed)
+    
+    # Serve assets directly
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Handle demo endpoints
+    RewriteRule ^demo/toggleTheme$ demo/index.php [L,QSA]
+    RewriteRule ^toggleTheme$ demo/index.php [L,QSA]
+    RewriteRule ^demo/nzpostSuggest$ demo/index.php [L,QSA]
+    RewriteRule ^nzpostSuggest$ demo/index.php [L,QSA]
+    RewriteRule ^manhattan/nzpostSuggest$ demo/index.php [L,QSA]
+    
+    # Handle AJAX endpoints
+    RewriteRule ^manhattan/handleButtonClick$ demo/index.php [L,QSA]
+    RewriteRule ^manhattan/getDropdownData$ demo/index.php [L,QSA]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Error pages (optional)
+ErrorDocument 404 /demo/index.php

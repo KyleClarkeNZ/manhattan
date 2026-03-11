@@ -9,10 +9,26 @@ m.icon('fa-icons');
 JS;
 
 $phpButton = <<<'PHP'
-<?= $m->button('saveBtn', 'Save')->primary()->icon('fa-save') ?>
+// Save form with primary button
+<?= $m->button('saveBtn', 'Save Changes')
+    ->primary()
+    ->icon('fa-save')
+    ->type('submit') ?>
+
+// Delete with confirmation
+<?= $m->button('deleteBtn', 'Delete')
+    ->danger()
+    ->icon('fa-trash')
+    ->on('click', 'confirmDelete') ?>
 PHP;
 $jsButton = <<<'JS'
-m.button('saveBtn', { events: { click: function () { /* ... */ } } });
+// Handle button click
+function confirmDelete() {
+    m.dialog.confirm('Delete this item?', 'Confirm', 'fa-trash')
+        .then(function(ok) {
+            if (ok) deleteItem();
+        });
+}
 JS;
 
 $phpBreadcrumb = <<<'PHP'
@@ -28,10 +44,21 @@ $jsBreadcrumb = <<<'JS'
 JS;
 
 $phpTextBox = <<<'PHP'
-<?= $m->textbox('email')->email()->placeholder('name@example.com')->required(true) ?>
+// Form field with validation
+<label for="userEmail">Email Address</label>
+<?= $m->textbox('userEmail')
+    ->name('email')
+    ->email()
+    ->placeholder('you@example.com')
+    ->required(true) ?>
 PHP;
 $jsTextBox = <<<'JS'
-m.textbox('email', { onInput: function (data) { console.log(data.value); } });
+// Real-time validation
+m.textbox('userEmail', {
+    onInput: function(data) {
+        validateEmail(data.value);
+    }
+});
 JS;
 
 $phpTextArea = <<<'PHP'
@@ -86,49 +113,147 @@ document.getElementById('myTabs').addEventListener('m-tab-change', function (e) 
 JS;
 
 $phpDatePicker = <<<'PHP'
-<?= $m->datepicker('dueDate')->value('2026-01-21')->min('2026-01-01') ?>
+// Date range selection
+<label>Start Date</label>
+<?= $m->datepicker('startDate')
+    ->name('start_date')
+    ->value(date('Y-m-d'))
+    ->placeholder('Select start date...') ?>
+
+<label>End Date</label>
+<?= $m->datepicker('endDate')
+    ->name('end_date')
+    ->min(date('Y-m-d'))
+    ->placeholder('Select end date...') ?>
 PHP;
 $jsDatePicker = <<<'JS'
-m.datepicker('dueDate');
+// Update min date when  start changes
+document.getElementById('startDate')
+    .addEventListener('change', function() {
+        document.getElementById('endDate')
+            .setAttribute('min', this.value);
+    });
 JS;
 
 $phpDropdown = <<<'PHP'
-<?= $m->dropdown('priority')->dataSource($priorities)->placeholder('Select...') ?>
+// Dropdown with grouped options
+<?= $m->dropdown('category')
+    ->groupedDataSource([
+        ['group' => 'Work', 'items' => [
+            ['value' => '1', 'text' => 'Meetings'],
+            ['value' => '2', 'text' => 'Reports']
+        ]],
+        ['group' => 'Personal', 'items' => [
+            ['value' => '3', 'text' => 'Errands']
+        ]]
+    ])
+    ->placeholder('Select category...')
+    ->name('task_category') ?>
 PHP;
 $jsDropdown = <<<'JS'
-m.dropdown('priority', { events: { change: function (data) { console.log(data); } } });
+// Listen for selection changes
+m.dropdown('category', {
+    events: {
+        change: function(data) {
+            loadTasksForCategory(data.value);
+        }
+    }
+});
 JS;
 
 $phpList = <<<'PHP'
-<?= $m->list('tasks')->reorderable(true)->items([['key'=>'1','html'=>'Task 1']]) ?>
+// Task list with drag-and-drop reordering
+$taskItems = [
+    ['key' => 't1', 'html' => '<i class="fas fa-clipboard-list"></i> Review pull requests'],
+    ['key' => 't2', 'html' => '<i class="fas fa-clipboard-list"></i> Update documentation'],
+    ['key' => 't3', 'html' => '<i class="fas fa-clipboard-list"></i> Deploy to staging']
+];
+echo $m->list('priorityList')
+    ->items($taskItems)
+    ->reorderable(true)
+    ->emptyMessage('No tasks to display');
 PHP;
 $jsList = <<<'JS'
-const list = m.list('tasks');
-list.setReorderable(true);
+// Listen for reorder events
+document.getElementById('priorityList')
+    .addEventListener('m-list-reorder', function(e) {
+        console.log('New order:', e.detail.order);
+        savePriority(e.detail.order);
+    });
+
+// Add new item programmatically
+var list = m.list('priorityList');
+list.addItem({key: 't4', html: 'New task'});
 JS;
 
 $phpWindow = <<<'PHP'
-<?= $m->window('myWindow', 'Title')->content('<p>Content</p>')->modal(true) ?>
+// Define window structure with buttons
+<?= $m->window('editTaskWindow', 'Edit Task')
+    ->modal(true)
+    ->width('600px')
+    ->content($formHtml)
+    ->addButton('Cancel', 'cancel', 'secondary')
+    ->addButton('Save', 'save_task', 'primary') ?>
 PHP;
 $jsWindow = <<<'JS'
-const w = m.window('myWindow', { draggable: true });
-w.open();
+// Open window
+m.window('editTaskWindow').open();
+
+// Close window
+m.window('editTaskWindow').close();
+
+// Listen for button events
+document.getElementById('editTaskWindow')
+    .addEventListener('m-window-button', function(e) {
+        if (e.detail.action === 'save_task') {
+            saveTaskForm();
+        }
+    });
 JS;
 
 $phpDialog = <<<'PHP'
 // Dialog is JS-only (no server-rendered HTML)
 PHP;
 $jsDialog = <<<'JS'
-m.dialog.confirm('Are you sure?').then(function (ok) { console.log(ok); });
+// Confirm before delete
+m.dialog.confirm(
+    'Delete this task? This cannot be undone.',
+    'Confirm Delete',
+    'fa-trash'
+).then(function(confirmed) {
+    if (confirmed) deleteTask(taskId);
+});
+
+// Prompt for input
+m.dialog.prompt(
+    'Enter task name:',
+    'Create Task',
+    'fa-plus'
+).then(function(value) {
+    if (value) createTask(value);
+});
+
+// Simple alert
+m.dialog.alert('Task saved successfully!', 'Success', 'fa-check');
 JS;
 
 $phpToaster = <<<'PHP'
+// Define toaster containers
 <?= $m->toaster('banner')->position('banner') ?>
 <?= $m->toaster('appToaster')->position('top-right') ?>
 PHP;
 $jsToaster = <<<'JS'
-m.toaster('banner').show('Saved!', 'success');
-m.toaster('appToaster').show('Hello', 'info');
+// Success notification
+m.toaster('appToaster').show('Task saved successfully!', 'success');
+
+// Error notification
+m.toaster('appToaster').show('Failed to save task', 'error');
+
+// Info with longer display
+m.toaster('appToaster').show('Processing...', 'info', 5000);
+
+// Banner-style notification (full-width top)
+m.toaster('banner').show('New update available', 'warning');
 JS;
 
 // DataGrid demo data
@@ -154,59 +279,75 @@ for ($i = 1; $i <= 30; $i++) {
 }
 
 $phpDataGrid = <<<'PHP'
-// Local DataGrid
+// Full-featured local grid
 $columns = [
-    ['field' => 'id',       'title' => '#',        'width' => 60,  'sortable' => true],
-    ['field' => 'task',     'title' => 'Task',      'width' => 280, 'sortable' => true, 'resizable' => true],
-    ['field' => 'owner',    'title' => 'Owner',     'width' => 100, 'sortable' => true, 'groupable' => true],
-    ['field' => 'priority', 'title' => 'Priority',  'width' => 100, 'sortable' => true, 'groupable' => true],
-    ['field' => 'status',   'title' => 'Status',    'width' => 120, 'sortable' => true, 'groupable' => true],
-    ['field' => 'due_date', 'title' => 'Due',       'width' => 110, 'sortable' => true, 'format' => 'date'],
-    ['field' => 'progress', 'title' => 'Progress%', 'width' => 90,  'sortable' => true, 'align' => 'right'],
+    ['field' => 'id',       'title' => '#',      'width' => 60,  'frozen' => true],
+    ['field' => 'task',     'title' => 'Task',   'width' => 280, 'sortable' => true, 'resizable' => true, 'frozen' => true],
+    ['field' => 'owner',    'title' => 'Owner',  'width' => 100, 'sortable' => true, 'groupable' => true],
+    ['field' => 'status',   'title' => 'Status', 'width' => 120, 'sortable' => true, 'groupable' => true],
+    ['field' => 'due_date', 'title' => 'Due',    'width' => 110, 'sortable' => true, 'format' => 'date'],
 ];
-echo $m->dataGrid('demoGrid')
+
+echo $m->dataGrid('tasksGrid')
     ->columns($columns)
-    ->dataSource($sampleData)
-    ->pageable(10, 'local')
+    ->dataSource($tasks)
+    ->pageable(20, 'local')
     ->sortable()
     ->resizable()
     ->reorderable()
     ->groupable()
     ->selectable()
-    ->height('420px')
-    ->toolbar([['text' => 'Refresh', 'icon' => 'fa-sync', 'click' => 'refreshDemo()']])
-    ->emptyState('No tasks found', 'Adjust filters or add a task');
+    ->filterable()
+    ->height('500px')
+    ->toolbar([
+        ['text' => 'Add Task', 'icon' => 'fa-plus', 'click' => 'addTask()'],
+        ['text' => 'Refresh', 'icon' => 'fa-sync', 'click' => 'refreshGrid()']
+    ])
+    ->emptyState('No tasks found', 'Create your first task to get started');
 
-// Remote DataGrid
+// Remote grid with server-side pagination
 echo $m->dataGrid('remoteGrid')
     ->columns($columns)
-    ->remoteUrl('/api/tasks', 'GET')
-    ->pageable(20, 'remote')
+    ->remoteUrl('/api/tasks', 'POST')
+    ->remoteHeaders(['X-CSRF-Token' => $csrfToken])
+    ->extraParams(['project_id' => $projectId, 'status' => 'active'])
+    ->pageable(25, 'remote')
     ->sortable()
-    ->height('420px');
+    ->filterable()
+    ->onDataBound('handleDataBound')
+    ->onRowClick('handleRowClick');
 PHP;
 $jsDataGrid = <<<'JS'
-// Get instance reference
-var grid = m.dataGrid('demoGrid');
+// Get grid instance
+var grid = m.dataGrid('tasksGrid');
 
-// Refresh (re-fetches remote / re-processes local)
+// Refresh data
 grid.refresh();
 
-// Programmatic navigation
+// Navigate pages
 grid.goToPage(2);
 
-// Sort
+// Sort programmatically
 grid.sort('due_date', 'asc');
 
-// Group rows
+// Group by field
 grid.groupBy('status');
 grid.clearGroup();
 
-// Replace local data
-grid.setData(newArray);
-
-// Read selection (selectable mode)
+// Get selected rows
 var selected = grid.getSelectedData();
+
+// Update data
+grid.setData(newTasksArray);
+
+// Event handlers
+function handleDataBound() {
+    console.log('Grid loaded');
+}
+
+function handleRowClick(row) {
+    editTask(row.id);
+}
 JS;
 
 $phpRating = <<<'PHP'
@@ -670,69 +811,24 @@ function codeBlock(string $lang, string $code): string
                     <h2><?= $m->icon('fa-stream') ?> Breadcrumb</h2>
                     <p class="m-demo-desc">Hierarchical navigation trail showing where the user is within the application. Server-side rendered, accessible, and dark-mode aware.</p>
 
-                    <h3>Examples</h3>
-                    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:1rem;">
-                        <thead>
-                            <tr style="background:#f8f9fa;">
-                                <th style="padding:8px 12px;text-align:left;color:#7f8c8d;font-weight:600;border-bottom:1px solid #e9ecef;">Context</th>
-                                <th style="padding:8px 12px;text-align:left;color:#7f8c8d;font-weight:600;border-bottom:1px solid #e9ecef;">Rendered</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom:1px solid #f1f3f5;">
-                                <td style="padding:10px 12px;color:#555;white-space:nowrap;font-weight:600;">Recipe site</td>
-                                <td style="padding:10px 12px;">
-                                    <?= $m->breadcrumb('demo-recipe')
-                                        ->home('/', 'Home')
-                                        ->item('Recipes', '/recipes')
-                                        ->item('Baking', '/recipes/baking')
-                                        ->item('Sourdough Bread')
-                                        ->current() ?>
-                                </td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #f1f3f5;">
-                                <td style="padding:10px 12px;color:#555;white-space:nowrap;font-weight:600;">E-commerce</td>
-                                <td style="padding:10px 12px;">
-                                    <?= $m->breadcrumb('demo-shop')
-                                        ->home('/', 'Store')
-                                        ->item('Clothing', '/clothing')
-                                        ->item('Mens', '/clothing/mens')
-                                        ->item('Jackets', '/clothing/mens/jackets')
-                                        ->item('Waxed Canvas Field Jacket')
-                                        ->current() ?>
-                                </td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #f1f3f5;">
-                                <td style="padding:10px 12px;color:#555;white-space:nowrap;font-weight:600;">Docs / Wiki</td>
-                                <td style="padding:10px 12px;">
-                                    <?= $m->breadcrumb('demo-docs')
-                                        ->home('/docs', 'Docs')
-                                        ->item('API Reference', '/docs/api')
-                                        ->item('Authentication')
-                                        ->current() ?>
-                                </td>
-                            </tr>
-                            <tr style="border-bottom:1px solid #f1f3f5;">
-                                <td style="padding:10px 12px;color:#555;white-space:nowrap;font-weight:600;">Admin panel</td>
-                                <td style="padding:10px 12px;">
-                                    <?= $m->breadcrumb('demo-admin')
-                                        ->item('Admin', '/admin', 'fa-tachometer-alt')
-                                        ->item('Users', '/admin/users', 'fa-users')
-                                        ->item('Edit User')
-                                        ->current() ?>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding:10px 12px;color:#555;white-space:nowrap;font-weight:600;">Two levels</td>
-                                <td style="padding:10px 12px;">
-                                    <?= $m->breadcrumb('demo-simple')
-                                        ->home('/')
-                                        ->item('Settings')
-                                        ->current() ?>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <h3 style="margin:1.25rem 0 0.75rem;font-size:0.9rem;font-weight:600;color:var(--m-text-secondary,#555);">Multi-level navigation</h3>
+                    <div class="m-demo-row">
+                        <?= $m->breadcrumb('demo-recipe')
+                            ->home('/', 'Home')
+                            ->item('Recipes', '/recipes')
+                            ->item('Baking', '/recipes/baking')
+                            ->item('Sourdough Bread')
+                            ->current() ?>
+                    </div>
+
+                    <h3 style="margin:1.25rem 0 0.75rem;font-size:0.9rem;font-weight:600;color:var(--m-text-secondary,#555);">With custom icons</h3>
+                    <div class="m-demo-row">
+                        <?= $m->breadcrumb('demo-admin')
+                            ->item('Admin', '/admin', 'fa-tachometer-alt')
+                            ->item('Users', '/admin/users', 'fa-users')
+                            ->item('Edit User')
+                            ->current() ?>
+                    </div>
 
                     <details class="m-demo-code">
                         <summary><?= $m->icon('fa-code') ?> Code</summary>
@@ -859,7 +955,7 @@ Use labels for status tags, categories</code></pre>
                     <h2><?= $m->icon('fa-inbox') ?> EmptyState</h2>
                     <p class="m-demo-desc">Zero-data placeholders shown when a list or view has no content yet. Supports link actions, JS click handlers, FAB triggers, and a compact variant for inline panels.</p>
 
-                    <h3 style="margin:1.25rem 0 0.5rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--m-text-muted,#888);">Link action</h3>
+                    <h3 style="margin:1.25rem 0 0.5rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--m-text-muted,#888);">Default variant</h3>
                     <div class="m-demo-row">
                         <?= $m->emptyState('demo-empty-tasks')
                             ->icon('fa-clipboard-list')
@@ -873,46 +969,25 @@ Use labels for status tags, categories</code></pre>
     ->icon(\'fa-clipboard-list\')
     ->title(\'No tasks yet\')
     ->message(\'Add your first task to get started.\')
-    ->action(\'Add Task\', \'/tasks/create\', \'fa-plus\') ?>') ?>
-                    </details>
+    ->action(\'Add Task\', \'/tasks/create\', \'fa-plus\') ?>
 
-                    <h3 style="margin:1.25rem 0 0.5rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--m-text-muted,#888);">FAB trigger (actionFab)</h3>
-                    <div class="m-demo-row">
-                        <?= $m->emptyState('demo-empty-fab')
-                            ->icon('fa-chart-line')
-                            ->title('No activity tracked')
-                            ->message('Track an activity via the button below or the + button.')
-                            ->actionFab('Track Activity', 'activity', 'fa-plus') ?>
-                    </div>
-                    <details class="m-demo-code">
-                        <summary><?= $m->icon('fa-code') ?> Code</summary>
-                        <?= codeBlock('php', '<?= $m->emptyState(\'id\')
-    ->icon(\'fa-chart-line\')
-    ->title(\'No activity tracked\')
-    ->message(\'Track an activity via the button below or the + button.\')
-    ->actionFab(\'Track Activity\', \'activity\', \'fa-plus\') ?>') ?>
-                    </details>
-
-                    <h3 style="margin:1.25rem 0 0.5rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--m-text-muted,#888);">JS click handler (actionJs)</h3>
-                    <div class="m-demo-row">
-                        <?= $m->emptyState('demo-empty-js')
-                            ->icon('fa-sync')
-                            ->title('No data loaded')
-                            ->message('Click the button to fetch data from the server.')
-                            ->actionJs('Load Data', "alert('fetch!')", 'fa-download') ?>
-                    </div>
-                    <details class="m-demo-code">
-                        <summary><?= $m->icon('fa-code') ?> Code</summary>
-                        <?= codeBlock('php', '<?= $m->emptyState(\'id\')
+// JS click handler instead of link
+<?= $m->emptyState(\'id2\')
     ->icon(\'fa-sync\')
     ->title(\'No data loaded\')
     ->message(\'Click to fetch data.\')
-    ->actionJs(\'Load Data\', \'fetchData()\', \'fa-download\') ?>') ?>
+    ->actionJs(\'Load Data\', \'fetchData()\', \'fa-download\') ?>
+
+// FAB trigger (opens floating action button window)
+<?= $m->emptyState(\'id3\')
+    ->icon(\'fa-chart-line\')
+    ->title(\'No activity tracked\')
+    ->actionFab(\'Track Activity\', \'activity\', \'fa-plus\') ?>') ?>
                     </details>
 
-                    <h3 style="margin:1.25rem 0 0.5rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--m-text-muted,#888);">Compact + bordered variant</h3>
+                    <h3 style="margin:1.25rem 0 0.5rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--m-text-muted,#888);">Compact variant (for panels)</h3>
                     <div class="m-demo-row" style="gap:1rem;align-items:flex-start;">
-                        <div style="flex:1;min-width:180px;max-width:280px;">
+                        <div style="flex:1;min-width:220px;max-width:300px;">
                             <?= $m->emptyState('demo-empty-compact-b')
                                 ->compact()
                                 ->bordered()
@@ -920,7 +995,7 @@ Use labels for status tags, categories</code></pre>
                                 ->title('No items scheduled')
                                 ->actionFab('Add Task', 'task', 'fa-plus') ?>
                         </div>
-                        <div style="flex:1;min-width:180px;max-width:280px;">
+                        <div style="flex:1;min-width:220px;max-width:300px;">
                             <?= $m->emptyState('demo-empty-compact-b2')
                                 ->compact()
                                 ->bordered()
@@ -945,28 +1020,14 @@ Use labels for status tags, categories</code></pre>
                     <h2><?= $m->icon('fa-star') ?> Rating</h2>
                     <p class="m-demo-desc">Star-based rating widget. Supports read-only display (with half-star precision), interactive editing, keyboard navigation, sizes, colour variants, and an <code>onChange</code> callback.</p>
 
-                    <h3>Read-Only Display</h3>
+                    <h3>Display &amp; Variants</h3>
                     <div class="m-demo-row" style="flex-wrap:wrap;gap:1.5rem;align-items:center">
-                        <?= $m->rating('rDisplay1')->value(4)->max(5)->readonly()->label('Whole stars') ?>
-                        <?= $m->rating('rDisplay2')->value(3.5)->max(5)->halfStars()->readonly()->label('Half-star') ?>
-                        <?= $m->rating('rDisplay3')->value(2.5)->max(5)->halfStars()->readonly()->label('2.5 / 5') ?>
-                        <?= $m->rating('rDisplay4')->value(0)->max(5)->readonly()->label('No rating') ?>
-                    </div>
-
-                    <h3>Sizes</h3>
-                    <div class="m-demo-row" style="flex-wrap:wrap;gap:1.5rem;align-items:center">
-                        <?= $m->rating('rSm')->value(3)->max(5)->readonly()->sm()->label('Small (sm)') ?>
-                        <?= $m->rating('rMd')->value(3)->max(5)->readonly()->label('Medium (md, default)') ?>
-                        <?= $m->rating('rLg')->value(3)->max(5)->readonly()->lg()->label('Large (lg)') ?>
-                    </div>
-
-                    <h3>Colour Variants</h3>
-                    <div class="m-demo-row" style="flex-wrap:wrap;gap:1.5rem;align-items:center">
-                        <?= $m->rating('rColDefault')->value(4)->max(5)->readonly()->label('Default (amber)') ?>
-                        <?= $m->rating('rColPrimary')->value(4)->max(5)->readonly()->color('primary')->label('Primary') ?>
-                        <?= $m->rating('rColSuccess')->value(4)->max(5)->readonly()->color('success')->label('Success') ?>
-                        <?= $m->rating('rColDanger') ->value(4)->max(5)->readonly()->color('danger') ->label('Danger') ?>
-                        <?= $m->rating('rColPurple') ->value(4)->max(5)->readonly()->color('purple') ->label('Purple') ?>
+                        <?= $m->rating('rDisplay1')->value(4)->max(5)->readonly()->label('4 stars') ?>
+                        <?= $m->rating('rDisplay2')->value(3.5)->max(5)->halfStars()->readonly()->label('3.5 stars (half)') ?>
+                        <?= $m->rating('rSm')->value(3)->max(5)->readonly()->sm()->label('Small size') ?>
+                        <?= $m->rating('rLg')->value(3)->max(5)->readonly()->lg()->label('Large size') ?>
+                        <?= $m->rating('rColPrimary')->value(4)->max(5)->readonly()->color('primary')->label('Primary color') ?>
+                        <?= $m->rating('rColSuccess')->value(4)->max(5)->readonly()->color('success')->label('Success color') ?>
                     </div>
 
                     <h3>Interactive</h3>
@@ -996,11 +1057,19 @@ Use labels for status tags, categories</code></pre>
                 <div id="progress" class="m-demo-section">
                     <h2><?= $m->icon('fa-tasks') ?> ProgressBar</h2>
                     <p class="m-demo-desc">Linear progress indicator with label, percentage, variants, and optional animation.</p>
-                    <div class="m-demo-row" style="flex-direction:column;gap:1rem;max-width:500px;">
-                        <?= $m->progressBar('pb-tasks')->label('Tasks completed')->value(18)->max(24)->showPercent()->success() ?>
-                        <?= $m->progressBar('pb-steps')->label('Steps goal')->value(7200)->max(10000)->showPercent()->primary()->striped() ?>
-                        <?= $m->progressBar('pb-upload')->label('Uploading...')->value(65)->max(100)->showPercent()->warning()->striped()->animated() ?>
-                        <?= $m->progressBar('pb-danger')->label('Disk usage')->value(88)->max(100)->showPercent()->danger() ?>
+                    <div style="max-width:600px;">
+                        <div style="margin-bottom:1rem;">
+                            <?= $m->progressBar('pb-tasks')->label('Tasks completed')->value(18)->max(24)->showPercent()->success() ?>
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <?= $m->progressBar('pb-steps')->label('Steps goal')->value(7200)->max(10000)->showPercent()->primary()->striped() ?>
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <?= $m->progressBar('pb-upload')->label('Uploading...')->value(65)->max(100)->showPercent()->warning()->striped()->animated() ?>
+                        </div>
+                        <div>
+                            <?= $m->progressBar('pb-danger')->label('Disk usage')->value(88)->max(100)->showPercent()->danger() ?>
+                        </div>
                     </div>
                     <details class="m-demo-code">
                         <summary><?= $m->icon('fa-code') ?> Code</summary>
@@ -1160,11 +1229,9 @@ Use labels for status tags, categories</code></pre>
                     <div class="m-demo-row">
                         <div class="m-demo-field">
                             <label>Plan:</label>
-                            <div class="m-choice-group">
-                                <?= $m->radio('demo-radio-basic')->name('demo_plan')->value('basic')->label('Basic')->checked(true) ?>
-                                <?= $m->radio('demo-radio-pro')->name('demo_plan')->value('pro')->label('Pro') ?>
-                                <?= $m->radio('demo-radio-enterprise')->name('demo_plan')->value('enterprise')->label('Enterprise')->disabled(true) ?>
-                            </div>
+                            <?= $m->radio('demo-radio-basic')->name('demo_plan')->value('basic')->label('Basic')->checked(true) ?>
+                            <?= $m->radio('demo-radio-pro')->name('demo_plan')->value('pro')->label('Pro') ?>
+                            <?= $m->radio('demo-radio-enterprise')->name('demo_plan')->value('enterprise')->label('Enterprise')->disabled(true) ?>
                         </div>
                     </div>
                     <details class="m-demo-code">

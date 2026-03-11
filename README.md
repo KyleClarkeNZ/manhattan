@@ -4,6 +4,8 @@ Manhattan is a server-rendered PHP + vanilla-JS UI component library. Drop it in
 
 **PHP 7.4+ · No build tools · jQuery ≥ 3.4.1 required · Font Awesome 6.x included**
 
+📋 **[View Live Demo](https://manhattan.kyleclarke.co.nz)** — See all components in action with interactive examples and code samples.
+
 ---
 
 ## Requirements
@@ -140,7 +142,13 @@ Assets are re-published automatically on every update.
 
 ---
 
-## Running the demo locally
+## Running the demo
+
+### View Online
+
+Visit **[manhattan.kyleclarke.co.nz](https://manhattan.kyleclarke.co.nz)** to see all components with live examples and code samples.
+
+### Run Locally
 
 ```bash
 cd /path/to/manhattan

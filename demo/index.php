@@ -90,6 +90,31 @@ if (strpos($_SERVER['REQUEST_URI'] ?? '', '/nzpostSuggest') !== false) {
     exit;
 }
 
+// Handle button click demo endpoint
+if (strpos($_SERVER['REQUEST_URI'] ?? '', '/handleButtonClick') !== false &&
+    ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST'
+) {
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'message' => 'Button click received']);
+    exit;
+}
+
+// Handle dropdown data demo endpoint
+if (strpos($_SERVER['REQUEST_URI'] ?? '', '/getDropdownData') !== false) {
+    header('Content-Type: application/json');
+    // Return some demo data for the Ajax dropdown
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            ['value' => 'opt1', 'text' => 'Dynamic Option 1'],
+            ['value' => 'opt2', 'text' => 'Dynamic Option 2'],
+            ['value' => 'opt3', 'text' => 'Dynamic Option 3'],
+            ['value' => 'opt4', 'text' => 'Dynamic Option 4'],
+        ]
+    ]);
+    exit;
+}
+
 // ---------------------------------------------------------------------------
 // Demo data
 // ---------------------------------------------------------------------------
