@@ -20,6 +20,12 @@ DirectoryIndex index.php
     # Handle AJAX endpoints
     RewriteRule ^manhattan/handleButtonClick$ demo/index.php [L,QSA]
     RewriteRule ^manhattan/getDropdownData$ demo/index.php [L,QSA]
+    RewriteRule ^handleButtonClick$ demo/index.php [L,QSA]
+    RewriteRule ^getDropdownData$ demo/index.php [L,QSA]
+    RewriteRule ^getGridData$ demo/index.php [L,QSA]
+    
+    # Route demo sub-pages (e.g. /demo/button, /demo/datagrid)
+    RewriteRule ^demo/[a-zA-Z]+/?$ demo/index.php [L,QSA]
 </IfModule>
 
 # Security headers
