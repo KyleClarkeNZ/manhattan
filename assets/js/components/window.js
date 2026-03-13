@@ -14,11 +14,21 @@
     const utils = m.utils;
 
     m.window = function(id, options) {
+        const windowEl = utils.getElement(id);
+        if (!windowEl) {
+            console.warn('Manhattan Window: Element not found:', id);
+            return null;
+        }
+
+        // Read configuration from data attributes (set by PHP)
+        const isModal = windowEl.getAttribute('data-modal') === 'true';
+        const isDraggable = windowEl.getAttribute('data-draggable') === 'true';
+        
         const defaults = {
             title: '',
             content: '',
-            modal: true,
-            draggable: false,
+            modal: isModal,   // Respect data attribute (default non-modal)
+            draggable: isDraggable,  // Respect data attribute
             width: '600px',
             height: 'auto',
             buttons: [],
@@ -28,12 +38,6 @@
 
         options = utils.extend({}, defaults, options);
         
-        const windowEl = utils.getElement(id);
-        if (!windowEl) {
-            console.warn('Manhattan Window: Element not found:', id);
-            return null;
-        }
-
         const overlay = windowEl.querySelector('.m-window-overlay');
         const wrapper = windowEl.querySelector('.m-window-wrapper');
         const closeBtn = windowEl.querySelector('.m-window-close');
@@ -44,11 +48,22 @@
         let dragStartY = 0;
         let windowStartX = 0;
         let windowStartY = 0;
+        
+        // Z-index management for non-modal windows
+        let baseZIndex = 10000;
+        let maxZIndex = baseZIndex;
 
         // Open window
         const open = function() {
             windowEl.classList.add('m-visible');
-            document.body.style.overflow = 'hidden'; // Prevent scroll
+            
+            // Only prevent scroll for modal windows
+            if (options.modal) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                // Non-modal: bring to front
+                bringToFront();
+            }
             
             if (options.onOpen) {
                 options.onOpen();
@@ -60,7 +75,11 @@
         // Close window
         const close = function() {
             windowEl.classList.remove('m-visible');
-            document.body.style.overflow = ''; // Restore scroll
+            
+            // Restore scroll (only matters for modals)
+            if (options.modal) {
+                document.body.style.overflow = '';
+            }
             
             if (options.onClose) {
                 options.onClose();
@@ -68,15 +87,32 @@
             
             utils.trigger(windowEl, 'm:window:close', { id });
         };
+        
+        // Bring window to front (non-modal windows only)
+        const bringToFront = function() {
+            if (!options.modal) {
+                maxZIndex++;
+                windowEl.style.zIndex = maxZIndex;
+            }
+        };
 
         // Close button click
         if (closeBtn) {
             closeBtn.addEventListener('click', close);
         }
 
-        // Overlay click (close modal)
-        if (overlay) {
+        // Overlay click (close modal only)
+        if (overlay && options.modal) {
             overlay.addEventListener('click', close);
+        }
+        
+        // Click window to bring to front (non-modal only)
+        if (!options.modal) {
+            windowEl.addEventListener('mousedown', function() {
+                if (windowEl.classList.contains('m-visible')) {
+                    bringToFront();
+                }
+            });
         }
 
         // Escape key to close
@@ -88,8 +124,6 @@
 
         // Draggable functionality
         if (options.draggable && titleBar && wrapper) {
-            titleBar.style.cursor = 'move';
-            
             titleBar.addEventListener('mousedown', function(e) {
                 if (e.target === closeBtn || closeBtn.contains(e.target)) {
                     return; // Don't drag when clicking close button
@@ -107,6 +141,11 @@
                 wrapper.style.left = windowStartX + 'px';
                 wrapper.style.top = windowStartY + 'px';
                 wrapper.style.margin = '0';
+                
+                // Bring to front when starting drag
+                if (!options.modal) {
+                    bringToFront();
+                }
                 
                 e.preventDefault();
             });

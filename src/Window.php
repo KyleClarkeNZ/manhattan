@@ -6,9 +6,18 @@ namespace Manhattan;
 /**
  * Manhattan Window Component
  * 
- * Creates modal dialogs and windows with optional draggable functionality.
+ * Creates non-modal windows and modal dialogs.
+ * 
+ * Non-modal windows (default): draggable, no overlay, z-index stacking on click.
+ * Modal windows (->modal()): overlay, blocks interaction, not draggable.
  * 
  * @example
+ * // Non-modal window (default)
+ * <?= $m->window('myWin', 'Window Title')
+ *       ->content('<p>Window content here</p>')
+ *       ->width('500px') ?>
+ * 
+ * // Modal dialog
  * <?= $m->window('myModal', 'Modal Title')
  *       ->content('<p>Modal content here</p>')
  *       ->modal()
@@ -19,7 +28,7 @@ class Window extends Component
     protected string $title = '';
     protected string $content = '';
     protected bool $isModal = false;
-    protected bool $isDraggable = false;
+    protected ?bool $isDraggable = null;  // null = auto-determine based on modal state
     protected bool $isResizable = false;
     protected bool $scrollable = true;
     protected ?string $width = null;
@@ -48,7 +57,8 @@ class Window extends Component
     }
     
     /**
-     * Make this window a modal (blocks interaction with page)
+     * Make this window a modal (blocks interaction with page, shows overlay, not draggable)
+     * Default is non-modal (no overlay, draggable).
      */
     public function modal(bool $isModal = true): self
     {
@@ -57,7 +67,9 @@ class Window extends Component
     }
     
     /**
-     * Make window draggable
+     * Make window draggable (drag by title bar to move)
+     * Non-modal windows are draggable by default.
+     * Modal windows are not draggable unless explicitly set.
      */
     public function draggable(bool $isDraggable = true): self
     {
@@ -168,8 +180,15 @@ class Window extends Component
             $classes[] = 'm-modal';
         }
         
-        if ($this->isDraggable) {
-            $classes[] = 'm-draggable';
+        // Non-modal windows are draggable by default unless explicitly set
+        $effectiveDraggable = $this->isDraggable;
+        if (!$this->isModal && !isset($this->isDraggable)) {
+            $effectiveDraggable = true;
+        }
+        
+        if ($effectiveDraggable === null) {
+            // Auto-determine: non-modal = draggable, modal = not draggable
+            $effectiveDraggable = !$this->isModal;
         }
         
         if ($this->isResizable) {
@@ -196,7 +215,11 @@ class Window extends Component
         
         $styleAttr = !empty($styles) ? ' style="' . implode('; ', $styles) . '"' : '';
         
-        $html = '<div id="' . htmlspecialchars($this->id) . '" class="' . implode(' ', $classes) . '">';
+        // Data attributes for JS initialization
+        $dataAttrs = ' data-modal="' . ($this->isModal ? 'true' : 'false') . '"';
+        $dataAttrs .= ' data-draggable="' . ($effectiveDraggable ? 'true' : 'false') . '"';
+        
+        $html = '<div id="' . htmlspecialchars($this->id) . '" class="' . implode(' ', $classes) . '"' . $dataAttrs . '>';
         
         // Modal overlay
         if ($this->isModal) {
@@ -208,7 +231,8 @@ class Window extends Component
         
         // Title bar
         if ($this->title) {
-            $html .= '<div class="m-window-titlebar">';
+            $titleBarClass = $effectiveDraggable ? 'm-window-titlebar m-draggable' : 'm-window-titlebar';
+            $html .= '<div class="' . $titleBarClass . '">';
             $html .= '<span class="m-window-title">' . $this->title . '</span>';
             $html .= '<button class="m-window-close" type="button">' . Icon::html('fa-times', ['ariaHidden' => true]) . '</button>';
             $html .= '</div>';

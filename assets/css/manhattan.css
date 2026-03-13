@@ -1860,13 +1860,26 @@
 
 /* Draggable window */
 .m-window.m-draggable .m-window-wrapper {
-    cursor: move;
+    /* Removed cursor - now handled by title bar */
 }
 
 /* Resizable window */
 .m-window.m-resizable .m-window-wrapper {
     resize: both;
     overflow: auto;
+}
+
+/* Non-modal windows */
+.m-window:not(.m-modal) {
+    /* Non-modal windows don't center like modals */
+    align-items: flex-start;
+    justify-content: flex-start;
+    pointer-events: none; /* Allow clicks through the container */
+}
+
+.m-window:not(.m-modal) .m-window-wrapper {
+    pointer-events: auto; /* Re-enable clicks on the window itself */
+    margin: 50px; /* Default position from top-left */
 }
 
 /* Title bar */
@@ -1878,6 +1891,10 @@
     border-bottom: 1px solid #e0e0e0;
     background: linear-gradient(180deg, #f8f9fa 0%, #fff 100%);
     border-radius: 8px 8px 0 0;
+}
+
+/* Draggable title bar cursor */
+.m-window-titlebar.m-draggable {
     cursor: move;
 }
 
