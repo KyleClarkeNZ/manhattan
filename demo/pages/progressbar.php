@@ -4,33 +4,42 @@
     <h2><?= $m->icon('fa-tasks') ?> ProgressBar</h2>
     <p class="m-demo-desc">Linear progress indicator with label, percentage display, colour variants, stripes, animation, and segmented display.</p>
 
-    <h3>Basic Progress</h3>
-    <div class="m-demo-row" style="flex-direction:column; gap:1rem; max-width:500px;">
-        <?= $m->progressBar('demo-pb-basic')->value(65)->max(100)->label('Upload progress')->showPercent() ?>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem; margin-bottom:2rem;">
+        <div>
+            <h3>Basic Progress</h3>
+            <?= $m->progressBar('demo-pb-basic')->value(65)->max(100)->label('Upload progress')->showPercent() ?>
+        </div>
+
+        <div>
+            <h3>Custom Value/Max</h3>
+            <?= $m->progressBar('demo-pb-custom')->value(3)->max(5)->label('Tasks: 3 of 5')->showPercent()->success() ?>
+        </div>
     </div>
 
     <h3>Colour Variants</h3>
-    <div class="m-demo-row" style="flex-direction:column; gap:1rem; max-width:500px;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1rem; margin-bottom:2rem;">
         <?= $m->progressBar('demo-pb-primary')->value(80)->label('Primary')->primary()->showPercent() ?>
         <?= $m->progressBar('demo-pb-success')->value(100)->label('Success')->success()->showPercent() ?>
         <?= $m->progressBar('demo-pb-warning')->value(55)->label('Warning')->warning()->showPercent() ?>
         <?= $m->progressBar('demo-pb-danger')->value(30)->label('Danger')->danger()->showPercent() ?>
     </div>
 
-    <h3>Striped &amp; Animated</h3>
-    <div class="m-demo-row" style="flex-direction:column; gap:1rem; max-width:500px;">
-        <?= $m->progressBar('demo-pb-striped')->value(70)->label('Striped')->striped()->showPercent() ?>
-        <?= $m->progressBar('demo-pb-animated')->value(50)->label('Animated')->striped()->animated()->showPercent()->success() ?>
-    </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem; margin-bottom:2rem;">
+        <div>
+            <h3>Striped</h3>
+            <?= $m->progressBar('demo-pb-striped')->value(70)->label('Striped pattern')->striped()->showPercent() ?>
+        </div>
 
-    <h3>Custom Value/Max</h3>
-    <div class="m-demo-row" style="flex-direction:column; gap:1rem; max-width:500px;">
-        <?= $m->progressBar('demo-pb-custom')->value(3)->max(5)->label('Tasks completed (3 of 5)')->showPercent()->success() ?>
+        <div>
+            <h3>Animated</h3>
+            <?= $m->progressBar('demo-pb-animated')->value(50)->label('Animated stripes')->striped()->animated()->showPercent()->success() ?>
+        </div>
     </div>
 
     <h3>Segmented Progress</h3>
     <p class="m-demo-desc">Display multiple segments in a single progress bar, each with its own color.</p>
-    <div class="m-demo-row" style="flex-direction:column; gap:1rem; max-width:500px;">
+    
+    <div style="display:grid; grid-template-columns: 1fr; gap:1.5rem; margin-bottom:2rem;">
         <?= $m->progressBar('demo-pb-segments')->max(100)->label('Project Status')->showPercent()
             ->segments([
                 ['value' => 45, 'variant' => 'success', 'label' => 'Completed'],
@@ -38,7 +47,7 @@
                 ['value' => 10, 'variant' => 'danger', 'label' => 'Blocked']
             ]) ?>
         
-        <?= $m->progressBar('demo-pb-storage')->max(1000)->label('Storage Usage (800 GB of 1 TB)')
+        <?= $m->progressBar('demo-pb-storage')->max(1000)->label('Storage: 800 GB / 1 TB')
             ->segments([
                 ['value' => 400, 'variant' => 'primary', 'label' => 'Documents'],
                 ['value' => 250, 'variant' => 'purple', 'label' => 'Media'],
@@ -48,17 +57,17 @@
 
     <h3>JavaScript API</h3>
     <p class="m-demo-desc">Read and update progress values dynamically with JavaScript.</p>
-    <div class="m-demo-row" style="gap:0.5rem;">
+    
+    <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
         <?= $m->button('demo-pb-js-inc', '+10')->primary()->icon('fa-plus') ?>
         <?= $m->button('demo-pb-js-dec', '-10')->secondary()->icon('fa-minus') ?>
         <?= $m->button('demo-pb-js-complete', 'Complete')->success()->icon('fa-check') ?>
         <?= $m->button('demo-pb-js-reset', 'Reset')->icon('fa-redo') ?>
     </div>
-    <div style="max-width:500px; margin-top:1rem;">
-        <?= $m->progressBar('demo-pb-js')->value(40)->max(100)->label('Controlled progress')->showPercent() ?>
-    </div>
+    
+    <?= $m->progressBar('demo-pb-js')->value(40)->max(100)->label('Controlled progress')->showPercent() ?>
 
-    <div class="m-demo-output" id="progressbar-output">Use the buttons above to control the progress bar...</div>
+    <div class="m-demo-output" id="progressbar-output" style="margin-top:1rem;">Use the buttons above to control the progress bar...</div>
 
     <?= demoCodeTabs(
         '// Basic with percentage
