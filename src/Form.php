@@ -378,12 +378,12 @@ class Form extends Component
                         . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</label>';
             }
             
-            // R// Only validate regular fields with rules
+            // Only validate regular fields with rules
                 if (($field['type'] ?? 'field') !== 'field') {
                     continue;
                 }
                 
-                ender component
+            // Render component
             $html[] = (string)$component;
             
             // Render hint if provided
