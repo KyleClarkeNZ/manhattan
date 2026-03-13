@@ -459,6 +459,7 @@ class HtmlHelper
 <script src="{$js}/components/validator.js" defer></script>
 <script src="{$js}/components/tabs.js" defer></script>
 <script src="{$js}/components/rating.js" defer></script>
+<script src="{$js}/components/progressbar.js" defer></script>
 <script src="{$js}/components/datagrid.js" defer></script>
 HTML;
     }
