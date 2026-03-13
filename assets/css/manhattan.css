@@ -2471,6 +2471,25 @@ body::-webkit-scrollbar-thumb:hover {
     background-size: 40px 40px;
 }
 
+/* Segmented progress bar */
+.m-progress-segmented .m-progress-track {
+    display: flex;
+    gap: 2px;
+}
+.m-progress-segment {
+    border-radius: 0;
+    flex-shrink: 0;
+}
+.m-progress-segment:first-child {
+    border-radius: 999px 0 0 999px;
+}
+.m-progress-segment:last-child {
+    border-radius: 0 999px 999px 0;
+}
+.m-progress-segment:only-child {
+    border-radius: 999px;
+}
+
 /* =====================================================================
    BUTTON — loading & confirm
    ===================================================================== */

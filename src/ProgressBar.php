@@ -21,6 +21,7 @@ final class ProgressBar extends Component
     private string $variant = 'primary';
     private bool $striped = false;
     private bool $animated = false;
+    private array $segments = [];
 
     public function value(float $value): self
     {
@@ -74,6 +75,26 @@ final class ProgressBar extends Component
         return $this;
     }
 
+    /**
+     * Add multiple segments to the progress bar
+     * Each segment is an array: ['value' => float, 'variant' => string, 'label' => string (optional)]
+     * 
+     * @param array $segments Array of segment definitions
+     * @return self
+     * 
+     * @example
+     * ->segments([
+     *     ['value' => 30, 'variant' => 'success', 'label' => 'Completed'],
+     *     ['value' => 20, 'variant' => 'warning', 'label' => 'In Progress'],
+     *     ['value' => 10, 'variant' => 'danger', 'label' => 'Failed']
+     * ])
+     */
+    public function segments(array $segments): self
+    {
+        $this->segments = $segments;
+        return $this;
+    }
+
     protected function getComponentType(): string
     {
         return 'progress-bar';
@@ -81,25 +102,20 @@ final class ProgressBar extends Component
 
     protected function renderHtml(): string
     {
-        $pct = $this->max > 0 ? min(100.0, ($this->value / $this->max) * 100) : 0.0;
-        $pctRounded = round($pct, 1);
-
         $classes = array_merge(['m-progress'], $this->getExtraClasses());
         $classAttr = implode(' ', $classes);
         $idAttr = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8');
         $extraAttrs = $this->renderAdditionalAttributes(['id', 'class']);
 
-        $fillClasses = ['m-progress-fill', 'm-progress-fill-' . htmlspecialchars($this->variant, ENT_QUOTES, 'UTF-8')];
-        if ($this->striped) {
-            $fillClasses[] = 'm-progress-striped';
-        }
-        if ($this->animated) {
-            $fillClasses[] = 'm-progress-animated';
-        }
-        $fillClassAttr = implode(' ', $fillClasses);
+        // Data attributes for JS
+        $dataAttrs = ' data-value="' . htmlspecialchars((string)$this->value, ENT_QUOTES, 'UTF-8') . '"';
+        $dataAttrs .= ' data-max="' . htmlspecialchars((string)$this->max, ENT_QUOTES, 'UTF-8') . '"';
 
         $labelHtml = '';
         if ($this->label !== null) {
+            $pct = $this->max > 0 ? min(100.0, ($this->value / $this->max) * 100) : 0.0;
+            $pctRounded = round($pct, 1);
+            
             $labelHtml = '<div class="m-progress-label">'
                 . htmlspecialchars($this->label, ENT_QUOTES, 'UTF-8')
                 . ($this->showPercent ? '<span class="m-progress-pct">' . $pctRounded . '%</span>' : '')
@@ -110,11 +126,73 @@ final class ProgressBar extends Component
         $ariaMax   = htmlspecialchars((string)$this->max, ENT_QUOTES, 'UTF-8');
         $ariaLabel = htmlspecialchars($this->label ?? 'Progress', ENT_QUOTES, 'UTF-8');
 
+        // Check if we're using segments
+        if (!empty($this->segments)) {
+            return $this->renderSegmentedBar($classAttr, $idAttr, $extraAttrs, $dataAttrs, $labelHtml, $ariaValue, $ariaMax, $ariaLabel);
+        }
+
+        // Single-bar rendering
+        $pct = $this->max > 0 ? min(100.0, ($this->value / $this->max) * 100) : 0.0;
+        $pctRounded = round($pct, 1);
+
+        $fillClasses = ['m-progress-fill', 'm-progress-fill-' . htmlspecialchars($this->variant, ENT_QUOTES, 'UTF-8')];
+        if ($this->striped) {
+            $fillClasses[] = 'm-progress-striped';
+        }
+        if ($this->animated) {
+            $fillClasses[] = 'm-progress-animated';
+        }
+        $fillClassAttr = implode(' ', $fillClasses);
+
         return <<<HTML
-<div id="{$idAttr}" class="{$classAttr}"{$extraAttrs}>
+<div id="{$idAttr}" class="{$classAttr}"{$extraAttrs}{$dataAttrs}>
     {$labelHtml}
     <div class="m-progress-track" role="progressbar" aria-valuenow="{$ariaValue}" aria-valuemax="{$ariaMax}" aria-label="{$ariaLabel}">
         <div class="{$fillClassAttr}" style="width:{$pctRounded}%"></div>
+    </div>
+</div>
+HTML;
+    }
+
+    /**
+     * Render a segmented progress bar
+     */
+    private function renderSegmentedBar(
+        string $classAttr,
+        string $idAttr,
+        string $extraAttrs,
+        string $dataAttrs,
+        string $labelHtml,
+        string $ariaValue,
+        string $ariaMax,
+        string $ariaLabel
+    ): string {
+        $segmentsHtml = '';
+        $totalValue = 0;
+
+        foreach ($this->segments as $segment) {
+            $segValue = (float)($segment['value'] ?? 0);
+            $segVariant = htmlspecialchars($segment['variant'] ?? 'primary', ENT_QUOTES, 'UTF-8');
+            $segLabel = htmlspecialchars($segment['label'] ?? '', ENT_QUOTES, 'UTF-8');
+            
+            $pct = $this->max > 0 ? min(100.0, ($segValue / $this->max) * 100) : 0.0;
+            $pctRounded = round($pct, 1);
+            
+            $totalValue += $segValue;
+            
+            $fillClasses = ['m-progress-fill', 'm-progress-segment', 'm-progress-fill-' . $segVariant];
+            $fillClassAttr = implode(' ', $fillClasses);
+            
+            $title = $segLabel ? ' title="' . $segLabel . '"' : '';
+            
+            $segmentsHtml .= '<div class="' . $fillClassAttr . '" style="width:' . $pctRounded . '%"' . $title . '></div>';
+        }
+
+        return <<<HTML
+<div id="{$idAttr}" class="{$classAttr} m-progress-segmented"{$extraAttrs}{$dataAttrs}>
+    {$labelHtml}
+    <div class="m-progress-track" role="progressbar" aria-valuenow="{$ariaValue}" aria-valuemax="{$ariaMax}" aria-label="{$ariaLabel}">
+        {$segmentsHtml}
     </div>
 </div>
 HTML;
