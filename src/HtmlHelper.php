@@ -287,6 +287,17 @@ class HtmlHelper
     }
 
     /**
+     * Create a Form component with automatic CSRF, validation, and model binding
+     *
+     * @param string $id Unique identifier for the form
+     * @return Form
+     */
+    public function form(string $id): Form
+    {
+        return new Form($id);
+    }
+
+    /**
      * Create a Dialog component
      *
      * @param string $id Unique identifier for the dialog
@@ -457,6 +468,7 @@ class HtmlHelper
 <script src="{$js}/components/dialog.js" defer></script>
 <script src="{$js}/components/toaster.js" defer></script>
 <script src="{$js}/components/validator.js" defer></script>
+<script src="{$js}/components/form.js" defer></script>
 <script src="{$js}/components/tabs.js" defer></script>
 <script src="{$js}/components/rating.js" defer></script>
 <script src="{$js}/components/progressbar.js" defer></script>
