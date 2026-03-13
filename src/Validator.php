@@ -12,8 +12,8 @@ namespace Manhattan;
  * @example
  * $m->validator('registration-form')
  *    ->field('email', 'Email is required', ['required', 'email'])
- *    ->field('password', 'Password must be at least 8 characters', ['required', 'minLength' => 8])
- *    ->field('username', 'Username is required', ['required', 'pattern' => '/^[a-zA-Z0-9_]+$/'])
+ *    ->field('password', 'Password must be at least 8 characters', ['required', ['minLength' => 8]])
+ *    ->field('username', 'Username must contain only letters, numbers, and underscores', ['required', ['pattern' => '^[a-zA-Z0-9_]+']])
  *    ->onSubmit('return handleFormSubmit(event);')
  */
 class Validator extends Component {

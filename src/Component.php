@@ -40,6 +40,11 @@ abstract class Component
         return $this->id;
     }
 
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
     public function addClass(string $class): self
     {
         $parts = preg_split('/\s+/', trim($class)) ?: [];

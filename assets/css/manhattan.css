@@ -2471,25 +2471,6 @@ body::-webkit-scrollbar-thumb:hover {
     background-size: 40px 40px;
 }
 
-/* Segmented progress bar */
-.m-progress-segmented .m-progress-track {
-    display: flex;
-    gap: 2px;
-}
-.m-progress-segment {
-    border-radius: 0;
-    flex-shrink: 0;
-}
-.m-progress-segment:first-child {
-    border-radius: 999px 0 0 999px;
-}
-.m-progress-segment:last-child {
-    border-radius: 0 999px 999px 0;
-}
-.m-progress-segment:only-child {
-    border-radius: 999px;
-}
-
 /* =====================================================================
    BUTTON — loading & confirm
    ===================================================================== */
@@ -3290,5 +3271,456 @@ body::-webkit-scrollbar-thumb:hover {
     
     .form-actions .m-button {
         width: 100%;
+    }
+}
+
+
+/* === Accordion Component === */
+.m-accordion {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.m-accordion-panel {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.m-accordion-panel:last-child {
+    border-bottom: none;
+}
+
+.m-accordion-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #fff;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #2c3e50;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.m-accordion-header:hover {
+    background: #f8f9fa;
+}
+
+.m-accordion-header:focus {
+    outline: 2px solid #2196F3;
+    outline-offset: -2px;
+    position: relative;
+    z-index: 1;
+}
+
+.m-accordion-panel--open .m-accordion-header {
+    background: #f8f9fa;
+    color: #118AB2;
+}
+
+.m-accordion-icon {
+    flex-shrink: 0;
+    width: 1.25rem;
+    text-align: center;
+    color: #118AB2;
+}
+
+.m-accordion-title {
+    flex: 1;
+}
+
+.m-accordion-caret {
+    flex-shrink: 0;
+    color: #607D8B;
+    font-size: 0.75rem;
+    transition: none; /* Default: no animation */
+}
+
+/* Animated accordion */
+.m-accordion[data-m-animated="true"] .m-accordion-caret {
+    transition: transform 0.3s ease;
+}
+
+.m-accordion-panel--open .m-accordion-caret {
+    transform: rotate(180deg);
+}
+
+.m-accordion-content {
+    overflow: hidden;
+}
+
+.m-accordion-body {
+    padding: 1rem 1.25rem;
+    color: #546e7a;
+    line-height: 1.6;
+}
+
+/* Compact variant */
+.m-accordion--compact .m-accordion-header {
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
+}
+
+.m-accordion--compact .m-accordion-body {
+    padding: 0.75rem 1rem;
+}
+
+/* Borderless variant */
+.m-accordion--borderless {
+    border: none;
+}
+
+.m-accordion--borderless .m-accordion-panel {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.m-accordion--borderless .m-accordion-panel:last-child {
+    border-bottom: none;
+}
+
+/* ============================================================
+   Wizard Component
+   ============================================================ */
+
+.m-wizard {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    font-size: 0.9375rem;
+}
+
+/* ── Header / step strip ─────────────────────────────────── */
+
+.m-wizard-header {
+    padding: 1.75rem 2rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.m-wizard-steps {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0;
+}
+
+/* Individual step item */
+.m-wizard-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+    cursor: default;
+    user-select: none;
+    min-width: 80px;
+    max-width: 120px;
+    text-align: center;
+    outline: none;
+}
+
+.m-wizard-step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Step circle */
+.m-wizard-step-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e0;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #94a3b8;
+    transition: border-color 0.25s, background 0.25s, color 0.25s, box-shadow 0.25s;
+    position: relative;
+}
+
+.m-wizard-step-circle .m-wizard-step-check-icon {
+    display: none;
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+
+.m-wizard-step-circle .m-wizard-step-default-icon {
+    color: #94a3b8;
+    font-size: 1rem;
+    transition: color 0.25s;
+}
+
+.m-wizard-step-circle .m-wizard-step-num {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Active step */
+.m-wizard-step-active .m-wizard-step-circle {
+    border-color: #2196F3;
+    background: #2196F3;
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.18);
+}
+
+.m-wizard-step-active .m-wizard-step-circle .m-wizard-step-default-icon,
+.m-wizard-step-active .m-wizard-step-circle .m-wizard-step-num {
+    color: #ffffff;
+}
+
+/* Completed step */
+.m-wizard-step-done .m-wizard-step-circle {
+    border-color: #4CAF50;
+    background: #4CAF50;
+    color: #ffffff;
+}
+
+.m-wizard-step-done .m-wizard-step-circle .m-wizard-step-default-icon,
+.m-wizard-step-done .m-wizard-step-circle .m-wizard-step-num {
+    display: none;
+}
+
+.m-wizard-step-done .m-wizard-step-circle .m-wizard-step-check-icon {
+    display: inline-block;
+    color: #ffffff;
+}
+
+/* Skipped step */
+.m-wizard-step-skipped .m-wizard-step-circle {
+    border-color: #FF9800;
+    background: #FFF8E1;
+    color: #FF9800;
+}
+
+.m-wizard-step-skipped .m-wizard-step-circle .m-wizard-step-default-icon,
+.m-wizard-step-skipped .m-wizard-step-circle .m-wizard-step-num {
+    color: #FF9800;
+}
+
+/* Clickable completed / skipped steps */
+.m-wizard-step-done,
+.m-wizard-step-skipped {
+    cursor: pointer;
+}
+
+.m-wizard-step-done:hover .m-wizard-step-circle {
+    box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.22);
+    transform: scale(1.06);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.m-wizard-step-skipped:hover .m-wizard-step-circle {
+    box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.22);
+    transform: scale(1.06);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+/* Step label */
+.m-wizard-step-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #94a3b8;
+    line-height: 1.3;
+    transition: color 0.25s;
+    margin-top: 0.25rem;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.m-wizard-step-active .m-wizard-step-label {
+    color: #1976D2;
+    font-weight: 600;
+}
+
+.m-wizard-step-done .m-wizard-step-label {
+    color: #388E3C;
+}
+
+.m-wizard-step-skipped .m-wizard-step-label {
+    color: #E65100;
+}
+
+/* Connector line between steps */
+.m-wizard-connector {
+    flex: 1 1 auto;
+    min-width: 16px;
+    align-self: flex-start;
+    /* Push down so the 2px fill is centred on the 44px circle (22px - 1px) */
+    margin-top: 21px;
+    padding: 0 4px;
+}
+
+.m-wizard-connector-fill {
+    height: 2px;
+    width: 100%;
+    background: #e2e8f0;
+    border-radius: 2px;
+    transition: background 0.3s;
+}
+
+.m-wizard-connector-done .m-wizard-connector-fill {
+    background: #4CAF50;
+}
+
+/* ── Body / panels ───────────────────────────────────────── */
+
+.m-wizard-body {
+    padding: 2rem;
+    position: relative;
+    min-height: 160px;
+}
+
+.m-wizard-panel {
+    display: none;
+}
+
+.m-wizard-panel-active {
+    display: block;
+}
+
+/* Loading overlay */
+.m-wizard-loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 0;
+}
+
+.m-wizard-loading-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    color: #64748b;
+}
+
+/* ── Error banner ────────────────────────────────────────── */
+
+.m-wizard-error-banner {
+    margin: 0 2rem 0.75rem;
+    padding: 0.65rem 1rem;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 6px;
+    color: #B91C1C;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: m-wizard-shake 0.3s ease-in-out;
+}
+
+.m-wizard-error-banner i {
+    flex-shrink: 0;
+    color: #B91C1C;
+}
+
+@keyframes m-wizard-shake {
+    0%, 100% { transform: translateX(0); }
+    25%       { transform: translateX(-4px); }
+    75%       { transform: translateX(4px); }
+}
+
+/* Invalid field highlight */
+.m-wizard-field-error input,
+.m-wizard-field-error select,
+.m-wizard-field-error textarea,
+input.m-wizard-field-error,
+select.m-wizard-field-error,
+textarea.m-wizard-field-error {
+    border-color: #EF4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* ── Footer / navigation ─────────────────────────────────── */
+
+.m-wizard-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 2rem;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    flex-wrap: wrap;
+}
+
+.m-wizard-footer-left,
+.m-wizard-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.m-wizard-footer-center {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+}
+
+.m-wizard-step-counter {
+    font-size: 0.8125rem;
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+    .m-wizard-header {
+        padding: 1.25rem 1rem 1rem;
+    }
+
+    .m-wizard-body {
+        padding: 1.25rem 1rem;
+    }
+
+    .m-wizard-footer {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .m-wizard-footer-left,
+    .m-wizard-footer-right,
+    .m-wizard-footer-center {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .m-wizard-step-label {
+        font-size: 0.6875rem;
+    }
+
+    .m-wizard-step {
+        min-width: 56px;
+        max-width: 80px;
+    }
+
+    .m-wizard-step-circle {
+        width: 36px;
+        height: 36px;
+        font-size: 0.875rem;
+    }
+
+    .m-wizard-error-banner {
+        margin: 0 1rem 0.75rem;
     }
 }

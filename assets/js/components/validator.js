@@ -16,18 +16,21 @@
         
         this.form = document.getElementById(this.formId);
         if (!this.form) {
-            console.error(`Manhattan Validator: Form with ID "${this.formId}" not found`);
+            console.warn(`Manhattan Validator: Form with ID "${this.formId}" not found`);
             return;
         }
         
-        console.log(`Manhattan Validator initialized for form: ${this.formId}`);
         this.init();
     };
     
     Validator.prototype.init = function() {
         // Disable HTML5 validation
         this.form.setAttribute('novalidate', 'novalidate');
-        
+
+        // Store this instance on the form element so other components
+        // (e.g. Wizard) can retrieve it via form._mValidatorInstance
+        this.form._mValidatorInstance = this;
+
         // Setup field validation
         for (const fieldName in this.fields) {
             this.setupFieldValidation(fieldName);
@@ -49,21 +52,13 @@
             return;
         }
         
-        // For Manhattan components, check if field is a wrapper or the actual input
+        // For Manhattan components unwrap the wrapper div to reach the native input
         let targetInput = field;
-        
-        // If it's a wrapper, find the input inside
-        if (field.classList.contains('m-textbox-wrapper') || 
-            field.classList.contains('m-dropdown-wrapper') || 
-            field.classList.contains('m-datepicker-wrapper')) {
-            const input = field.querySelector('input, select, textarea');
+        if (field.tagName !== 'INPUT' && field.tagName !== 'SELECT' && field.tagName !== 'TEXTAREA') {
+            const input = field.querySelector('input:not([type=hidden]), select, textarea');
             if (input) {
                 targetInput = input;
             }
-        }
-        // If it's already an input element, use it directly
-        else if (field.tagName === 'INPUT' || field.tagName === 'SELECT' || field.tagName === 'TEXTAREA') {
-            targetInput = field;
         }
         
         // Add event listeners to the actual input
@@ -89,21 +84,13 @@
         
         const config = this.fields[fieldName];
         
-        // For Manhattan components, check if field is a wrapper or the actual input
+        // For Manhattan components unwrap the wrapper div to reach the native input
         let targetInput = field;
-        
-        // If it's a wrapper, find the input inside
-        if (field.classList.contains('m-textbox-wrapper') || 
-            field.classList.contains('m-dropdown-wrapper') || 
-            field.classList.contains('m-datepicker-wrapper')) {
-            const input = field.querySelector('input, select, textarea');
+        if (field.tagName !== 'INPUT' && field.tagName !== 'SELECT' && field.tagName !== 'TEXTAREA') {
+            const input = field.querySelector('input:not([type=hidden]), select, textarea');
             if (input) {
                 targetInput = input;
             }
-        }
-        // If it's already an input element, use it directly
-        else if (field.tagName === 'INPUT' || field.tagName === 'SELECT' || field.tagName === 'TEXTAREA') {
-            targetInput = field;
         }
         
         const value = targetInput.value.trim();
@@ -210,35 +197,17 @@
     };
     
     Validator.prototype.showError = function(fieldElement, inputElement, message) {
-        // Add invalid class to the actual input
         inputElement.classList.add('m-validator-invalid');
         
-        // Determine where to insert the error message
-        // If fieldElement is a wrapper, insert after it. Otherwise, insert after the input's parent container
-        let insertAfter = fieldElement;
+        // Anchor to the nearest .form-group when available (Form component layout);
+        // otherwise fall back to the field element's direct parent.
+        var anchor = fieldElement.closest('.form-group') || fieldElement.parentNode;
         
-        // If the field is the input itself, find the parent form-group
-        if (fieldElement === inputElement) {
-            const formGroup = inputElement.closest('.form-group');
-            if (formGroup) {
-                insertAfter = formGroup.querySelector('input, select, textarea') || inputElement;
-            }
-        }
-        
-        // Find or create error message element
-        let errorMsg = insertAfter.parentNode.querySelector('.m-validator-error');
-        
-        // Only create if it doesn't exist
+        var errorMsg = anchor.querySelector('.m-validator-error');
         if (!errorMsg) {
             errorMsg = document.createElement('div');
             errorMsg.className = 'm-validator-error';
-            
-            // Insert after the input element
-            if (insertAfter.nextSibling) {
-                insertAfter.parentNode.insertBefore(errorMsg, insertAfter.nextSibling);
-            } else {
-                insertAfter.parentNode.appendChild(errorMsg);
-            }
+            anchor.appendChild(errorMsg);
         }
         
         errorMsg.textContent = message;
@@ -246,20 +215,10 @@
     };
     
     Validator.prototype.clearError = function(fieldElement, inputElement) {
-        // Remove invalid class
         inputElement.classList.remove('m-validator-invalid');
         
-        // Find the parent form-group or use the field's parent
-        let searchParent = fieldElement.parentNode;
-        if (fieldElement === inputElement) {
-            const formGroup = inputElement.closest('.form-group');
-            if (formGroup) {
-                searchParent = formGroup;
-            }
-        }
-        
-        // Find and hide error message
-        const errorMsg = searchParent.querySelector('.m-validator-error');
+        var anchor = fieldElement.closest('.form-group') || fieldElement.parentNode;
+        var errorMsg = anchor.querySelector('.m-validator-error');
         
         if (errorMsg) {
             errorMsg.style.display = 'none';
@@ -326,6 +285,22 @@
         }
     };
     
+    /**
+     * Run validation on all registered fields and return true if all pass.
+     * Inline error messages are shown/hidden as a side-effect.
+     */
+    Validator.prototype.validateAll = function() {
+        var isValid = true;
+        for (var fieldName in this.fields) {
+            if (Object.prototype.hasOwnProperty.call(this.fields, fieldName)) {
+                if (!this.validateField(fieldName)) {
+                    isValid = false;
+                }
+            }
+        }
+        return isValid;
+    };
+
     Validator.prototype.reset = function() {
         for (const fieldName in this.fields) {
             // Try to find field by ID first, then by name attribute
@@ -335,23 +310,11 @@
             }
             
             if (field) {
-                // For Manhattan components, check if field is a wrapper or the actual input
                 let targetInput = field;
-                
-                // If it's a wrapper, find the input inside
-                if (field.classList.contains('m-textbox-wrapper') || 
-                    field.classList.contains('m-dropdown-wrapper') || 
-                    field.classList.contains('m-datepicker-wrapper')) {
-                    const input = field.querySelector('input, select, textarea');
-                    if (input) {
-                        targetInput = input;
-                    }
+                if (field.tagName !== 'INPUT' && field.tagName !== 'SELECT' && field.tagName !== 'TEXTAREA') {
+                    const input = field.querySelector('input:not([type=hidden]), select, textarea');
+                    if (input) targetInput = input;
                 }
-                // If it's already an input element, use it directly
-                else if (field.tagName === 'INPUT' || field.tagName === 'SELECT' || field.tagName === 'TEXTAREA') {
-                    targetInput = field;
-                }
-                
                 this.clearError(field, targetInput);
             }
         }

@@ -130,6 +130,40 @@ if ($page !== 'overview' && isset($demoNav[$page])) {
         body.m-dark .m-demo-sidebar a.active i { color: #90caf9; }
         body.m-dark .m-demo-sidebar-group-label { color: #5a6470; }
 
+        /* Accordion navigation styling */
+        .m-demo-sidebar .m-accordion {
+            margin: 0;
+        }
+        .m-demo-sidebar .m-accordion-header {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9aa0a9;
+            padding: 8px 16px 4px;
+            background: transparent;
+            border: none;
+        }
+        .m-demo-sidebar .m-accordion-header:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        body.m-dark .m-demo-sidebar .m-accordion-header {
+            color: #5a6470;
+        }
+        body.m-dark .m-demo-sidebar .m-accordion-header:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        .m-demo-sidebar .m-accordion-content {
+            padding: 0;
+        }
+        .m-demo-sidebar .m-accordion-caret {
+            color: #9aa0a9;
+            font-size: 10px;
+        }
+        body.m-dark .m-demo-sidebar .m-accordion-caret {
+            color: #5a6470;
+        }
+
         /* Main content */
         .m-demo-main {
             flex: 1;
@@ -360,17 +394,50 @@ if ($page !== 'overview' && isset($demoNav[$page])) {
                 <i class="fas fa-home"></i> Overview
             </a>
         </div>
-        <?php foreach ($navGroups as $groupName => $items): ?>
-        <div class="m-demo-sidebar-group">
-            <div class="m-demo-sidebar-group-label"><?= htmlspecialchars($groupName, ENT_QUOTES, 'UTF-8') ?></div>
-            <?php foreach ($items as $slug => $info): ?>
-            <a href="/demo/<?= $slug ?>"<?php if ($page === $slug): ?> class="active"<?php endif; ?>>
-                <i class="fas <?= htmlspecialchars($info[1], ENT_QUOTES, 'UTF-8') ?>"></i>
-                <?= htmlspecialchars($info[0], ENT_QUOTES, 'UTF-8') ?>
-            </a>
-            <?php endforeach; ?>
-        </div>
-        <?php endforeach; ?>
+        <?php
+        // Build accordion panels for navigation groups
+        $navAccordion = $m->accordion('navAccordion')
+            ->allowMultiple()
+            ->animated()
+            ->addClass('m-accordion--borderless m-accordion--compact');
+        
+        $groupIndex = 0;
+        $defaultOpenIndex = null;
+        
+        foreach ($navGroups as $groupName => $items):
+            // Find if any item in this group is currently active
+            $groupHasActive = false;
+            foreach ($items as $slug => $info) {
+                if ($page === $slug) {
+                    $groupHasActive = true;
+                    $defaultOpenIndex = $groupIndex;
+                    break;
+                }
+            }
+            
+            // Build the content HTML for this group
+            $groupHtml = '';
+            foreach ($items as $slug => $info) {
+                $activeClass = ($page === $slug) ? ' class="active"' : '';
+                $groupHtml .= '<a href="/demo/' . $slug . '"' . $activeClass . '>';
+                $groupHtml .= '<i class="fas ' . htmlspecialchars($info[1], ENT_QUOTES, 'UTF-8') . '"></i> ';
+                $groupHtml .= htmlspecialchars($info[0], ENT_QUOTES, 'UTF-8');
+                $groupHtml .= '</a>';
+            }
+            
+            $navAccordion->panel($groupName, $groupHtml);
+            $groupIndex++;
+        endforeach;
+        
+        // Set default open to the group containing the active page, or first group if overview
+        if ($defaultOpenIndex !== null) {
+            $navAccordion->defaultOpen($defaultOpenIndex);
+        } elseif ($page === 'overview') {
+            $navAccordion->defaultOpen(0);
+        }
+        
+        echo $navAccordion;
+        ?>
     </aside>
 
     <!-- Main Content -->

@@ -190,6 +190,12 @@
                 m.tabs(el.id || el, {});
             });
         }
+
+        if (typeof m.wizard === 'function') {
+            document.querySelectorAll('.m-wizard').forEach(el => {
+                if (el.id) m.wizard(el.id, {});
+            });
+        }
     });
 
 })(window);

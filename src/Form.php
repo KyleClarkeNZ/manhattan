@@ -24,7 +24,6 @@ class Form extends Component
     protected string $layout = 'vertical';
     protected bool $autoValidate = true;
     protected bool $autoCsrf = true;
-    protected ?string $errorBannerId = null;
     protected array $formAttributes = [];
     
     public function __construct(string $id)
@@ -81,27 +80,33 @@ class Form extends Component
     }
     
     /**
-     * Add a field to the form with optional label and validation rules
-     * 
-     * @param Component $component Manhattan component (textbox, dropdown, etc.)
-     * @param string $label Field label text (empty = no label)
-     * @param array $validationRules Validation rules for Manhattan Validator
-     * @param string $hint Optional help text displayed below field
-     * @param string $wrapperClass Optional CSS class(es) for the form-group wrapper
+     * Add a field to the form.
+     *
+     * @param Component $component     Manhattan component (textbox, dropdown, etc.)
+     * @param string    $label         Label text (empty = no label rendered).
+     * @param array     $validationRules Validation rules passed to the auto-generated
+     *                                 Validator (e.g. <code>['required', 'email']</code>,
+     *                                 <code>['required', ['minLength' => 8]]</code>).
+     *                                 When supplied the label text is used to generate
+     *                                 the inline error message automatically.
+     * @param string    $errorMessage  Override the auto-generated validation error
+     *                                 message. Ignored when $validationRules is empty.
+     * @param string    $hint          Optional help text shown below the field.
+     * @param string    $wrapperClass  Optional extra CSS classes on the form-group div.
      * @return self
      */
-    public function field($component, string $label = '', array $validationRules = [], string $hint = '', string $wrapperClass = ''): self
+    public function field($component, string $label = '', array $validationRules = [], string $errorMessage = '', string $hint = '', string $wrapperClass = ''): self
     {
-        // Extract field name from component if it has one
         $fieldName = $this->extractFieldName($component);
-        
+
         $this->fields[] = [
-            'type' => 'field',
-            'component' => $component,
-            'label' => $label,
-            'rules' => $validationRules,
-            'hint' => $hint,
-            'name' => $fieldName,
+            'type'         => 'field',
+            'component'    => $component,
+            'label'        => $label,
+            'rules'        => $validationRules,
+            'errorMessage' => $errorMessage,
+            'hint'         => $hint,
+            'name'         => $fieldName,
             'wrapperClass' => $wrapperClass,
         ];
         
@@ -205,17 +210,6 @@ class Form extends Component
     }
     
     /**
-     * Enable automatic error banner display using Manhattan Toaster
-     * 
-     * @param string $toasterId ID for the toaster component
-     */
-    public function errorBanner(string $toasterId = 'formErrorBanner'): self
-    {
-        $this->errorBannerId = $toasterId;
-        return $this;
-    }
-    
-    /**
      * Add custom attributes to the form element
      */
     public function formAttr(string $name, string $value): self
@@ -291,7 +285,7 @@ class Form extends Component
             'name' => $this->name,
             'method' => $this->method === 'get' ? 'get' : 'post',
             'action' => $this->action,
-            'class' => implode(' ', $this->classes),
+            'class' => implode(' ', $this->getExtraClasses()),
         ];
         
         // Add AJAX data attribute
@@ -301,19 +295,14 @@ class Form extends Component
         
         // Merge custom form attributes
         $formAttrs = array_merge($formAttrs, $this->formAttributes);
-        
-        // Add any custom attributes from parent Component
-        foreach ($this->attributes as $key => $value) {
-            if (!isset($formAttrs[$key])) {
-                $formAttrs[$key] = $value;
-            }
-        }
-        
+
         $formTag = '<form';
         foreach ($formAttrs as $key => $value) {
-            $formTag .= ' ' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') 
+            $formTag .= ' ' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8')
                      . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
         }
+        // Append any extra attributes set via ->attr() on the Component
+        $formTag .= $this->renderAdditionalAttributes(array_keys($formAttrs));
         $formTag .= '>';
         
         $html[] = $formTag;
@@ -373,9 +362,13 @@ class Form extends Component
             
             // Render label if provided
             if (!empty($label)) {
-                $labelFor = $component->getId();
-                $html[] = '<label for="' . htmlspecialchars($labelFor, ENT_QUOTES, 'UTF-8') . '">' 
-                        . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</label>';
+                $labelFor  = $component->getId();
+                $isRequired = !empty($field['rules']) && in_array('required', $field['rules'], true);
+                $labelHtml  = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+                if ($isRequired) {
+                    $labelHtml .= '<span class="required" aria-hidden="true">*</span>';
+                }
+                $html[] = '<label for="' . htmlspecialchars($labelFor, ENT_QUOTES, 'UTF-8') . '">' . $labelHtml . '</label>';
             }
             
             // Render component
@@ -398,20 +391,34 @@ class Form extends Component
         
         $html[] = '</form>';
         
-        // Add validator if enabled
-        if ($this->autoValidate && !empty($this->fields)) {
-            $validator = new Validator($this->id);
-            
+        // Add auto-generated validator if enabled
+        if ($this->autoValidate) {
+            $validator   = new Validator($this->id);
+            $hasRules    = false;
+
             foreach ($this->fields as $field) {
-                if (empty($field['rules']) || $field['name'] === null) {
+                if ($field['type'] !== 'field' || empty($field['rules'])) {
                     continue;
                 }
-                
+
                 $fieldId = $field['component']->getId();
-                $validator->field($fieldId, $field['rules']);
+
+                // Derive error message: explicit override > label-based > generic
+                $msg = $field['errorMessage'] ?? '';
+                if ($msg === '') {
+                    $label = $field['label'] ?? '';
+                    $msg   = $label !== ''
+                        ? 'Please fill in the ' . strtolower($label) . ' field.'
+                        : 'This field is required.';
+                }
+
+                $validator->field($fieldId, $msg, $field['rules']);
+                $hasRules = true;
             }
-            
-            $html[] = (string)$validator;
+
+            if ($hasRules) {
+                $html[] = (string)$validator;
+            }
         }
         
         return implode("\n", $html);

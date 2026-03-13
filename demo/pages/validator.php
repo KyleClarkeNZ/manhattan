@@ -32,9 +32,9 @@
     </form>
 
     <?= $m->validator('demoValidatorForm')
-        ->field('username', 'Username is required (letters, numbers, underscores only)', ['required', 'pattern' => '/^[a-zA-Z0-9_]+$/'])
-        ->field('email', 'A valid email is required', ['required', 'email'])
-        ->field('password', 'Password must be at least 8 characters', ['required', 'minLength' => 8])
+        ->field('val-username', 'Username must contain only letters, numbers, and underscores', ['required', ['pattern' => '^[a-zA-Z0-9_]+$']])
+        ->field('val-email', 'A valid email address is required', ['required', 'email'])
+        ->field('val-password', 'Password must be at least 8 characters', ['required', ['minLength' => 8]])
         ->onSubmit('handleDemoFormSubmit(event)')
         ->validateOnBlur()
         ->validateOnInput() ?>
@@ -42,39 +42,45 @@
     <div class="m-demo-output" id="validator-output">Fill out the form and submit to see validation...</div>
 
     <?= demoCodeTabs(
-        '// Attach validator to a form
+        '// Attach a validator to any form by its ID.
+// Flag rules are plain strings; value rules are single-key arrays.
 <?= $m->validator(\'myForm\')
-    ->field(\'username\', \'Username is required\', [\'required\'])
-    ->field(\'email\', \'Valid email required\', [\'required\', \'email\'])
-    ->field(\'password\', \'Min 8 chars\', [\'required\', \'minLength\' => 8])
+    ->field(\'username\', \'Username is required\',        [\'required\'])
+    ->field(\'email\',    \'Valid email required\',          [\'required\', \'email\'])
+    ->field(\'password\', \'Min 8 characters\',             [\'required\', [\'minLength\' => 8]])
+    ->field(\'bio\',      \'Max 200 characters\',           [[\'maxLength\' => 200]])
+    ->field(\'score\',    \'Must be between 0 and 100\',    [[\'min\' => 0], [\'max\' => 100]])
+    ->field(\'code\',     \'Alphanumeric codes only\',      [\'required\', [\'pattern\' => \'^[a-zA-Z0-9]+$\']])
     ->onSubmit(\'handleSubmit(event)\')
     ->validateOnBlur()
     ->validateOnInput() ?>',
-        '// The onSubmit callback fires only when all fields are valid
+        '// onSubmit fires only when all fields pass
 function handleSubmit(event) {
     event.preventDefault();
-    var form = event.target;
-    var data = new FormData(form);
-    console.log(\'Valid form submitted\');
+    var data = new FormData(event.target);
+    console.log(\'Valid form submitted\', Object.fromEntries(data));
 }
 
-// Available validation rules:
-// \'required\'
-// \'email\'
-// {minLength: 5}
-// {maxLength: 20}
-// {min: 0}  (numbers)
-// {max: 100}
-// \'integer\'
-// \'positive\'
-// {pattern: \'/^[a-z]+$/i\'}
-// {custom: function(value, input) { return value === \'ok\'; }}'
+// JS validation rules reference:
+// Flag rules (plain strings):
+//   \'required\'   — must not be empty
+//   \'email\'      — valid email format
+//   \'integer\'    — whole number
+//   \'positive\'   — number > 0
+//
+// Value rules (single-key array in PHP → object in JS config):
+//   [\'minLength\' => 5]          → {minLength: 5}
+//   [\'maxLength\' => 200]        → {maxLength: 200}
+//   [\'min\' => 0]                → {min: 0}
+//   [\'max\' => 100]              → {max: 100}
+//   [\'pattern\' => \'^[a-z]+$\']  → {pattern: \'^[a-z]+$\'}
+//   [\'custom\' => fn]            → {custom: function(value, input) { return true; }}'
     ) ?>
 </div>
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->validator($formId)', 'string', 'Create a validator targeting the form with the given ID.'],
-    ['->field($name, $message, $rules)', 'string, string, array', 'Add a field to validate. Rules can be strings (<code>required</code>, <code>email</code>) or key-value pairs (<code>minLength => 8</code>).'],
+    ['->field($name, $message, $rules)', 'string, string, array', 'Add a field to validate. Flag rules are plain strings (<code>\'required\'</code>, <code>\'email\'</code>); value rules are single-key arrays (<code>[\'minLength\' => 8]</code>, <code>[\'pattern\' => \'^\.+$\']</code>).'],
     ['->onSubmit($callback)', 'string', 'JS code to execute when the form passes all validation.'],
     ['->validateOnBlur($enabled)', 'bool', 'Validate fields when they lose focus (default: true).'],
     ['->validateOnInput($enabled)', 'bool', 'Validate fields in real-time on each keystroke (default: false).'],

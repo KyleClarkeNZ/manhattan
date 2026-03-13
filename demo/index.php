@@ -125,6 +125,35 @@ if (strpos($uri, '/getGridData') !== false) {
     exit;
 }
 
+if (strpos($uri, '/wizardSubmit') !== false && $method === 'POST') {
+    header('Content-Type: application/json');
+    $raw  = file_get_contents('php://input');
+    $data = json_decode($raw ?: '{}', true) ?: [];
+    $wizardMeta = isset($data['_wizard']) && is_array($data['_wizard']) ? $data['_wizard'] : [];
+    $step  = isset($wizardMeta['currentStep']) ? (string)$wizardMeta['currentStep'] : 'unknown';
+    $total = isset($wizardMeta['totalSteps'])  ? (int)$wizardMeta['totalSteps']  : 0;
+    echo json_encode([
+        'success' => true,
+        'message' => 'Wizard submitted at step "' . $step . '" (' . $total . ' steps total).',
+        'ref'     => 'DEMO-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)),
+        'received' => $data,
+    ]);
+    exit;
+}
+
+if (strpos($uri, '/wizardData') !== false && $method === 'GET') {
+    header('Content-Type: application/json');
+    // Simulate a server returning pre-populated field values
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'ord-customer'       => 'Acme Corporation',
+            'ord-customer-email' => 'acme@example.com',
+        ],
+    ]);
+    exit;
+}
+
 // ---------------------------------------------------------------------------
 // Manhattan setup
 // ---------------------------------------------------------------------------
@@ -156,6 +185,7 @@ $demoNav = [
     'statcard'    => ['StatCard',    'fa-tachometer-alt',     'Layout & Display'],
     'emptystate'  => ['EmptyState',  'fa-inbox',              'Layout & Display'],
     'tabs'        => ['Tabs',        'fa-folder',             'Layout & Display'],
+    'accordion'   => ['Accordion',   'fa-bars-staggered',     'Layout & Display'],
     // Actions & Navigation
     'button'      => ['Button',      'fa-hand-pointer',       'Actions & Navigation'],
     'dropdown'    => ['Dropdown',    'fa-chevron-circle-down', 'Actions & Navigation'],
@@ -183,6 +213,8 @@ $demoNav = [
     'tooltip'     => ['Tooltip',     'fa-comment',            'Overlays & Feedback'],
     // Utilities
     'codearea'    => ['CodeArea',    'fa-code',               'Utilities'],
+    // Composites
+    'wizard'      => ['Wizard',      'fa-layer-group',        'Composites'],
 ];
 
 // Parse page slug from URI: /demo/button → button, /demo/ → overview

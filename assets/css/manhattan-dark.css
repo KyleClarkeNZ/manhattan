@@ -1345,3 +1345,195 @@ body.m-dark .form-group label {
 body.m-dark .field-hint {
     color: #a0aec0;
 }
+
+
+/* === Accordion Component (Dark Theme) === */
+body.m-dark .m-accordion {
+    border-color: #334155;
+    background: #1e2a3a;
+}
+
+body.m-dark .m-accordion-panel {
+    border-bottom-color: #334155;
+}
+
+body.m-dark .m-accordion-header {
+    background: #1e2a3a;
+    color: #e2e8f0;
+}
+
+body.m-dark .m-accordion-header:hover {
+    background: #2d3748;
+}
+
+body.m-dark .m-accordion-panel--open .m-accordion-header {
+    background: #2d3748;
+    color: #118AB2;
+}
+
+body.m-dark .m-accordion-icon {
+    color: #118AB2;
+}
+
+body.m-dark .m-accordion-caret {
+    color: #94a3b8;
+}
+
+body.m-dark .m-accordion-body {
+    color: #cbd5e0;
+}
+
+body.m-dark .m-accordion--borderless .m-accordion-panel {
+    border-bottom-color: #2d3748;
+}
+
+/* ============================================================
+   Wizard — Dark Theme
+   ============================================================ */
+
+body.m-dark .m-wizard,
+body.theme-dark .m-wizard {
+    background: #1e242b;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+body.m-dark .m-wizard-header,
+body.theme-dark .m-wizard-header,
+body.m-dark .m-wizard-footer,
+body.theme-dark .m-wizard-footer {
+    background: #161b22;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Step circles */
+body.m-dark .m-wizard-step-circle,
+body.theme-dark .m-wizard-step-circle {
+    background: #252d36;
+    border-color: #3d4b5c;
+    color: #64748b;
+}
+
+body.m-dark .m-wizard-step-circle .m-wizard-step-default-icon,
+body.theme-dark .m-wizard-step-circle .m-wizard-step-default-icon,
+body.m-dark .m-wizard-step-circle .m-wizard-step-num,
+body.theme-dark .m-wizard-step-circle .m-wizard-step-num {
+    color: #64748b;
+}
+
+/* Active */
+body.m-dark .m-wizard-step-active .m-wizard-step-circle,
+body.theme-dark .m-wizard-step-active .m-wizard-step-circle {
+    border-color: #64b5f6;
+    background: #1565C0;
+    box-shadow: 0 0 0 4px rgba(100, 181, 246, 0.2);
+}
+
+body.m-dark .m-wizard-step-active .m-wizard-step-circle .m-wizard-step-default-icon,
+body.theme-dark .m-wizard-step-active .m-wizard-step-circle .m-wizard-step-default-icon,
+body.m-dark .m-wizard-step-active .m-wizard-step-circle .m-wizard-step-num,
+body.theme-dark .m-wizard-step-active .m-wizard-step-circle .m-wizard-step-num {
+    color: #ffffff;
+}
+
+/* Done */
+body.m-dark .m-wizard-step-done .m-wizard-step-circle,
+body.theme-dark .m-wizard-step-done .m-wizard-step-circle {
+    border-color: #388E3C;
+    background: #1B5E20;
+}
+
+/* Skipped */
+body.m-dark .m-wizard-step-skipped .m-wizard-step-circle,
+body.theme-dark .m-wizard-step-skipped .m-wizard-step-circle {
+    border-color: #E65100;
+    background: #4E342E;
+}
+
+body.m-dark .m-wizard-step-skipped .m-wizard-step-circle .m-wizard-step-default-icon,
+body.theme-dark .m-wizard-step-skipped .m-wizard-step-circle .m-wizard-step-default-icon,
+body.m-dark .m-wizard-step-skipped .m-wizard-step-circle .m-wizard-step-num,
+body.theme-dark .m-wizard-step-skipped .m-wizard-step-circle .m-wizard-step-num {
+    color: #FF9800;
+}
+
+/* Labels */
+body.m-dark .m-wizard-step-label,
+body.theme-dark .m-wizard-step-label {
+    color: #64748b;
+}
+
+body.m-dark .m-wizard-step-active .m-wizard-step-label,
+body.theme-dark .m-wizard-step-active .m-wizard-step-label {
+    color: #64b5f6;
+}
+
+body.m-dark .m-wizard-step-done .m-wizard-step-label,
+body.theme-dark .m-wizard-step-done .m-wizard-step-label {
+    color: #66BB6A;
+}
+
+body.m-dark .m-wizard-step-skipped .m-wizard-step-label,
+body.theme-dark .m-wizard-step-skipped .m-wizard-step-label {
+    color: #FFA726;
+}
+
+/* Connectors */
+body.m-dark .m-wizard-connector-fill,
+body.theme-dark .m-wizard-connector-fill {
+    background: #2d3748;
+}
+
+body.m-dark .m-wizard-connector-done .m-wizard-connector-fill,
+body.theme-dark .m-wizard-connector-done .m-wizard-connector-fill {
+    background: #388E3C;
+}
+
+/* Body */
+body.m-dark .m-wizard-body,
+body.theme-dark .m-wizard-body {
+    color: #e6e6e6;
+}
+
+/* Loading overlay */
+body.m-dark .m-wizard-loading,
+body.theme-dark .m-wizard-loading {
+    background: rgba(30, 36, 43, 0.9);
+}
+
+body.m-dark .m-wizard-loading-inner,
+body.theme-dark .m-wizard-loading-inner {
+    color: #a7b0bb;
+}
+
+/* Error banner */
+body.m-dark .m-wizard-error-banner,
+body.theme-dark .m-wizard-error-banner {
+    background: #450a0a;
+    border-color: #7f1d1d;
+    color: #fca5a5;
+}
+
+body.m-dark .m-wizard-error-banner i,
+body.theme-dark .m-wizard-error-banner i {
+    color: #fca5a5;
+}
+
+/* Step counter */
+body.m-dark .m-wizard-step-counter,
+body.theme-dark .m-wizard-step-counter {
+    color: #94a3b8;
+}
+
+/* Field error highlight */
+body.m-dark .m-wizard-field-error input,
+body.theme-dark .m-wizard-field-error input,
+body.m-dark .m-wizard-field-error select,
+body.theme-dark .m-wizard-field-error select,
+body.m-dark .m-wizard-field-error textarea,
+body.theme-dark .m-wizard-field-error textarea,
+body.m-dark input.m-wizard-field-error,
+body.theme-dark input.m-wizard-field-error {
+    border-color: #EF4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+}

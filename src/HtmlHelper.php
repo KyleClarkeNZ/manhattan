@@ -444,6 +444,29 @@ class HtmlHelper
     }
 
     /**
+     * Create an Accordion component
+     *
+     * @param string $id Unique identifier for the accordion
+     * @return Accordion
+     */
+    public function accordion(string $id): Accordion
+    {
+        return new Accordion($id);
+    }
+
+    /**
+     * Create a Wizard component (multi-step form wizard)
+     *
+     * @param string $id Unique identifier for the wizard
+     * @param array $options Additional configuration options
+     * @return Wizard
+     */
+    public function wizard(string $id, array $options = []): Wizard
+    {
+        return new Wizard($id, $options);
+    }
+
+    /**
      * Render Manhattan script includes
      * Should be called in layout before closing </body> tag
      */
@@ -473,6 +496,8 @@ class HtmlHelper
 <script src="{$js}/components/rating.js" defer></script>
 <script src="{$js}/components/progressbar.js" defer></script>
 <script src="{$js}/components/datagrid.js" defer></script>
+<script src="{$js}/components/accordion.js" defer></script>
+<script src="{$js}/components/wizard.js" defer></script>
 HTML;
     }
 
