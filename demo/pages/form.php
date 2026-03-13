@@ -327,6 +327,52 @@ form.onSubmit(function(e, data) {
 '// Still gets full form API
 const form = m.form(\'newsletterForm\');'
     ) ?>
+
+    <h3>Hidden Fields & Raw HTML</h3>
+    <p class="m-demo-desc">Add hidden fields and custom HTML content (e.g., captcha images, custom messages).</p>
+    
+    <?= $m->form('advancedForm')
+        ->action('/demo/submit')
+        ->hidden('user_id', '12345')  // Hidden field
+        ->hidden('token', 'abc123')
+        ->html('<div class="form-group captcha-group"><img src="/captcha.php" alt="captcha" class="captcha-image" /></div>')
+        ->field(
+            $m->textbox('captcha')->name('captcha')->placeholder('Enter code above'),
+            'Verification Code',
+            ['required' => true],
+            '',
+            'captcha-group'  // Custom wrapper class
+        )
+        ->html('<p class="form-notice">Protected by captcha verification</p>')
+        ->submit('Verify', 'fa-check')
+    ?>
+
+    <?= demoCodeTabs(
+'<?= $m->form(\'registerForm\')
+    ->action(\'/register\')
+    // Add hidden fields
+    ->hidden(\'user_id\', $userId)
+    ->hidden(\'token\', $token)
+    // Add custom HTML (e.g., captcha image)
+    ->html(\'<div class="captcha-group">
+        <img src="/captcha.php" alt="captcha" />
+    </div>\')
+    // Regular field with custom wrapper class
+    ->field(
+        $m->textbox(\'captcha\')->name(\'captcha\'),
+        \'Verification Code\',
+        [\'required\' => true],
+        \'\',
+        \'captcha-group\'  // 5th param: wrapper class
+    )
+    ->submit(\'Register\', \'fa-user-plus\')->primary()
+?>',
+'// Hidden fields are included in form data
+const form = m.form(\'registerForm\');
+const data = form.serialize();
+// data.user_id === "12345"
+// data.token === "abc123"'
+    ) ?>
 </div>
 
 <!-- API Documentation -->
@@ -336,7 +382,9 @@ const form = m.form(\'newsletterForm\');'
     ['->method($method)', 'self', 'Set HTTP method: post (default), get, put, delete. PUT/DELETE use method spoofing.'],
     ['->name($name)', 'self', 'Set form name attribute. Default: same as ID.'],
     ['->model($data)', 'self', 'Bind model (array or object) to auto-populate field values.'],
-    ['->field($component, $label, $rules, $hint)', 'self', 'Add a field with label, validation rules, and optional hint text.'],
+    ['->field($component, $label, $rules, $hint, $wrapperClass)', 'self', 'Add a field with label, validation rules, hint text, and optional wrapper class.'],
+    ['->hidden($name, $value)', 'self', 'Add a hidden input field.'],
+    ['->html($html)', 'self', 'Insert raw HTML content (for captcha images, custom layouts, etc.).'],
     ['->submit($text, $icon)', 'Button', 'Create submit button. Returns Button instance for chaining (e.g., <code>->primary()</code>).'],
     ['->ajax($enabled)', 'self', 'Enable AJAX form submission. Default: <code>false</code>.'],
     ['->layout($layout)', 'self', 'Set form layout: vertical (default), horizontal, inline.'],

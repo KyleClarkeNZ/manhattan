@@ -87,19 +87,57 @@ class Form extends Component
      * @param string $label Field label text (empty = no label)
      * @param array $validationRules Validation rules for Manhattan Validator
      * @param string $hint Optional help text displayed below field
+     * @param string $wrapperClass Optional CSS class(es) for the form-group wrapper
      * @return self
      */
-    public function field($component, string $label = '', array $validationRules = [], string $hint = ''): self
+    public function field($component, string $label = '', array $validationRules = [], string $hint = '', string $wrapperClass = ''): self
     {
         // Extract field name from component if it has one
         $fieldName = $this->extractFieldName($component);
         
         $this->fields[] = [
+            'type' => 'field',
             'component' => $component,
             'label' => $label,
             'rules' => $validationRules,
             'hint' => $hint,
             'name' => $fieldName,
+            'wrapperClass' => $wrapperClass,
+        ];
+        
+        return $this;
+    }
+    
+    /**
+     * Add a hidden input field
+     * 
+     * @param string $name Field name
+     * @param string $value Field value
+     * @return self
+     */
+    public function hidden(string $name, string $value): self
+    {
+        $this->fields[] = [
+            'type' => 'hidden',
+            'name' => $name,
+            'value' => $value,
+        ];
+        
+        return $this;
+    }
+    
+    /**
+     * Add raw HTML content to the form
+     * Use for custom layouts, captcha images, or other special content
+     * 
+     * @param string $html Raw HTML to insert
+     * @return self
+     */
+    public function html(string $html): self
+    {
+        $this->fields[] = [
+            'type' => 'html',
+            'html' => $html,
         ];
         
         return $this;
@@ -295,10 +333,31 @@ class Form extends Component
         
         // Render fields
         foreach ($this->fields as $field) {
+            // Handle different field types
+            $fieldType = $field['type'] ?? 'field';
+            
+            if ($fieldType === 'hidden') {
+                // Hidden field
+                $html[] = '<input type="hidden" name="' 
+                        . htmlspecialchars($field['name'], ENT_QUOTES, 'UTF-8') 
+                        . '" value="' 
+                        . htmlspecialchars($field['value'], ENT_QUOTES, 'UTF-8') 
+                        . '">';
+                continue;
+            }
+            
+            if ($fieldType === 'html') {
+                // Raw HTML content
+                $html[] = $field['html'];
+                continue;
+            }
+            
+            // Regular field
             $component = $field['component'];
             $label = $field['label'];
             $hint = $field['hint'];
             $fieldName = $field['name'];
+            $wrapperClass = $field['wrapperClass'] ?? '';
             
             // Bind model data if available
             if ($fieldName !== null && $this->model !== null) {
@@ -306,7 +365,11 @@ class Form extends Component
             }
             
             // Wrap field in form-group
-            $html[] = '<div class="form-group">';
+            $groupClasses = 'form-group';
+            if (!empty($wrapperClass)) {
+                $groupClasses .= ' ' . $wrapperClass;
+            }
+            $html[] = '<div class="' . htmlspecialchars($groupClasses, ENT_QUOTES, 'UTF-8') . '">';
             
             // Render label if provided
             if (!empty($label)) {
@@ -315,7 +378,12 @@ class Form extends Component
                         . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</label>';
             }
             
-            // Render component
+            // R// Only validate regular fields with rules
+                if (($field['type'] ?? 'field') !== 'field') {
+                    continue;
+                }
+                
+                ender component
             $html[] = (string)$component;
             
             // Render hint if provided
