@@ -1336,3 +1336,12 @@ body.theme-dark .m-datagrid-filter-input:focus {
 
 /* Checkbox indicator in dark (read-only cells show the native indicator,
    colour already handled by the existing m-choice dark rules — no extra needed) */
+
+/* === Form Component (Dark Theme) === */
+body.m-dark .form-group label {
+    color: #cbd5e0;
+}
+
+body.m-dark .field-hint {
+    color: #a0aec0;
+}
