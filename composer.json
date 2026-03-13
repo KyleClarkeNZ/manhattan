@@ -3,7 +3,7 @@
     "description": "Manhattan — a server-rendered PHP + vanilla-JS UI component library.",
     "type": "library",
     "license": "MIT",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "keywords": ["ui", "components", "php", "javascript", "framework"],
     "authors": [
         {
