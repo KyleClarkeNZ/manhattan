@@ -188,6 +188,7 @@ $demoNav = [
     'accordion'   => ['Accordion',   'fa-bars-staggered',     'Layout & Display'],
     // Actions & Navigation
     'button'      => ['Button',      'fa-hand-pointer',       'Actions & Navigation'],
+    'buttongroup' => ['ButtonGroup', 'fa-table-columns',      'Actions & Navigation'],
     'dropdown'    => ['Dropdown',    'fa-chevron-circle-down', 'Actions & Navigation'],
     // Editors & Forms
     'textbox'     => ['TextBox',     'fa-i-cursor',           'Editors & Forms'],

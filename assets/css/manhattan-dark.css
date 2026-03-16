@@ -1537,3 +1537,38 @@ body.theme-dark input.m-wizard-field-error {
     border-color: #EF4444 !important;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
 }
+
+/* === Button Group Component (dark) === */
+body.m-dark .m-button-group,
+body.theme-dark .m-button-group {
+    border-color: #3a3a5a;
+}
+
+body.m-dark .m-button-group-btn,
+body.theme-dark .m-button-group-btn {
+    background: #1a1a35;
+    color: #9090b0;
+    border-right-color: #3a3a5a;
+}
+
+body.m-dark .m-button-group-btn:hover,
+body.theme-dark .m-button-group-btn:hover {
+    background: #252545;
+    color: #60a0c8;
+}
+
+body.m-dark .m-button-group-btn.m-button-group-active,
+body.theme-dark .m-button-group-btn.m-button-group-active {
+    background: #118AB2;
+    color: #fff;
+}
+
+body.m-dark .m-button-group-btn.m-button-group-active:hover,
+body.theme-dark .m-button-group-btn.m-button-group-active:hover {
+    background: #0d6e8f;
+}
+
+body.m-dark .m-button-group-sep,
+body.theme-dark .m-button-group-sep {
+    background: #3a3a5a;
+}

@@ -467,6 +467,18 @@ class HtmlHelper
     }
 
     /**
+     * Create a ButtonGroup component — mutually exclusive icon-only toggle buttons.
+     *
+     * @param string $id Unique identifier for the button group
+     * @param array $options Additional configuration options
+     * @return ButtonGroup
+     */
+    public function buttonGroup(string $id, array $options = []): ButtonGroup
+    {
+        return new ButtonGroup($id, $options);
+    }
+
+    /**
      * Render Manhattan script includes
      * Should be called in layout before closing </body> tag
      */
@@ -498,6 +510,7 @@ class HtmlHelper
 <script src="{$js}/components/datagrid.js" defer></script>
 <script src="{$js}/components/accordion.js" defer></script>
 <script src="{$js}/components/wizard.js" defer></script>
+<script src="{$js}/components/buttongroup.js" defer></script>
 HTML;
     }
 

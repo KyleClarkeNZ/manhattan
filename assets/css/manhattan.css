@@ -3724,3 +3724,73 @@ textarea.m-wizard-field-error {
         margin: 0 1rem 0.75rem;
     }
 }
+
+/* === Button Group Component === */
+.m-button-group {
+    display: inline-flex;
+    border: 1px solid var(--m-border, #dde3ec);
+    border-radius: 6px;
+    overflow: hidden;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.m-button-group-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 30px;
+    padding: 0;
+    background: var(--m-bg, #fff);
+    color: var(--m-text-muted, #777);
+    border: none;
+    border-right: 1px solid var(--m-border, #dde3ec);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    font-size: 0.8125rem;
+    line-height: 1;
+    outline: none;
+}
+
+.m-button-group-btn:last-child {
+    border-right: none;
+}
+
+.m-button-group-btn:hover {
+    background: var(--m-hover-bg, #f0f4f8);
+    color: var(--m-primary, #2196F3);
+}
+
+.m-button-group-btn:focus-visible {
+    outline: 2px solid var(--m-primary, #2196F3);
+    outline-offset: -2px;
+    z-index: 1;
+}
+
+.m-button-group-btn.m-button-group-active {
+    background: var(--m-primary, #2196F3);
+    color: #fff;
+}
+
+.m-button-group-btn.m-button-group-active:hover {
+    background: var(--m-primary-hover, #1976D2);
+    color: #fff;
+}
+
+/* Separator between logical groups in the same toolbar */
+.m-button-group-sep {
+    width: 1px;
+    background: var(--m-border, #dde3ec);
+    margin: 4px 6px;
+    align-self: stretch;
+    flex-shrink: 0;
+}
+
+/* Toolbar: wraps multiple m-button-group elements and separators */
+.m-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
