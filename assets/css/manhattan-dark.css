@@ -399,6 +399,16 @@ body.theme-dark .m-codearea-copy:hover {
     color: #e6e6e6;
 }
 
+/* The broad `body.m-dark * { color }` wildcard overrides the critical
+   `color: transparent` set on the textarea in manhattan.css, causing both
+   the input layer and the syntax-highlighted overlay to render at the same
+   time (the "double-vision" bug). Restore the transparent value explicitly. */
+body.m-dark .m-codearea,
+body.theme-dark .m-codearea {
+    color: transparent;
+    caret-color: #c9d1d9;
+}
+
 /* ========================================
    Loader
    ======================================== */
@@ -973,14 +983,6 @@ body.theme-dark .m-address-help {
 }
 
 /* ========================================
-   Form Group
-   ======================================== */
-body.m-dark .form-group label,
-body.theme-dark .form-group label {
-    color: #a7b0bb;
-}
-
-/* ========================================
    Dark scrollbars
    ======================================== */
 body.m-dark .m-window-content,
@@ -1338,52 +1340,63 @@ body.theme-dark .m-datagrid-filter-input:focus {
    colour already handled by the existing m-choice dark rules — no extra needed) */
 
 /* === Form Component (Dark Theme) === */
-body.m-dark .form-group label {
+body.m-dark .form-group label,
+body.theme-dark .form-group label {
     color: #cbd5e0;
 }
 
-body.m-dark .field-hint {
+body.m-dark .field-hint,
+body.theme-dark .field-hint {
     color: #a0aec0;
 }
 
 
 /* === Accordion Component (Dark Theme) === */
-body.m-dark .m-accordion {
+body.m-dark .m-accordion,
+body.theme-dark .m-accordion {
     border-color: #334155;
     background: #1e2a3a;
 }
 
-body.m-dark .m-accordion-panel {
+body.m-dark .m-accordion-panel,
+body.theme-dark .m-accordion-panel {
     border-bottom-color: #334155;
 }
 
-body.m-dark .m-accordion-header {
+body.m-dark .m-accordion-header,
+body.theme-dark .m-accordion-header {
     background: #1e2a3a;
     color: #e2e8f0;
 }
 
-body.m-dark .m-accordion-header:hover {
+body.m-dark .m-accordion-header:hover,
+body.theme-dark .m-accordion-header:hover {
     background: #2d3748;
 }
 
-body.m-dark .m-accordion-panel--open .m-accordion-header {
+body.m-dark .m-accordion-panel--open .m-accordion-header,
+body.theme-dark .m-accordion-panel--open .m-accordion-header {
     background: #2d3748;
     color: #118AB2;
 }
 
-body.m-dark .m-accordion-icon {
+body.m-dark .m-accordion-icon,
+body.theme-dark .m-accordion-icon {
     color: #118AB2;
 }
 
-body.m-dark .m-accordion-caret {
+body.m-dark .m-accordion-caret,
+body.theme-dark .m-accordion-caret {
     color: #94a3b8;
 }
 
-body.m-dark .m-accordion-body {
+body.m-dark .m-accordion-body,
+body.theme-dark .m-accordion-body {
     color: #cbd5e0;
 }
 
-body.m-dark .m-accordion--borderless .m-accordion-panel {
+body.m-dark .m-accordion--borderless .m-accordion-panel,
+body.theme-dark .m-accordion--borderless .m-accordion-panel {
     border-bottom-color: #2d3748;
 }
 
