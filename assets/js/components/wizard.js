@@ -113,8 +113,10 @@
             return Array.prototype.slice.call(
                 panelEl.querySelectorAll('input, select, textarea')
             ).filter(function (f) {
-                // Exclude hidden wizard-internal inputs
-                return f.type !== 'hidden' || f.classList.contains('m-wizard-field');
+                // Exclude hidden wizard-internal inputs, but keep RTE's hidden input
+                return f.type !== 'hidden'
+                    || f.classList.contains('m-wizard-field')
+                    || f.classList.contains('m-rte-hidden-input');
             });
         }
 
