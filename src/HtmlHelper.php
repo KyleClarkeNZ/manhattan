@@ -479,6 +479,23 @@ class HtmlHelper
     }
 
     /**
+     * Create a RichTextEditor component.
+     *
+     * Renders a contenteditable-based editor with a customisable toolbar.
+     * Always outputs clean semantic HTML (with <p> blocks, headings, lists, etc.).
+     *
+     * Display saved content consistently by wrapping it in <div class="m-richtext">.
+     *
+     * @param string $id      Unique identifier for the editor
+     * @param array  $options Additional configuration options
+     * @return RichTextEditor
+     */
+    public function richTextEditor(string $id, array $options = []): RichTextEditor
+    {
+        return new RichTextEditor($id, $options);
+    }
+
+    /**
      * Render Manhattan script includes
      * Should be called in layout before closing </body> tag
      */
@@ -511,6 +528,7 @@ class HtmlHelper
 <script src="{$js}/components/accordion.js" defer></script>
 <script src="{$js}/components/wizard.js" defer></script>
 <script src="{$js}/components/buttongroup.js" defer></script>
+<script src="{$js}/components/richtexteditor.js" defer></script>
 HTML;
     }
 

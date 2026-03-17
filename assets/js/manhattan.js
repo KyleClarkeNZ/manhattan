@@ -196,6 +196,12 @@
                 if (el.id) m.wizard(el.id, {});
             });
         }
+
+        if (typeof m.richTextEditor === 'function') {
+            document.querySelectorAll('[data-component="richtexteditor"]').forEach(el => {
+                if (el.id) m.richTextEditor(el.id);
+            });
+        }
     });
 
 })(window);

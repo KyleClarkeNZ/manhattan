@@ -7,8 +7,9 @@ declare(strict_types=1);
 
 /**
  * Render a tabbed code/example section with PHP and optional JS tabs.
+ * Either $phpCode or $jsCode may be null, but not both.
  */
-function demoCodeTabs(string $phpCode, ?string $jsCode = null): string
+function demoCodeTabs(?string $phpCode = null, ?string $jsCode = null): string
 {
     $m = \Manhattan\HtmlHelper::getInstance();
 
@@ -18,22 +19,35 @@ function demoCodeTabs(string $phpCode, ?string $jsCode = null): string
 
     $tabs = $m->tabs($id)->tabStyle('underline');
 
-    $phpBlock = (string)$m->codeArea($id . '_php')
-        ->language('php')
-        ->value($phpCode)
-        ->readOnly(true)
-        ->rows(min(20, max(4, substr_count($phpCode, "\n") + 1)));
+    $hasPhp = $phpCode !== null && trim($phpCode) !== '';
+    $hasJs  = $jsCode  !== null && trim($jsCode)  !== '';
 
-    $tabs->tab('php', 'PHP')->icon('fa-code')->content($phpBlock)->active();
+    if ($hasPhp) {
+        $phpBlock = (string)$m->codeArea($id . '_php')
+            ->language('php')
+            ->value($phpCode)
+            ->readOnly(true)
+            ->rows(min(20, max(4, substr_count($phpCode, "\n") + 1)));
 
-    if ($jsCode !== null && trim($jsCode) !== '') {
+        $tab = $tabs->tab('php', 'PHP')->icon('fa-code')->content($phpBlock);
+        if (!$hasJs) {
+            $tab->active();
+        } else {
+            $tab->active();
+        }
+    }
+
+    if ($hasJs) {
         $jsBlock = (string)$m->codeArea($id . '_js')
             ->language('js')
             ->value($jsCode)
             ->readOnly(true)
             ->rows(min(20, max(4, substr_count($jsCode, "\n") + 1)));
 
-        $tabs->tab('js', 'JavaScript')->icon('fa-js')->content($jsBlock);
+        $tab = $tabs->tab('js', 'JavaScript')->icon('fa-js')->content($jsBlock);
+        if (!$hasPhp) {
+            $tab->active();
+        }
     }
 
     return '<div class="m-demo-code-tabs">' . (string)$tabs . '</div>';

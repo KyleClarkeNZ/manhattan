@@ -1572,3 +1572,181 @@ body.m-dark .m-button-group-sep,
 body.theme-dark .m-button-group-sep {
     background: #3a3a5a;
 }
+
+/* === RichTextEditor Component (dark) === */
+body.m-dark .m-richtexteditor,
+body.theme-dark .m-richtexteditor {
+    border-color: #2a3448;
+    background: #14202e;
+}
+
+body.m-dark .m-richtexteditor-focused,
+body.theme-dark .m-richtexteditor-focused {
+    border-color: #42a5f5;
+    box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.15);
+}
+
+body.m-dark .m-rte-toolbar,
+body.theme-dark .m-rte-toolbar {
+    background: #0e1825;
+    border-bottom-color: #2a3448;
+}
+
+body.m-dark .m-rte-sep,
+body.theme-dark .m-rte-sep {
+    background: #2a3448;
+}
+
+body.m-dark .m-rte-select,
+body.theme-dark .m-rte-select {
+    background-color: #14202e;
+    border-color: #2a3448;
+    color: #cdd6e0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+}
+
+body.m-dark .m-rte-select:hover,
+body.m-dark .m-rte-select:focus,
+body.theme-dark .m-rte-select:hover,
+body.theme-dark .m-rte-select:focus {
+    border-color: #42a5f5;
+}
+
+/* --- Toolbar custom dropdowns (dark) --- */
+body.m-dark .m-rte-dropdown-trigger,
+body.theme-dark .m-rte-dropdown-trigger {
+    background: #14202e;
+    border-color: #2a3448;
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-dropdown-trigger:hover,
+body.m-dark .m-rte-dropdown-trigger[aria-expanded="true"],
+body.theme-dark .m-rte-dropdown-trigger:hover,
+body.theme-dark .m-rte-dropdown-trigger[aria-expanded="true"] {
+    border-color: #42a5f5;
+    background: #1a2a3c;
+}
+
+body.m-dark .m-rte-dropdown-panel,
+body.theme-dark .m-rte-dropdown-panel {
+    background: #14202e;
+    border-color: #2a3448;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+body.m-dark .m-rte-dropdown-item,
+body.theme-dark .m-rte-dropdown-item {
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-dropdown-item:hover,
+body.theme-dark .m-rte-dropdown-item:hover {
+    background: #1a2a3c;
+}
+
+body.m-dark .m-rte-dropdown-item.m-rte-dropdown-item-active,
+body.theme-dark .m-rte-dropdown-item.m-rte-dropdown-item-active {
+    background: rgba(66, 165, 245, 0.15);
+    color: #42a5f5;
+}
+
+body.m-dark .m-rte-color-btn,
+body.theme-dark .m-rte-color-btn {
+    background: #14202e;
+    border-color: #2a3448;
+    color: #8899aa;
+}
+
+body.m-dark .m-rte-color-btn:hover,
+body.theme-dark .m-rte-color-btn:hover {
+    background: #1a2a3c;
+    border-color: #42a5f5;
+    color: #42a5f5;
+}
+
+body.m-dark .m-rte-color-panel,
+body.theme-dark .m-rte-color-panel {
+    background: #14202e;
+    border-color: #2a3448;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+body.m-dark .m-rte-color-custom,
+body.theme-dark .m-rte-color-custom {
+    border-color: #2a3448;
+}
+
+body.m-dark .m-rte-content,
+body.theme-dark .m-rte-content {
+    color: #cdd6e0;
+    caret-color: #42a5f5;
+}
+
+body.m-dark .m-rte-footer,
+body.theme-dark .m-rte-footer {
+    background: #0e1825;
+    border-top-color: #2a3448;
+}
+
+body.m-dark .m-richtexteditor-readonly .m-rte-content,
+body.theme-dark .m-richtexteditor-readonly .m-rte-content {
+    background: #0e1825;
+}
+
+/* m-richtext dark overrides */
+body.m-dark .m-richtext code,
+body.theme-dark .m-richtext code {
+    background: #0e1825;
+}
+
+body.m-dark .m-richtext pre,
+body.theme-dark .m-richtext pre {
+    background: #0e1825;
+}
+
+body.m-dark .m-richtext hr,
+body.theme-dark .m-richtext hr {
+    border-top-color: #2a3448;
+}
+
+/* --- Link dialog (dark) --- */
+body.m-dark .m-rte-link-panel,
+body.theme-dark .m-rte-link-panel {
+    background: #14202e;
+    border-color: #2a3448;
+}
+
+body.m-dark .m-rte-link-header,
+body.theme-dark .m-rte-link-header {
+    background: #0e1825;
+    border-bottom-color: #2a3448;
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-link-close,
+body.theme-dark .m-rte-link-close {
+    color: #8899aa;
+}
+
+body.m-dark .m-rte-link-close:hover,
+body.theme-dark .m-rte-link-close:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-link-field-label,
+body.theme-dark .m-rte-link-field-label {
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-link-newtab,
+body.theme-dark .m-rte-link-newtab {
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-link-footer,
+body.theme-dark .m-rte-link-footer {
+    background: #0e1825;
+    border-top-color: #2a3448;
+}
