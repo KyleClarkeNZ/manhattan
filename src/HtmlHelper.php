@@ -496,6 +496,36 @@ class HtmlHelper
     }
 
     /**
+     * Create a Popover component.
+     *
+     * A floating panel anchored to a trigger element. Supports static HTML content
+     * or remote AJAX content. Triggers on hover (default) or click.
+     *
+     * @param string $id      Unique identifier for the popover
+     * @param array  $options Additional configuration options
+     * @return Popover
+     */
+    public function popover(string $id, array $options = []): Popover
+    {
+        return new Popover($id, $options);
+    }
+
+    /**
+     * Create a Pagination component.
+     *
+     * Renders pagination controls that can drive component data in three modes:
+     * 'client' (DOM-based), 'server' (link-based), or 'ajax' (fetch-based).
+     *
+     * @param string $id      Unique identifier for the pagination nav
+     * @param array  $options Additional configuration options
+     * @return Pagination
+     */
+    public function pagination(string $id, array $options = []): Pagination
+    {
+        return new Pagination($id, $options);
+    }
+
+    /**
      * Render Manhattan script includes
      * Should be called in layout before closing </body> tag
      */
@@ -529,6 +559,8 @@ class HtmlHelper
 <script src="{$js}/components/wizard.js" defer></script>
 <script src="{$js}/components/buttongroup.js" defer></script>
 <script src="{$js}/components/richtexteditor.js" defer></script>
+<script src="{$js}/components/popover.js" defer></script>
+<script src="{$js}/components/pagination.js" defer></script>
 HTML;
     }
 

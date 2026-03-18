@@ -1763,3 +1763,116 @@ body.theme-dark .m-rte-link-footer {
     background: #0e1825;
     border-top-color: #2a3448;
 }
+
+/* ========================================
+   Pagination
+   ======================================== */
+body.m-dark .m-pagination-btn,
+body.theme-dark .m-pagination-btn {
+    background: #1e242b;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #cdd6e0;
+}
+
+body.m-dark .m-pagination-btn:hover:not(.m-pagination-disabled):not(.m-pagination-active),
+body.theme-dark .m-pagination-btn:hover:not(.m-pagination-disabled):not(.m-pagination-active) {
+    background: #252d36;
+    border-color: #64b5f6;
+    color: #64b5f6;
+}
+
+body.m-dark .m-pagination-btn.m-pagination-active,
+body.theme-dark .m-pagination-btn.m-pagination-active {
+    background: #1976D2;
+    border-color: #1976D2;
+    color: #fff;
+}
+
+body.m-dark .m-pagination-nav,
+body.theme-dark .m-pagination-nav {
+    color: #a7b0bb;
+}
+
+body.m-dark .m-pagination-ellipsis,
+body.theme-dark .m-pagination-ellipsis {
+    color: #555;
+}
+
+body.m-dark .m-pagination-info,
+body.theme-dark .m-pagination-info {
+    color: #a7b0bb;
+}
+
+body.m-dark .m-pagination-size-label,
+body.theme-dark .m-pagination-size-label {
+    color: #777;
+}
+
+/* Size selector inherits Manhattan Dropdown dark theme styles automatically */
+
+/* ========================================
+   Popover
+   ======================================== */
+body.m-dark .m-popover,
+body.theme-dark .m-popover {
+    background: #252d36;
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Arrow fill overrides — must match dark background */
+body.m-dark .m-popover-bottom .m-popover-arrow::after,
+body.theme-dark .m-popover-bottom .m-popover-arrow::after {
+    border-bottom-color: #252d36;
+}
+
+body.m-dark .m-popover-top .m-popover-arrow::after,
+body.theme-dark .m-popover-top .m-popover-arrow::after {
+    border-top-color: #252d36;
+}
+
+body.m-dark .m-popover-right .m-popover-arrow::after,
+body.theme-dark .m-popover-right .m-popover-arrow::after {
+    border-right-color: #252d36;
+}
+
+body.m-dark .m-popover-left .m-popover-arrow::after,
+body.theme-dark .m-popover-left .m-popover-arrow::after {
+    border-left-color: #252d36;
+}
+
+/* Arrow border colour */
+body.m-dark .m-popover-bottom .m-popover-arrow,
+body.theme-dark .m-popover-bottom .m-popover-arrow {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+body.m-dark .m-popover-top .m-popover-arrow,
+body.theme-dark .m-popover-top .m-popover-arrow {
+    border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+body.m-dark .m-popover-right .m-popover-arrow,
+body.theme-dark .m-popover-right .m-popover-arrow {
+    border-right-color: rgba(255, 255, 255, 0.12);
+}
+
+body.m-dark .m-popover-left .m-popover-arrow,
+body.theme-dark .m-popover-left .m-popover-arrow {
+    border-left-color: rgba(255, 255, 255, 0.12);
+}
+
+body.m-dark .m-popover-header,
+body.theme-dark .m-popover-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+body.m-dark .m-popover-title,
+body.theme-dark .m-popover-title {
+    color: #e6e6e6;
+}
+
+body.m-dark .m-popover-body,
+body.theme-dark .m-popover-body {
+    color: #a7b0bb;
+}

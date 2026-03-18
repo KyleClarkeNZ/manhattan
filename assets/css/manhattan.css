@@ -228,6 +228,360 @@
     transform: translateY(0);
 }
 
+/* === Popover Component === */
+.m-popover {
+    position: fixed;
+    z-index: 2500;
+    max-width: 360px;
+    min-width: 160px;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.07);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.97) translateY(-3px);
+    transition: opacity 150ms ease, transform 150ms ease;
+    overflow: visible;
+}
+
+.m-popover.m-popover-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1) translateY(0);
+}
+
+/* Arrow — zero-size element; actual triangle is built via ::before (border)
+   and ::after (fill) so the popover background covers the inner half cleanly. */
+.m-popover-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+/* Bottom placement: popover below trigger, arrow points up */
+.m-popover-bottom .m-popover-arrow {
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid rgba(0, 0, 0, 0.12);
+}
+.m-popover-bottom .m-popover-arrow::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: -7px;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid #ffffff;
+}
+
+/* Top placement: popover above trigger, arrow points down */
+.m-popover-top .m-popover-arrow {
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid rgba(0, 0, 0, 0.12);
+}
+.m-popover-top .m-popover-arrow::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: -7px;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid #ffffff;
+}
+
+/* Right placement: popover to the right, arrow points left */
+.m-popover-right .m-popover-arrow {
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid rgba(0, 0, 0, 0.12);
+}
+.m-popover-right .m-popover-arrow::after {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 2px;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-right: 7px solid #ffffff;
+}
+
+/* Left placement: popover to the left, arrow points right */
+.m-popover-left .m-popover-arrow {
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 8px solid rgba(0, 0, 0, 0.12);
+}
+.m-popover-left .m-popover-arrow::after {
+    content: '';
+    position: absolute;
+    top: -7px;
+    right: 2px;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-left: 7px solid #ffffff;
+}
+
+.m-popover-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.m-popover-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2c3e50;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.m-popover-body {
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #444;
+}
+
+.m-popover-body p:first-child { margin-top: 0; }
+.m-popover-body p:last-child  { margin-bottom: 0; }
+
+.m-popover-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-height: 60px;
+}
+
+.m-popover-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    color: #e74c3c;
+    font-size: 12px;
+}
+
+/* === Pagination Component === */
+.m-pagination {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+    font-size: 14px;
+}
+
+/* Left alignment: controls start left, info/sizes follow */
+.m-pagination-left  { justify-items: start; }
+.m-pagination-right { justify-items: end; }
+/* Center (default): controls centered via grid */
+
+.m-pagination-info {
+    justify-self: start;
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+}
+
+.m-pagination-controls {
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-wrap: nowrap;
+}
+
+.m-pagination-sizes {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.m-pagination-size-label {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Size selector — Manhattan Dropdown component */
+.m-pagination-sizes .m-dropdown-wrapper {
+    position: relative;
+}
+.m-pagination-sizes .m-dropdown-custom {
+    min-width: 72px;
+}
+.m-pagination-sizes .m-dropdown-header {
+    padding: 0 30px 0 10px;
+    font-size: 13px;
+    height: 34px;
+    border-color: #dde3ec;
+}
+
+/* Page buttons */
+.m-pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    border: 1px solid #dde3ec;
+    border-radius: 6px;
+    background: #fff;
+    color: #444;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.m-pagination-btn:hover:not(.m-pagination-disabled):not(.m-pagination-active) {
+    background: #f0f6fa;
+    border-color: #118AB2;
+    color: #118AB2;
+}
+
+.m-pagination-btn:focus-visible {
+    outline: 2px solid #118AB2;
+    outline-offset: 2px;
+}
+
+/* Active / current page */
+.m-pagination-btn.m-pagination-active {
+    background: #118AB2;
+    border-color: #118AB2;
+    color: #fff;
+    cursor: default;
+    font-weight: 600;
+}
+
+/* Disabled nav button */
+.m-pagination-btn.m-pagination-disabled,
+.m-pagination-btn[disabled] {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Nav (‹ ›) buttons: slightly narrower */
+.m-pagination-nav {
+    min-width: 30px;
+    font-size: 16px;
+    font-weight: 400;
+    color: #666;
+}
+
+/* Ellipsis */
+.m-pagination-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 34px;
+    font-size: 13px;
+    color: #aaa;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* --- Compact variant --- */
+.m-pagination-compact .m-pagination-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    font-size: 12px;
+    border-radius: 4px;
+}
+.m-pagination-compact .m-pagination-nav {
+    min-width: 26px;
+    font-size: 14px;
+}
+.m-pagination-compact .m-pagination-ellipsis {
+    height: 28px;
+    min-width: 24px;
+    font-size: 12px;
+}
+.m-pagination-compact .m-pagination-info,
+.m-pagination-compact .m-pagination-size-label {
+    font-size: 11px;
+}
+.m-pagination-compact .m-pagination-sizes .m-dropdown-header {
+    font-size: 11px;
+    height: 28px;
+    padding: 0 26px 0 8px;
+    min-width: 56px;
+}
+
+/* --- Large variant --- */
+.m-pagination-large .m-pagination-btn {
+    min-width: 42px;
+    height: 42px;
+    padding: 0 12px;
+    font-size: 15px;
+    border-radius: 8px;
+}
+.m-pagination-large .m-pagination-nav {
+    min-width: 36px;
+    font-size: 20px;
+}
+.m-pagination-large .m-pagination-ellipsis {
+    height: 42px;
+    font-size: 16px;
+}
+.m-pagination-large .m-pagination-sizes .m-dropdown-header {
+    font-size: 15px;
+    height: 42px;
+    padding: 0 34px 0 14px;
+}
+
+/* Target element loading state (ajax mode) */
+.m-pagination-target-loading {
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+/* Responsive: collapse to single column on very small screens */
+@media (max-width: 480px) {
+    .m-pagination {
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+    .m-pagination-info,
+    .m-pagination-sizes {
+        justify-self: center;
+    }
+    .m-pagination-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
 /* === Loader Component === */
 .m-hidden {
     display: none !important;

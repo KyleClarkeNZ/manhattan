@@ -154,6 +154,43 @@ if (strpos($uri, '/wizardData') !== false && $method === 'GET') {
     exit;
 }
 
+if (strpos($uri, '/paginationPage') !== false && $method === 'GET') {
+    $page    = max(1, (int)($_GET['page']    ?? 1));
+    $perPage = max(1, (int)($_GET['perPage'] ?? 5));
+    $total   = 47;
+    $offset  = ($page - 1) * $perPage;
+    $items   = [];
+    for ($n = $offset + 1; $n <= min($offset + $perPage, $total); $n++) {
+        $items[] = '<div class="m-list-item" data-pagination-item>'
+            . '<div style="display:flex;align-items:center;gap:10px;padding:2px 0">'
+            . '<span style="width:28px;height:28px;border-radius:50%;background:#118AB2;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">' . $n . '</span>'
+            . '<div><strong style="font-size:13px">AJAX Item #' . $n . '</strong><br>'
+            . '<span style="font-size:12px;color:#888">Loaded from server — page ' . $page . '</span></div>'
+            . '</div></div>';
+    }
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+    if (strpos($accept, 'application/json') !== false) {
+        header('Content-Type: application/json');
+        echo json_encode(['html' => implode('', $items), 'total' => $total]);
+    } else {
+        echo implode('', $items);
+    }
+    exit;
+}
+
+if (strpos($uri, '/popoverContent') !== false && $method === 'GET') {
+    // Return demo HTML for the remote popover example
+    echo '<div style="display:flex;align-items:center;gap:10px;padding:2px 0">'
+       . '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#118AB2,#06457a);color:#fff;'
+       .      'display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">DM</div>'
+       . '<div style="display:flex;flex-direction:column;gap:2px">'
+       .   '<strong style="font-size:13px">Demo User</strong>'
+       .   '<span style="font-size:12px;color:#888">Loaded via AJAX</span>'
+       .   '<span style="font-size:11px;color:#aaa"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> Remote, URL</span>'
+       . '</div></div>';
+    exit;
+}
+
 // ---------------------------------------------------------------------------
 // Manhattan setup
 // ---------------------------------------------------------------------------
@@ -208,11 +245,14 @@ $demoNav = [
     'chart'       => ['Chart',       'fa-chart-bar',          'Data & Visualisation'],
     'progressbar' => ['ProgressBar', 'fa-tasks',              'Data & Visualisation'],
     'rating'      => ['Rating',      'fa-star',               'Data & Visualisation'],
+    // Data & Visualisation
+    'pagination'  => ['Pagination',  'fa-ellipsis-h',         'Data & Visualisation'],
     // Overlays & Feedback
     'window'      => ['Window',      'fa-window-maximize',    'Overlays & Feedback'],
     'dialog'      => ['Dialog',      'fa-comment-dots',       'Overlays & Feedback'],
     'toaster'     => ['Toaster',     'fa-bell',               'Overlays & Feedback'],
     'tooltip'     => ['Tooltip',     'fa-comment',            'Overlays & Feedback'],
+    'popover'     => ['Popover',     'fa-comment-alt',        'Overlays & Feedback'],
     // Utilities
     'codearea'    => ['CodeArea',    'fa-code',               'Utilities'],
     // Composites
