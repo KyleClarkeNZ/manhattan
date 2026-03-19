@@ -1876,3 +1876,50 @@ body.m-dark .m-popover-body,
 body.theme-dark .m-popover-body {
     color: #a7b0bb;
 }
+
+/* =====================================================================
+   ICON PICKER — Dark theme
+   ===================================================================== */
+
+body.m-dark .m-iconpicker-trigger,
+body.theme-dark .m-iconpicker-trigger {
+    background: var(--m-input-bg, #1e242b);
+    border-color: var(--m-border-color, #2e3740);
+    color: var(--m-text, #e6eaf0);
+}
+
+body.m-dark .m-iconpicker-trigger:hover,
+body.theme-dark .m-iconpicker-trigger:hover {
+    border-color: #118AB2;
+}
+
+body.m-dark .m-iconpicker-trigger[aria-expanded="true"],
+body.theme-dark .m-iconpicker-trigger[aria-expanded="true"] {
+    border-color: #118AB2;
+    box-shadow: 0 0 0 3px rgba(17, 138, 178, 0.2);
+}
+
+body.m-dark .m-iconpicker-panel,
+body.theme-dark .m-iconpicker-panel {
+    background: var(--m-surface, #1e242b);
+    border-color: var(--m-border-color, #2e3740);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+body.m-dark .m-iconpicker-btn,
+body.theme-dark .m-iconpicker-btn {
+    color: var(--m-text, #c0c8d4);
+}
+
+body.m-dark .m-iconpicker-btn:hover,
+body.theme-dark .m-iconpicker-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #64b5f6;
+}
+
+body.m-dark .m-iconpicker-btn.m-iconpicker-selected,
+body.theme-dark .m-iconpicker-btn.m-iconpicker-selected {
+    background: #118AB2;
+    color: #fff;
+    border-color: #118AB2;
+}

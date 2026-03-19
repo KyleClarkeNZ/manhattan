@@ -526,6 +526,21 @@ class HtmlHelper
     }
 
     /**
+     * Create an IconPicker component.
+     *
+     * Renders a dropdown-style picker with a configurable grid of Font Awesome icons.
+     * Selecting an icon updates a hidden form input for submission.
+     *
+     * @param string $id      Unique identifier for the icon picker
+     * @param array  $options Configuration options
+     * @return IconPicker
+     */
+    public function iconPicker(string $id, array $options = []): IconPicker
+    {
+        return new IconPicker($id, $options);
+    }
+
+    /**
      * Render Manhattan script includes
      * Should be called in layout before closing </body> tag
      */
@@ -561,6 +576,7 @@ class HtmlHelper
 <script src="{$js}/components/richtexteditor.js" defer></script>
 <script src="{$js}/components/popover.js" defer></script>
 <script src="{$js}/components/pagination.js" defer></script>
+<script src="{$js}/components/iconpicker.js" defer></script>
 HTML;
     }
 

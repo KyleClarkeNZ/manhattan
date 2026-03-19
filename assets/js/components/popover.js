@@ -301,6 +301,13 @@
             }
         });
 
+        // Reposition when any element in the page scrolls (use capture to catch nested scrollers)
+        document.addEventListener('scroll', function () {
+            if (popEl.classList.contains('m-popover-visible') && activeTrigger) {
+                positionPopover(popEl, activeTrigger, offset);
+            }
+        }, true);
+
         // --- Auto-bind configured triggers ---
 
         // Single element ID via data-trigger

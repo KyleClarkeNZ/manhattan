@@ -130,6 +130,13 @@
                 .then(function(resp) {
                     var html = (typeof resp === 'string') ? resp : (resp && resp.html ? resp.html : '');
                     injectHtml(panel, html);
+
+                    // Auto-init any nested tabs inside the loaded content
+                    var nestedTabs = panel.querySelectorAll('.m-tabs');
+                    for (var n = 0; n < nestedTabs.length; n++) {
+                        initSingleTabs(nestedTabs[n]);
+                    }
+
                     if (window.m.utils && window.m.utils.trigger) {
                         window.m.utils.trigger(container, 'm-tab-content-loaded', { key: key, panel: panel });
                     }
@@ -152,12 +159,16 @@
             .then(function(r) {
                 return r.text().then(function(html) {
                     if (!r.ok) {
-                        // Server returned an error — inject whatever it sent
                         injectHtml(panel, html || '<div class="partial-error"><div class="partial-error__icon">'
                             + '<i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>'
                             + '<div class="partial-error__body"><p class="partial-error__message">Failed to load content.</p></div></div>');
                     } else {
                         injectHtml(panel, html);
+                    }
+                    // Auto-init any nested tabs inside the loaded content
+                    var nestedTabs = panel.querySelectorAll('.m-tabs');
+                    for (var n = 0; n < nestedTabs.length; n++) {
+                        initSingleTabs(nestedTabs[n]);
                     }
                 });
             })
@@ -222,6 +233,11 @@
                     var panel = el.querySelector('.m-tabs-panel[data-tab-key="' + key + '"]');
                     if (panel) {
                         injectHtml(panel, html);
+                        // Auto-init any nested tabs inside the injected content
+                        var nestedTabs = panel.querySelectorAll('.m-tabs');
+                        for (var n = 0; n < nestedTabs.length; n++) {
+                            initSingleTabs(nestedTabs[n]);
+                        }
                     }
                     return api;
                 },
@@ -240,6 +256,11 @@
                         }, opts || {})).then(function(resp) {
                             var html = (typeof resp === 'string') ? resp : (resp && resp.html ? resp.html : '');
                             injectHtml(panel, html);
+                            // Auto-init any nested tabs inside the refreshed content
+                            var nestedTabs = panel.querySelectorAll('.m-tabs');
+                            for (var n = 0; n < nestedTabs.length; n++) {
+                                initSingleTabs(nestedTabs[n]);
+                            }
                             if (window.m.utils && window.m.utils.trigger) {
                                 window.m.utils.trigger(el, 'm-tab-content-refresh', { key: key, panel: panel });
                             }

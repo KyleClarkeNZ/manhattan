@@ -236,6 +236,7 @@ $demoNav = [
     'radio'       => ['Radio',       'fa-dot-circle',         'Editors & Forms'],
     'datepicker'  => ['DatePicker',  'fa-calendar-alt',       'Editors & Forms'],
     'address'     => ['Address',     'fa-map-marker-alt',     'Editors & Forms'],
+    'iconpicker'  => ['IconPicker',  'fa-icons',              'Editors & Forms'],
     'richtexteditor' => ['RichTextEditor', 'fa-pen-to-square',  'Editors & Forms'],
     'form'        => ['Form',        'fa-edit',               'Editors & Forms'],
     'validator'   => ['Validator',   'fa-check-circle',       'Editors & Forms'],

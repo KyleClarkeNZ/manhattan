@@ -4719,3 +4719,128 @@ textarea.m-wizard-field-error {
         min-width: 112px;
     }
 }
+
+/* =====================================================================
+   ICON PICKER
+   ===================================================================== */
+
+.m-iconpicker {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.m-iconpicker-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--m-border-color, #dde1e7);
+    border-radius: var(--m-radius, 6px);
+    background: var(--m-input-bg, #fff);
+    color: var(--m-text, #222);
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.m-iconpicker-trigger:hover {
+    border-color: var(--m-primary, #118AB2);
+}
+
+.m-iconpicker-trigger[aria-expanded="true"] {
+    border-color: var(--m-primary, #118AB2);
+    box-shadow: 0 0 0 3px rgba(17, 138, 178, 0.12);
+}
+
+.m-iconpicker-trigger:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.m-iconpicker-trigger-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    width: 1.1em;
+    text-align: center;
+    color: var(--m-text, #222);
+}
+
+.m-iconpicker-placeholder-icon {
+    color: var(--m-text-muted, #aaa);
+}
+
+.m-iconpicker-trigger-label {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.m-iconpicker-caret {
+    font-size: 0.65rem;
+    color: var(--m-text-muted, #aaa);
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+}
+
+.m-iconpicker-trigger[aria-expanded="true"] .m-iconpicker-caret {
+    transform: rotate(180deg);
+}
+
+/* Panel */
+.m-iconpicker-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 9990;
+    background: var(--m-surface, #fff);
+    border: 1px solid var(--m-border-color, #dde1e7);
+    border-radius: var(--m-radius, 6px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: 0.5rem;
+    min-width: 220px;
+}
+
+/* Grid of icon buttons */
+.m-iconpicker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    gap: 2px;
+}
+
+.m-iconpicker-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--m-text, #333);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+}
+
+.m-iconpicker-btn:hover {
+    background: var(--m-bg-hover, rgba(0, 0, 0, 0.05));
+    color: var(--m-primary, #118AB2);
+}
+
+.m-iconpicker-btn.m-iconpicker-selected {
+    background: var(--m-primary, #118AB2);
+    color: #fff;
+    border-color: var(--m-primary, #118AB2);
+}
