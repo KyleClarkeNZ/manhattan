@@ -396,6 +396,55 @@
 .m-pagination-right { justify-items: end; }
 /* Center (default): controls centered via grid */
 
+/* --- Label position: above --- */
+/* Info spans full width in its own row above the controls row */
+.m-pagination-label-above .m-pagination-info {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    justify-self: center;
+}
+.m-pagination-label-above .m-pagination-controls {
+    grid-column: 2;
+    grid-row: 2;
+}
+.m-pagination-label-above .m-pagination-sizes {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+/* --- Label position: below --- */
+/* Controls row first, info spans full width below */
+.m-pagination-label-below .m-pagination-info {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+}
+.m-pagination-label-below .m-pagination-controls {
+    grid-column: 2;
+    grid-row: 1;
+}
+.m-pagination-label-below .m-pagination-sizes {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+/* --- Label position: right --- */
+/* Info on the right, sizes swap to the left */
+.m-pagination-label-right .m-pagination-info {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+}
+.m-pagination-label-right .m-pagination-controls {
+    grid-column: 2;
+    grid-row: 1;
+}
+.m-pagination-label-right .m-pagination-sizes {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+}
+
 .m-pagination-info {
     justify-self: start;
     font-size: 13px;

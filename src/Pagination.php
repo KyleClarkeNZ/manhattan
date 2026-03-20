@@ -53,6 +53,7 @@ final class Pagination extends Component
     private bool $showFirstLast = false;
     private string $size = '';        // '' | 'compact' | 'large'
     private bool $autoLoad = false;
+    private string $labelPosition = ''; // '' | 'left' | 'right' | 'above' | 'below' | 'none'
 
     /**
      * Total number of items across all pages.
@@ -194,6 +195,28 @@ final class Pagination extends Component
         return $this;
     }
 
+    /**
+     * Set the position of the "Showing X–Y of Z" info label.
+     *
+     * - 'left'  (default): info on the left of the controls row.
+     * - 'right':            info on the right of the controls row.
+     * - 'above':            info on its own row above the controls.
+     * - 'below':            info on its own row below the controls.
+     * - 'none':             info hidden entirely.
+     *
+     * Calling this method automatically shows the label for all positions
+     * except 'none', so ->showInfo() is not required when using this method.
+     */
+    public function labelPosition(string $position): self
+    {
+        $valid = ['left', 'right', 'above', 'below', 'none'];
+        if (in_array($position, $valid, true)) {
+            $this->labelPosition = $position;
+            $this->showInfo      = ($position !== 'none');
+        }
+        return $this;
+    }
+
     protected function getComponentType(): string
     {
         return 'pagination';
@@ -211,6 +234,11 @@ final class Pagination extends Component
         if ($this->align === 'right') $classes[] = 'm-pagination-right';
         if ($this->size === 'compact') $classes[] = 'm-pagination-compact';
         if ($this->size === 'large')   $classes[] = 'm-pagination-large';
+        // Label position: 'above', 'below', 'right' get a modifier class;
+        // 'left' and 'none' use the default layout.
+        if (in_array($this->labelPosition, ['above', 'below', 'right'], true)) {
+            $classes[] = 'm-pagination-label-' . $this->labelPosition;
+        }
         foreach ($this->getExtraClasses() as $c) {
             $classes[] = $c;
         }
@@ -245,11 +273,17 @@ final class Pagination extends Component
         $html  = '<nav id="' . $id . '" class="' . $classAttr . '"' . $data . $extraAttrs;
         $html .= ' aria-label="Pagination">';
 
+        // Resolve effective show/position
+        $effectiveShow = $this->showInfo;
+        if ($this->labelPosition !== '') {
+            $effectiveShow = ($this->labelPosition !== 'none');
+        }
+
         // Info text column
         $html .= '<div class="m-pagination-info"';
-        $html .= $this->showInfo ? '' : ' aria-hidden="true" style="visibility:hidden"';
+        $html .= $effectiveShow ? '' : ' aria-hidden="true" style="visibility:hidden"';
         $html .= '>';
-        if ($this->showInfo && $this->total > 0) {
+        if ($effectiveShow && $this->total > 0) {
             $from = ($currentPage - 1) * $this->perPage + 1;
             $to   = min($currentPage * $this->perPage, $this->total);
             $html .= 'Showing ' . $from . '–' . $to . ' of ' . $this->total;

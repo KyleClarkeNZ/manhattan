@@ -139,6 +139,102 @@ for ($j = 1; $j <= 18; $j++) {
         ->showFirstLast(true)
         ->showInfo(true) ?>
 
+    <!-- ================================================================
+         5. Label Position
+         ================================================================ -->
+    <h3>Label Position</h3>
+    <p class="m-demo-desc">
+        The <code>-&gt;labelPosition()</code> method controls where the "Showing X&ndash;Y of Z" label
+        appears relative to the page buttons. Accepted values:
+        <code>'left'</code> (default), <code>'right'</code>, <code>'above'</code>,
+        <code>'below'</code>, and <code>'none'</code>.
+        Calling this method automatically shows the label &mdash; no separate <code>-&gt;showInfo()</code> call is needed.
+    </p>
+
+    <p class="m-demo-desc"><strong>above</strong> &mdash; label row above the buttons</p>
+    <?= $m->pagination('demo-pager-label-above')
+        ->total(128)
+        ->perPage(15)
+        ->currentPage(3)
+        ->mode('server')
+        ->url('/items?page={page}')
+        ->labelPosition('above') ?>
+
+    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>below</strong> &mdash; label row below the buttons</p>
+    <?= $m->pagination('demo-pager-label-below')
+        ->total(128)
+        ->perPage(15)
+        ->currentPage(3)
+        ->mode('server')
+        ->url('/items?page={page}')
+        ->labelPosition('below') ?>
+
+    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>right</strong> &mdash; label on the right, controls centred</p>
+    <?= $m->pagination('demo-pager-label-right')
+        ->total(128)
+        ->perPage(15)
+        ->currentPage(3)
+        ->mode('server')
+        ->url('/items?page={page}')
+        ->labelPosition('right') ?>
+
+    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>none</strong> &mdash; label hidden, controls centred</p>
+    <?= $m->pagination('demo-pager-label-none')
+        ->total(128)
+        ->perPage(15)
+        ->currentPage(3)
+        ->mode('server')
+        ->url('/items?page={page}')
+        ->labelPosition('none') ?>
+
+    <!-- ================================================================
+         5. Label Position
+         ================================================================ -->
+    <h3>Label Position</h3>
+    <p class="m-demo-desc">
+        The <code>->labelPosition()</code> method controls where the "Showing X&ndash;Y of Z" label
+        appears relative to the page buttons. Accepted values:
+        <code>'left'</code> (default), <code>'right'</code>, <code>'above'</code>,
+        <code>'below'</code>, and <code>'none'</code>.
+        Calling this method automatically shows the label; no separate <code>->showInfo()</code> call is needed.
+    </p>
+
+    <p class="m-demo-desc"><strong>above</strong> — label row above the buttons</p>
+    <?= $m->pagination('demo-pager-label-above')
+        ->total(128)
+        ->perPage(15)
+        ->currentPage(3)
+        ->mode('server')
+        ->url('/items?page={page}')
+        ->labelPosition('above') ?>
+
+    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>below</strong> — label row below the buttons</p>
+    <?= $m->pagination('demo-pager-label-below')
+        ->total(128)
+        ->perPage(15)
+        ->currentPage(3)
+        ->mode('server')
+        ->url('/items?page={page}')
+        ->labelPosition('below') ?>
+
+    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>right</strong> — label on the right side (controls centred)</p>
+    <?= $m->pagination('demo-pager-label-right')
+        ->total(128)
+        ->perPage(15)
+        ->currentPage(3)
+        ->mode('server')
+        ->url('/items?page={page}')
+        ->labelPosition('right') ?>
+
+    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>none</strong> — label hidden, controls centred</p>
+    <?= $m->pagination('demo-pager-label-none')
+        ->total(128)
+        ->perPage(15)
+        ->currentPage(3)
+        ->mode('server')
+        ->url('/items?page={page}')
+        ->labelPosition('none') ?>
+
     <div class="m-demo-output" id="pag-output">Interact with the client or AJAX pager above to see events here…</div>
 
     <?= demoCodeTabs(
@@ -239,11 +335,12 @@ document.getElementById(\'my-pager\').addEventListener(\'m:pagination:loaded\', 
     ['->target($id)', 'self', 'ID of the container whose children are paginated (client/ajax).'],
     ['->mode($m)', 'self', '<code>\'client\'</code> (default), <code>\'server\'</code>, or <code>\'ajax\'</code>.'],
     ['->url($template)', 'self', 'URL template. Tokens: <code>{page}</code>, <code>{perPage}</code>. Required for server mode; optional for ajax auto-fetch.'],
-    ['->showInfo()', 'self', 'Show "Showing X–Y of Z" info text. Default: false.'],
+    ['->showInfo()', 'self', 'Show "Showing X\u2013Y of Z" info text at the left. Default: false.'],
+    ['->labelPosition($pos)', 'self', 'Set info label position and show it. <code>\'left\'</code> (default), <code>\'right\'</code>, <code>\'above\'</code>, <code>\'below\'</code>, <code>\'none\'</code>. Preferred over <code>->showInfo()</code> when position matters.'],
     ['->showSizeSelector($sizes)', 'self', 'Show a per-page size selector. E.g. <code>[10, 25, 50]</code>.'],
     ['->align($a)', 'self', 'Alignment: <code>\'center\'</code> (default), <code>\'left\'</code>, <code>\'right\'</code>.'],
     ['->maxButtons($n)', 'self', 'Max page buttons including ellipsis. Default: <code>7</code>.'],
-    ['->showFirstLast()', 'self', 'Show « (first) and » (last) jump buttons. Default: false.'],
+    ['->showFirstLast()', 'self', 'Show &laquo; (first) and &raquo; (last) jump buttons. Default: false.'],
     ['->compact()', 'self', 'Use smaller buttons.'],
     ['->large()', 'self', 'Use larger buttons.'],
     ['->autoLoad()', 'self', 'Ajax mode: fetch page 1 automatically on init. Default: false.'],
