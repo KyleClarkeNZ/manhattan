@@ -5,13 +5,22 @@ namespace Manhattan;
 
 /**
  * Label Component
- * Larger text labels with optional icons
+ *
+ * Renders a semantic HTML <label> element for use with form inputs.
+ * Associates with any input by ID via `for` / the `->for()` fluent method.
+ * Optionally marks required fields and displays a help icon.
+ *
+ * Usage:
+ *   <?= $m->label('title-label', 'Title')->for('titleInput') ?>
+ *   <?= $m->label('email-label', 'Email address')->for('emailInput')->required() ?>
+ *   <?= $m->label('note-label', 'Notes')->for('notesArea')->hint('Optional') ?>
  */
 final class Label extends Component
 {
     private string $text = '';
-    private string $variant = 'default';
-    private ?string $icon = null;
+    private string $for = '';
+    private bool $required = false;
+    private string $hint = '';
 
     public function __construct(string $id, string $text = '', array $options = [])
     {
@@ -19,6 +28,9 @@ final class Label extends Component
         $this->text = $text;
     }
 
+    /**
+     * Set the label text.
+     */
     public function text(string $text): self
     {
         $this->text = $text;
@@ -26,52 +38,29 @@ final class Label extends Component
     }
 
     /**
-     * @param string $variant default|primary|success|warning|danger|purple|secondary|info
+     * Set the `for` attribute — the ID of the associated input element.
      */
-    public function variant(string $variant): self
+    public function for(string $inputId): self
     {
-        $this->variant = $variant;
+        $this->for = $inputId;
         return $this;
     }
 
-    public function primary(): self
+    /**
+     * Mark the field as required (adds a red asterisk).
+     */
+    public function required(bool $required = true): self
     {
-        return $this->variant('primary');
+        $this->required = $required;
+        return $this;
     }
 
-    public function success(): self
+    /**
+     * Add optional hint/sub-label text rendered beside the label.
+     */
+    public function hint(string $hint): self
     {
-        return $this->variant('success');
-    }
-
-    public function warning(): self
-    {
-        return $this->variant('warning');
-    }
-
-    public function danger(): self
-    {
-        return $this->variant('danger');
-    }
-
-    public function purple(): self
-    {
-        return $this->variant('purple');
-    }
-
-    public function secondary(): self
-    {
-        return $this->variant('secondary');
-    }
-
-    public function info(): self
-    {
-        return $this->variant('info');
-    }
-
-    public function icon(string $faIcon): self
-    {
-        $this->icon = $faIcon;
+        $this->hint = $hint;
         return $this;
     }
 
@@ -82,28 +71,31 @@ final class Label extends Component
 
     protected function renderHtml(): string
     {
-        $classes = array_merge(
-            ['m-label', 'm-label-' . $this->variant],
-            $this->getExtraClasses()
-        );
-
-        $attrs = $this->renderAdditionalAttributes(['id', 'class']) . $this->renderEventAttributes();
+        $classes   = array_merge(['m-label'], $this->getExtraClasses());
         $classAttr = htmlspecialchars(implode(' ', $classes), ENT_QUOTES, 'UTF-8');
-        $idAttr = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8');
+        $idAttr    = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8');
+        $forAttr   = $this->for !== ''
+            ? ' for="' . htmlspecialchars($this->for, ENT_QUOTES, 'UTF-8') . '"'
+            : '';
+        $attrs     = $this->renderAdditionalAttributes(['id', 'class', 'for']) . $this->renderEventAttributes();
 
-        $content = '';
-        if ($this->icon) {
-            $iconHelper = new Icon('', $this->icon);
-            $content .= $iconHelper . ' ';
+        $inner = htmlspecialchars($this->text, ENT_QUOTES, 'UTF-8');
+
+        if ($this->required) {
+            $inner .= '<span class="m-label-required" aria-hidden="true">*</span>';
         }
-        $content .= htmlspecialchars($this->text, ENT_QUOTES, 'UTF-8');
+
+        if ($this->hint !== '') {
+            $inner .= ' <span class="m-label-hint">' . htmlspecialchars($this->hint, ENT_QUOTES, 'UTF-8') . '</span>';
+        }
 
         return sprintf(
-            '<span id="%s" class="%s"%s>%s</span>',
+            '<label id="%s" class="%s"%s%s>%s</label>',
             $idAttr,
             $classAttr,
+            $forAttr,
             $attrs,
-            $content
+            $inner
         );
     }
 
@@ -112,3 +104,4 @@ final class Label extends Component
         return $this->renderHtml();
     }
 }
+

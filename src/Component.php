@@ -17,6 +17,10 @@ abstract class Component
     /** @var string[] */
     private array $extraClasses = [];
 
+    private string $labelText = '';
+    private bool $labelRequired = false;
+    private string $labelHint = '';
+
     public function __construct(string $id, array $options = [])
     {
         $this->id = $id;
@@ -86,9 +90,48 @@ abstract class Component
         return $this;
     }
 
+    /**
+     * Set a form label to render above this component.
+     */
+    public function label(string $text): self
+    {
+        $this->labelText = $text;
+        return $this;
+    }
+
+    /**
+     * Mark the label as required (shows red asterisk). Has no effect without label().
+     */
+    public function labelRequired(bool $required = true): self
+    {
+        $this->labelRequired = $required;
+        return $this;
+    }
+
+    /**
+     * Add subdued hint text to the label. Has no effect without label().
+     */
+    public function labelHint(string $hint): self
+    {
+        $this->labelHint = $hint;
+        return $this;
+    }
+
     public function render(): string
     {
-        return $this->renderHtml();
+        if ($this->labelText === '') {
+            return $this->renderHtml();
+        }
+
+        $labelComp = new Label($this->id . '_label', $this->labelText);
+        $labelComp->for($this->id);
+        if ($this->labelRequired) {
+            $labelComp->required();
+        }
+        if ($this->labelHint !== '') {
+            $labelComp->hint($this->labelHint);
+        }
+        return (string)$labelComp . $this->renderHtml();
     }
 
     public function __toString(): string

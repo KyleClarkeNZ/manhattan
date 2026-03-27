@@ -57,8 +57,8 @@
     box-shadow: 0 2px 8px rgba(0, 188, 212, 0.3);
 }
 
-/* === Label Component === */
-.m-label {
+/* === Chip Component (soft inline status/category tags) === */
+.m-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
@@ -69,44 +69,67 @@
     line-height: 1.5;
 }
 
-.m-label-primary {
+.m-chip-primary {
     background: rgba(33, 150, 243, 0.12);
     color: #1976D2;
 }
 
-.m-label-success {
+.m-chip-success {
     background: rgba(76, 175, 80, 0.12);
     color: #388E3C;
 }
 
-.m-label-warning {
+.m-chip-warning {
     background: rgba(255, 152, 0, 0.12);
     color: #F57C00;
 }
 
-.m-label-danger {
+.m-chip-danger {
     background: rgba(244, 67, 54, 0.12);
     color: #d32f2f;
 }
 
-.m-label-purple {
+.m-chip-purple {
     background: rgba(102, 126, 234, 0.12);
     color: #5e35b1;
 }
 
-.m-label-secondary {
+.m-chip-secondary {
     background: rgba(96, 125, 139, 0.12);
     color: #546E7A;
 }
 
-.m-label-default {
+.m-chip-default {
     background: rgba(0, 0, 0, 0.08);
     color: #616161;
 }
 
-.m-label-info {
+.m-chip-info {
     background: rgba(0, 188, 212, 0.12);
     color: #0097A7;
+}
+
+/* === Label Component (semantic form label) === */
+.m-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--m-text, #333);
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+    cursor: default;
+}
+
+.m-label-required {
+    color: #e53935;
+    margin-left: 0.25rem;
+    font-weight: 700;
+}
+
+.m-label-hint {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--m-text-muted, #888);
 }
 
 /* === Button Component === */
@@ -230,7 +253,7 @@
 
 /* === Popover Component === */
 .m-popover {
-    position: fixed;
+    position: absolute;
     z-index: 2500;
     max-width: 360px;
     min-width: 160px;
@@ -250,6 +273,12 @@
     pointer-events: auto;
     transform: scale(1) translateY(0);
 }
+
+/* Placement-aware hidden-state transforms so the entrance animation always
+   originates from the trigger side (the base rule handles bottom). */
+.m-popover-top   { transform: scale(0.97) translateY( 3px); }
+.m-popover-left  { transform: scale(0.97) translateX( 3px); }
+.m-popover-right { transform: scale(0.97) translateX(-3px); }
 
 /* Arrow — zero-size element; actual triangle is built via ::before (border)
    and ::after (fill) so the popover background covers the inner half cleanly. */
@@ -4892,4 +4921,131 @@ textarea.m-wizard-field-error {
     background: var(--m-primary, #118AB2);
     color: #fff;
     border-color: var(--m-primary, #118AB2);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SplitPane
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.m-split-pane {
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Orientation variants */
+.m-split-pane--horizontal { flex-direction: row; }
+.m-split-pane--vertical   { flex-direction: column; }
+
+/* ── Panes ─────────────────────────────────────────────────────────────────── */
+.m-split-pane__first {
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+}
+
+.m-split-pane__second {
+    flex: 1 1 0;
+    overflow: hidden;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ── Divider ───────────────────────────────────────────────────────────────── */
+.m-split-pane__divider {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--m-border, #e2e6ea);
+    transition: background 0.15s;
+    position: relative;
+    z-index: 1;
+    outline: none;
+}
+
+.m-split-pane--horizontal .m-split-pane__divider {
+    width: 5px;
+    cursor: col-resize;
+}
+
+.m-split-pane--vertical .m-split-pane__divider {
+    height: 5px;
+    cursor: row-resize;
+}
+
+.m-split-pane__divider:hover,
+.m-split-pane__divider:focus,
+.m-split-pane--dragging .m-split-pane__divider {
+    background: var(--m-primary, #118AB2);
+}
+
+/* Invisible wider hit area */
+.m-split-pane__divider::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: -4px; right: -4px;
+}
+.m-split-pane--vertical .m-split-pane__divider::before {
+    left: 0; right: 0; top: -4px; bottom: -4px;
+}
+
+/* Visual grip dots */
+.m-split-pane__divider-handle {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    pointer-events: none;
+    opacity: 0.45;
+    transition: opacity 0.15s;
+}
+
+.m-split-pane--horizontal .m-split-pane__divider-handle {
+    flex-direction: column;
+}
+.m-split-pane--vertical .m-split-pane__divider-handle {
+    flex-direction: row;
+}
+
+.m-split-pane__divider-handle::before,
+.m-split-pane__divider-handle::after {
+    content: '';
+    display: block;
+    border-radius: 50%;
+    background: currentColor;
+    width: 3px;
+    height: 3px;
+}
+
+.m-split-pane__divider:hover .m-split-pane__divider-handle,
+.m-split-pane__divider:focus .m-split-pane__divider-handle,
+.m-split-pane--dragging .m-split-pane__divider-handle {
+    opacity: 0.9;
+}
+
+/* Prevent text selection while dragging */
+.m-split-pane--dragging {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ── Mobile: stack panes vertically, hide divider ─────────────────────────── */
+@media (max-width: 768px) {
+    .m-split-pane {
+        flex-direction: column;
+    }
+    .m-split-pane__first {
+        width: 100% !important;
+        height: auto !important;
+        flex-shrink: 1;
+    }
+    .m-split-pane__divider {
+        display: none;
+    }
 }

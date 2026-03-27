@@ -20,6 +20,8 @@ class Form extends Component
     protected ?array $model = null;
     protected array $fields = [];
     protected ?Button $submitButton = null;
+    protected ?array $cancelButton = null;
+    protected ?Button $resetButton = null;
     protected bool $ajax = false;
     protected string $layout = 'vertical';
     protected bool $autoValidate = true;
@@ -169,6 +171,50 @@ class Form extends Component
         return $this->submitButton;
     }
     
+    /**
+     * Add a cancel button to the form.
+     *
+     * If $href is provided the button renders as an anchor link and navigates
+     * to that URL. Without $href it renders as a plain button that calls
+     * window.history.back() — useful when the cancel target isn't known at
+     * render time.
+     *
+     * @param string $text  Button label. Default: 'Cancel'.
+     * @param string $href  URL to navigate to on click. Empty = history.back().
+     * @param string $icon  Font Awesome icon class. Default: 'fa-times'.
+     * @return self
+     */
+    public function cancel(string $text = 'Cancel', string $href = '', string $icon = 'fa-times'): self
+    {
+        $this->cancelButton = [
+            'text' => $text,
+            'href' => $href,
+            'icon' => $icon,
+        ];
+        return $this;
+    }
+
+    /**
+     * Add a reset button to the form.
+     *
+     * Renders a <button type="reset"> that clears all fields back to their
+     * initial values — useful for long filter or data-entry forms.
+     *
+     * @param string $text Button label. Default: 'Reset'.
+     * @param string $icon Font Awesome icon class. Default: 'fa-undo'.
+     * @return self
+     */
+    public function reset(string $text = 'Reset', string $icon = 'fa-undo'): self
+    {
+        $resetId = $this->id . '_reset';
+        $this->resetButton = new Button($resetId, $text);
+        $this->resetButton->type('reset');
+        if (!empty($icon)) {
+            $this->resetButton->icon($icon);
+        }
+        return $this;
+    }
+
     /**
      * Enable AJAX form submission
      */
@@ -362,13 +408,13 @@ class Form extends Component
             
             // Render label if provided
             if (!empty($label)) {
-                $labelFor  = $component->getId();
-                $isRequired = !empty($field['rules']) && in_array('required', $field['rules'], true);
-                $labelHtml  = htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+                $isRequired  = !empty($field['rules']) && in_array('required', $field['rules'], true);
+                $labelComp   = new Label($component->getId() . '_label', $label);
+                $labelComp->for($component->getId());
                 if ($isRequired) {
-                    $labelHtml .= '<span class="required" aria-hidden="true">*</span>';
+                    $labelComp->required();
                 }
-                $html[] = '<label for="' . htmlspecialchars($labelFor, ENT_QUOTES, 'UTF-8') . '">' . $labelHtml . '</label>';
+                $html[] = (string)$labelComp;
             }
             
             // Render component
@@ -382,10 +428,32 @@ class Form extends Component
             $html[] = '</div>';
         }
         
-        // Render submit button if provided
-        if ($this->submitButton !== null) {
+        // Render action buttons if at least one is configured
+        if ($this->submitButton !== null || $this->cancelButton !== null || $this->resetButton !== null) {
             $html[] = '<div class="form-actions">';
-            $html[] = (string)$this->submitButton;
+
+            if ($this->submitButton !== null) {
+                $html[] = (string)$this->submitButton;
+            }
+
+            if ($this->cancelButton !== null) {
+                $safeText = htmlspecialchars($this->cancelButton['text'], ENT_QUOTES, 'UTF-8');
+                $iconHtml = '';
+                if (!empty($this->cancelButton['icon'])) {
+                    $iconHtml = '<i class="fas ' . htmlspecialchars($this->cancelButton['icon'], ENT_QUOTES, 'UTF-8') . '" aria-hidden="true"></i> ';
+                }
+                if (!empty($this->cancelButton['href'])) {
+                    $safeHref = htmlspecialchars($this->cancelButton['href'], ENT_QUOTES, 'UTF-8');
+                    $html[] = '<a href="' . $safeHref . '" class="m-button">' . $iconHtml . $safeText . '</a>';
+                } else {
+                    $html[] = '<button type="button" class="m-button" onclick="window.history.back()">' . $iconHtml . $safeText . '</button>';
+                }
+            }
+
+            if ($this->resetButton !== null) {
+                $html[] = (string)$this->resetButton;
+            }
+
             $html[] = '</div>';
         }
         

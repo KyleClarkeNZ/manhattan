@@ -109,54 +109,67 @@ body.theme-dark .m-badge-secondary {
 }
 
 /* ========================================
-   Label
+   Chip
    ======================================== */
-body.m-dark .m-label-primary,
-body.theme-dark .m-label-primary {
+body.m-dark .m-chip-primary,
+body.theme-dark .m-chip-primary {
     background: rgba(33, 150, 243, 0.18);
     color: #90caf9;
 }
 
-body.m-dark .m-label-success,
-body.theme-dark .m-label-success {
+body.m-dark .m-chip-success,
+body.theme-dark .m-chip-success {
     background: rgba(76, 175, 80, 0.18);
     color: #81c784;
 }
 
-body.m-dark .m-label-warning,
-body.theme-dark .m-label-warning {
+body.m-dark .m-chip-warning,
+body.theme-dark .m-chip-warning {
     background: rgba(255, 152, 0, 0.18);
     color: #ffb74d;
 }
 
-body.m-dark .m-label-danger,
-body.theme-dark .m-label-danger {
+body.m-dark .m-chip-danger,
+body.theme-dark .m-chip-danger {
     background: rgba(244, 67, 54, 0.18);
     color: #e57373;
 }
 
-body.m-dark .m-label-purple,
-body.theme-dark .m-label-purple {
+body.m-dark .m-chip-purple,
+body.theme-dark .m-chip-purple {
     background: rgba(102, 126, 234, 0.18);
     color: #9fa8da;
 }
 
-body.m-dark .m-label-secondary,
-body.theme-dark .m-label-secondary {
+body.m-dark .m-chip-secondary,
+body.theme-dark .m-chip-secondary {
     background: rgba(96, 125, 139, 0.18);
     color: #90a4ae;
 }
 
-body.m-dark .m-label-default,
-body.theme-dark .m-label-default {
+body.m-dark .m-chip-default,
+body.theme-dark .m-chip-default {
     background: rgba(255, 255, 255, 0.12);
     color: #b0bec5;
 }
 
-body.m-dark .m-label-info,
-body.theme-dark .m-label-info {
+body.m-dark .m-chip-info,
+body.theme-dark .m-chip-info {
     background: rgba(0, 188, 212, 0.18);
     color: #4dd0e1;
+}
+
+/* ========================================
+   Label (form label)
+   ======================================== */
+body.m-dark .m-label,
+body.theme-dark .m-label {
+    color: var(--m-text, #ddd);
+}
+
+body.m-dark .m-label-hint,
+body.theme-dark .m-label-hint {
+    color: var(--m-text-muted, #888);
 }
 
 /* ========================================
@@ -1922,4 +1935,14 @@ body.theme-dark .m-iconpicker-btn.m-iconpicker-selected {
     background: #118AB2;
     color: #fff;
     border-color: #118AB2;
+}
+
+/* ── SplitPane (dark) ───────────────────────────────────────────────────────── */
+body.m-dark .m-split-pane__divider {
+    background: var(--m-dark-border, #3a3a3a);
+}
+body.m-dark .m-split-pane__divider:hover,
+body.m-dark .m-split-pane__divider:focus,
+body.m-dark .m-split-pane--dragging .m-split-pane__divider {
+    background: var(--m-primary, #118AB2);
 }

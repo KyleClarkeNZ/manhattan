@@ -5,7 +5,11 @@
     <p class="m-demo-desc">
         A floating panel anchored to a trigger element. Supports static HTML content or remote AJAX
         content, hover (default) or click triggers, and smart viewport-aware placement.
-        Popovers are ideal for contextual info cards, user profile previews, and rich tooltips.
+        The popover is rendered to <code>&lt;body&gt;</code> and uses <code>position: absolute</code>
+        so it scrolls naturally with the document — no JavaScript scroll tracking needed.
+        When the popover is clamped near a viewport edge the arrow always adjusts to keep pointing
+        at the trigger element. Popovers are ideal for contextual info cards, user profile previews,
+        and rich tooltips.
     </p>
 
     <!-- ================================================================

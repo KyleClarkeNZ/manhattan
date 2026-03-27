@@ -59,11 +59,18 @@
         if (preferred !== 'auto') return preferred;
         var spaceBelow = window.innerHeight - triggerRect.bottom;
         var spaceAbove = triggerRect.top;
-        return (spaceBelow >= 160 || spaceBelow >= spaceAbove) ? 'bottom' : 'top';
+        // Prefer bottom; only flip to top when above has more room and below is tight
+        return (spaceAbove > spaceBelow && spaceBelow < 160) ? 'top' : 'bottom';
     }
 
     /**
-     * Position the popover near triggerEl using fixed coordinates.
+     * Position the popover near triggerEl using page-absolute coordinates.
+     * The popover must be a direct child of <body> (ensured during init) so that
+     * `position: absolute` resolves against the document origin.
+     *
+     * After clamping to the viewport the arrow is shifted to always point at the
+     * horizontal (top/bottom placements) or vertical (left/right placements)
+     * centre of the trigger element.
      */
     function positionPopover(popEl, triggerEl, offset) {
         var rect = triggerEl.getBoundingClientRect();
@@ -73,39 +80,58 @@
         popEl.classList.remove('m-popover-top', 'm-popover-bottom', 'm-popover-left', 'm-popover-right');
         popEl.classList.add('m-popover-' + placement);
 
-        // Measure the popover dimensions while off-screen
-        var prevVis = popEl.style.visibility;
-        popEl.style.visibility = 'hidden';
-        popEl.style.display = 'block';
+        // popover is never display:none — offsetWidth/Height are always valid
         var popW = popEl.offsetWidth;
         var popH = popEl.offsetHeight;
-        popEl.style.visibility = prevVis;
-        // display is reset when m-popover-visible class controls it
 
-        var left, top;
         var vw = document.documentElement.clientWidth;
         var vh = document.documentElement.clientHeight;
+        // Page scroll offsets — convert viewport-relative rect to page-absolute coords
+        var sx = window.scrollX !== undefined ? window.scrollX : window.pageXOffset;
+        var sy = window.scrollY !== undefined ? window.scrollY : window.pageYOffset;
+        var MARGIN = 8;
 
+        var left, top;
         if (placement === 'bottom') {
-            left = rect.left + rect.width / 2 - popW / 2;
-            top  = rect.bottom + offset;
+            left = sx + rect.left + rect.width  / 2 - popW / 2;
+            top  = sy + rect.bottom + offset;
         } else if (placement === 'top') {
-            left = rect.left + rect.width / 2 - popW / 2;
-            top  = rect.top - popH - offset;
+            left = sx + rect.left + rect.width  / 2 - popW / 2;
+            top  = sy + rect.top - popH - offset;
         } else if (placement === 'left') {
-            left = rect.left - popW - offset;
-            top  = rect.top + rect.height / 2 - popH / 2;
+            left = sx + rect.left - popW - offset;
+            top  = sy + rect.top + rect.height / 2 - popH / 2;
         } else { // right
-            left = rect.right + offset;
-            top  = rect.top + rect.height / 2 - popH / 2;
+            left = sx + rect.right + offset;
+            top  = sy + rect.top + rect.height / 2 - popH / 2;
         }
 
-        // Clamp horizontally and vertically within the viewport
-        left = Math.max(8, Math.min(left, vw - popW - 8));
-        top  = Math.max(8, Math.min(top,  vh - popH - 8));
+        // Clamp to stay within the current viewport
+        var clampedLeft = Math.max(sx + MARGIN, Math.min(left, sx + vw - popW - MARGIN));
+        var clampedTop  = Math.max(sy + MARGIN, Math.min(top,  sy + vh - popH - MARGIN));
 
-        popEl.style.left = left + 'px';
-        popEl.style.top  = top  + 'px';
+        popEl.style.left = clampedLeft + 'px';
+        popEl.style.top  = clampedTop  + 'px';
+
+        // Shift the arrow so it always points at the trigger's centre,
+        // even when the popover box has been clamped away from ideal position.
+        var arrowEl = popEl.querySelector('.m-popover-arrow');
+        if (arrowEl) {
+            arrowEl.style.left = '';
+            arrowEl.style.top  = '';
+            if (placement === 'bottom' || placement === 'top') {
+                var triggerCX = sx + rect.left + rect.width  / 2;
+                var arrowLeft = triggerCX - clampedLeft;
+                // Keep arrow within the rounded corners of the popover
+                arrowLeft = Math.max(16, Math.min(arrowLeft, popW - 16));
+                arrowEl.style.left = arrowLeft + 'px';
+            } else {
+                var triggerCY = sy + rect.top  + rect.height / 2;
+                var arrowTop  = triggerCY - clampedTop;
+                arrowTop = Math.max(16, Math.min(arrowTop, popH - 16));
+                arrowEl.style.top = arrowTop + 'px';
+            }
+        }
     }
 
     /**
@@ -124,6 +150,12 @@
         var offset     = parseInt(popEl.getAttribute('data-offset')     || '8',   10);
         var defaultUrl = popEl.getAttribute('data-remote') || '';
         var useCache   = popEl.getAttribute('data-cache') !== 'false';
+
+        // Reparent to <body> so `position: absolute` resolves against the document
+        // origin regardless of where the PHP rendered the popover element.
+        if (popEl.parentNode !== document.body) {
+            document.body.appendChild(popEl);
+        }
 
         var bodyEl  = popEl.querySelector('.m-popover-body');
         var titleEl = popEl.querySelector('.m-popover-title');
@@ -294,19 +326,12 @@
             }
         });
 
-        // Reposition on resize/scroll while visible
+        // Reposition on viewport resize (absolute coords may need updating)
         window.addEventListener('resize', function () {
             if (popEl.classList.contains('m-popover-visible') && activeTrigger) {
                 positionPopover(popEl, activeTrigger, offset);
             }
         });
-
-        // Reposition when any element in the page scrolls (use capture to catch nested scrollers)
-        document.addEventListener('scroll', function () {
-            if (popEl.classList.contains('m-popover-visible') && activeTrigger) {
-                positionPopover(popEl, activeTrigger, offset);
-            }
-        }, true);
 
         // --- Auto-bind configured triggers ---
 

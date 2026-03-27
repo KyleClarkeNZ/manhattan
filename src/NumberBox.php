@@ -217,9 +217,4 @@ class NumberBox extends Component
 
         return '<input' . $attrString . '>';
     }
-
-    public function __toString(): string
-    {
-        return $this->renderHtml();
-    }
 }

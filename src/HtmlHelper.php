@@ -407,11 +407,22 @@ class HtmlHelper
     }
 
     /**
-     * Create a Label component
+     * Create a Chip component (soft inline status/category tag).
      *
-     * @param string $id Unique identifier for the label
+     * @param string $id   Unique identifier
+     * @param string $text Chip text
+     * @return Chip
+     */
+    public function chip(string $id, string $text = '', array $options = []): Chip
+    {
+        return new Chip($id, $text, $options);
+    }
+
+    /**
+     * Create a Label component — a semantic <label> element for form inputs.
+     *
+     * @param string $id   Unique identifier
      * @param string $text Label text
-     * @param array $options Configuration options
      * @return Label
      */
     public function label(string $id, string $text = '', array $options = []): Label
@@ -541,6 +552,14 @@ class HtmlHelper
     }
 
     /**
+     * Create a SplitPane component — two panels with a draggable divider.
+     */
+    public function splitPane(string $id, array $options = []): SplitPane
+    {
+        return new SplitPane($id, $options);
+    }
+
+    /**
      * Render Manhattan script includes
      * Should be called in layout before closing </body> tag
      */
@@ -577,6 +596,7 @@ class HtmlHelper
 <script src="{$js}/components/popover.js" defer></script>
 <script src="{$js}/components/pagination.js" defer></script>
 <script src="{$js}/components/iconpicker.js" defer></script>
+<script src="{$js}/components/splitpane.js" defer></script>
 HTML;
     }
 
