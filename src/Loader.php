@@ -5,10 +5,11 @@ namespace Manhattan;
 
 final class Loader extends Component
 {
-    private string $text = 'Loading...';
+    private string $text = '';
     private bool $hidden = false;
     private bool $overlay = false;
     private string $size = 'md';
+    private bool $animateDots = false;
 
     public function __construct(string $id, array $options = [])
     {
@@ -23,6 +24,9 @@ final class Loader extends Component
         if (isset($options['overlay'])) {
             $this->overlay((bool)$options['overlay']);
         }
+        if (isset($options['animateDots'])) {
+            $this->animateDots((bool)$options['animateDots']);
+        }
         if (isset($options['size'])) {
             $this->size((string)$options['size']);
         }
@@ -31,6 +35,16 @@ final class Loader extends Component
     public function text(?string $text): self
     {
         $this->text = trim((string)$text);
+        return $this;
+    }
+
+    /**
+     * Animate a three-dot ellipsis after the text.
+     * Has no effect if no text is set.
+     */
+    public function animateDots(bool $animate = true): self
+    {
+        $this->animateDots = $animate;
         return $this;
     }
 
@@ -94,7 +108,16 @@ final class Loader extends Component
 
         $textHtml = '';
         if ($this->text !== '') {
-            $textHtml = '<span class="m-loader-text">' . htmlspecialchars($this->text, ENT_QUOTES, 'UTF-8') . '</span>';
+            $dots = '';
+            if ($this->animateDots) {
+                $dots = '<span class="m-loader-dots" aria-hidden="true">'
+                      . '<span>.</span><span>.</span><span>.</span>'
+                      . '</span>';
+            }
+            $textHtml = '<span class="m-loader-text">'
+                      . htmlspecialchars($this->text, ENT_QUOTES, 'UTF-8')
+                      . $dots
+                      . '</span>';
         }
 
         return "<div{$attrString}{$eventAttrs}{$extraAttrs}><span class=\"m-loader-spinner\" aria-hidden=\"true\"></span>{$textHtml}</div>";

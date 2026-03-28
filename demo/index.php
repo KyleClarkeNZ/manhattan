@@ -254,6 +254,7 @@ $demoNav = [
     'window'      => ['Window',      'fa-window-maximize',    'Overlays & Feedback'],
     'dialog'      => ['Dialog',      'fa-comment-dots',       'Overlays & Feedback'],
     'toaster'     => ['Toaster',     'fa-bell',               'Overlays & Feedback'],
+    'loader'      => ['Loader',      'fa-spinner',            'Overlays & Feedback'],
     'tooltip'     => ['Tooltip',     'fa-comment',            'Overlays & Feedback'],
     'popover'     => ['Popover',     'fa-comment-alt',        'Overlays & Feedback'],
     // Utilities

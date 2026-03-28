@@ -435,6 +435,11 @@ body.theme-dark .m-loader-text {
     color: #a7b0bb;
 }
 
+body.m-dark .m-loader-dots span,
+body.theme-dark .m-loader-dots span {
+    color: #a7b0bb;
+}
+
 /* ========================================
    List
    ======================================== */
