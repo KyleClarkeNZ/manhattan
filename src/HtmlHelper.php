@@ -560,6 +560,38 @@ class HtmlHelper
     }
 
     /**
+     * Create an ImageViewer component — image/video gallery with thumbnail navigation.
+     *
+     * Supports two layouts: 'side' (default — vertical thumbstrip left) and
+     * 'below' (horizontal thumbstrip beneath the stage). YouTube links and direct
+     * video URLs are supported alongside images. Optional lightbox integration
+     * and auto-advance are available.
+     *
+     * @param string $id Unique identifier for the ImageViewer
+     * @return ImageViewer
+     */
+    public function imageViewer(string $id): ImageViewer
+    {
+        return new ImageViewer($id);
+    }
+
+    /**
+     * Create a Lightbox component — full-screen overlay image viewer.
+     *
+     * Can be pre-populated with images via PHP or supplied dynamically at open
+     * time via JavaScript (lb.show(index, images)). Supports keyboard navigation
+     * and is automatically generated as a sibling when ImageViewer::lightbox() is
+     * called without an explicit lightbox ID.
+     *
+     * @param string $id Unique identifier for the Lightbox
+     * @return Lightbox
+     */
+    public function lightbox(string $id): Lightbox
+    {
+        return new Lightbox($id);
+    }
+
+    /**
      * Render Manhattan script includes
      * Should be called in layout before closing </body> tag
      */
@@ -597,6 +629,8 @@ class HtmlHelper
 <script src="{$js}/components/pagination.js" defer></script>
 <script src="{$js}/components/iconpicker.js" defer></script>
 <script src="{$js}/components/splitpane.js" defer></script>
+<script src="{$js}/components/lightbox.js" defer></script>
+<script src="{$js}/components/imageviewer.js" defer></script>
 HTML;
     }
 

@@ -225,6 +225,7 @@ $demoNav = [
     'emptystate'  => ['EmptyState',  'fa-inbox',              'Layout & Display'],
     'tabs'        => ['Tabs',        'fa-folder',             'Layout & Display'],
     'accordion'   => ['Accordion',   'fa-bars-staggered',     'Layout & Display'],
+    'imageviewer' => ['ImageViewer', 'fa-images',             'Layout & Display'],
     // Actions & Navigation
     'button'      => ['Button',      'fa-hand-pointer',       'Actions & Navigation'],
     'buttongroup' => ['ButtonGroup', 'fa-table-columns',      'Actions & Navigation'],
@@ -257,6 +258,7 @@ $demoNav = [
     'loader'      => ['Loader',      'fa-spinner',            'Overlays & Feedback'],
     'tooltip'     => ['Tooltip',     'fa-comment',            'Overlays & Feedback'],
     'popover'     => ['Popover',     'fa-comment-alt',        'Overlays & Feedback'],
+    'lightbox'    => ['Lightbox',    'fa-expand',             'Overlays & Feedback'],
     // Utilities
     'codearea'    => ['CodeArea',    'fa-code',               'Utilities'],
     // Composites

@@ -5068,3 +5068,491 @@ textarea.m-wizard-field-error {
         display: none;
     }
 }
+
+/* ==========================================================================
+   ImageViewer
+   ========================================================================== */
+
+/*
+ * CSS variables (set via PHP ->thumbSize() / ->height()):
+ *   --m-iv-thumb-w   Thumbnail width  (default 80px)
+ *   --m-iv-thumb-h   Thumbnail height (default 60px)
+ *   --m-iv-height    Stage height     (default 380px)
+ */
+
+.m-imageviewer {
+    display: flex;           /* block-level, fills parent width */
+    flex-direction: column;
+    width: 100%;
+    background: var(--m-surface, #fff);
+    border: 1px solid var(--m-border, #e2e6ea);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* ── Body wrapper ─────────────────────────────────────────────────────────── */
+
+.m-imageviewer-body {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Side layout: thumbstrip left, stage right */
+.m-imageviewer--side .m-imageviewer-body {
+    flex-direction: row;
+}
+
+/* Below layout: stage above, thumbstrip below */
+.m-imageviewer--below .m-imageviewer-body {
+    flex-direction: column;
+}
+
+/* ── Thumbnail strip ──────────────────────────────────────────────────────── */
+
+.m-imageviewer-thumbstrip {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    background: var(--m-surface, #fff);
+    flex-shrink: 0;
+}
+
+/* Side: vertical scrolling column — height matches the stage */
+.m-imageviewer--side .m-imageviewer-thumbstrip {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: var(--m-iv-height, 380px);
+    width: calc(var(--m-iv-thumb-w, 80px) + 20px);
+    border-right: 1px solid var(--m-border, #e2e6ea);
+}
+
+/* Below: horizontal scrolling row */
+.m-imageviewer--below .m-imageviewer-thumbstrip {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-top: 1px solid var(--m-border, #e2e6ea);
+}
+
+/* ── Apple-style thin overlay scrollbars ─────────────────────────────────── */
+
+.m-imageviewer-thumbstrip {
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0) transparent;
+    transition: scrollbar-color 0.2s;
+}
+
+.m-imageviewer-thumbstrip:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
+}
+
+/* WebKit / Blink */
+.m-imageviewer-thumbstrip::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+.m-imageviewer-thumbstrip::-webkit-scrollbar-track {
+    background: transparent;
+}
+.m-imageviewer-thumbstrip::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+    transition: background 0.2s;
+}
+.m-imageviewer-thumbstrip:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.22);
+}
+.m-imageviewer-thumbstrip::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.42);
+}
+
+/* ── Individual thumbnail ─────────────────────────────────────────────────── */
+
+.m-imageviewer-thumb {
+    flex-shrink: 0;
+    width: var(--m-iv-thumb-w, 80px);
+    height: var(--m-iv-thumb-h, 60px);
+    border: 2px solid transparent;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s, opacity 0.15s;
+    background: var(--m-border, #e2e6ea);
+    outline: none;
+}
+
+.m-imageviewer-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    transition: transform 0.15s;
+}
+
+.m-imageviewer-thumb:hover img {
+    transform: scale(1.04);
+}
+
+.m-imageviewer-thumb:hover,
+.m-imageviewer-thumb:focus-visible {
+    border-color: var(--m-primary, #118AB2);
+}
+
+.m-imageviewer-thumb:focus-visible {
+    outline: 2px solid var(--m-primary, #118AB2);
+    outline-offset: 1px;
+}
+
+.m-imageviewer-thumb.m-active {
+    border-color: var(--m-primary, #118AB2);
+}
+
+/* Video thumbnail: play icon overlay */
+.m-imageviewer-thumb--video .m-imageviewer-thumb-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font-size: 13px;
+    pointer-events: none;
+}
+
+/* Placeholder when no thumbnail image is available */
+.m-imageviewer-thumb-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #aaa;
+    font-size: 20px;
+}
+
+/* ── Main stage ───────────────────────────────────────────────────────────── */
+
+/*
+ * Stage has a fixed height (via CSS var) so the component doesn't jump
+ * as images load. Items use position:absolute so they fill the stage exactly.
+ */
+.m-imageviewer-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    background: #f5f6f7;
+    height: var(--m-iv-height, 380px);
+    min-height: 160px;
+}
+
+/* ── Items (image / video / iframe) ──────────────────────────────────────── */
+
+.m-imageviewer-item {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.m-imageviewer-item.m-active {
+    display: flex;
+    animation: m-iv-fade 0.25s ease;
+}
+
+@keyframes m-iv-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.m-imageviewer-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.m-imageviewer-iframe,
+.m-imageviewer-video {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+/* ── Navigation arrows ───────────────────────────────────────────────────── */
+
+.m-imageviewer-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.38);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    transition: background 0.15s, opacity 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;             /* hidden until hover */
+}
+
+/* Show arrows when hovering the stage area */
+.m-imageviewer-stage:hover .m-imageviewer-nav {
+    opacity: 1;
+}
+
+.m-imageviewer-nav:hover {
+    background: rgba(0, 0, 0, 0.68);
+}
+
+.m-imageviewer-nav:focus-visible {
+    opacity: 1;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.m-imageviewer-nav:disabled {
+    opacity: 0;
+    cursor: default;
+    pointer-events: none;
+}
+
+.m-imageviewer-nav--prev { left: 10px; }
+.m-imageviewer-nav--next { right: 10px; }
+
+/* ── Caption & Counter overlays ─────────────────────────────────────────── */
+
+.m-imageviewer-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 54px;  /* side padding clears arrows */
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.58));
+    color: #fff;
+    font-size: 13px;
+    text-align: center;
+    line-height: 1.4;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.m-imageviewer-caption[hidden] {
+    display: none;
+}
+
+.m-imageviewer-counter {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.42);
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    pointer-events: none;
+    z-index: 2;
+    line-height: 1.6;
+}
+
+/* ── Responsive: stack side layout on narrow screens ─────────────────────── */
+
+@media (max-width: 600px) {
+    .m-imageviewer--side .m-imageviewer-body {
+        flex-direction: column;
+    }
+    .m-imageviewer--side .m-imageviewer-thumbstrip {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: auto;
+        height: auto;
+        border-right: none;
+        border-top: 1px solid var(--m-border, #e2e6ea);
+        order: 1; /* thumbs go below on mobile */
+    }
+    .m-imageviewer--side .m-imageviewer-stage {
+        order: 0;
+    }
+}
+
+/* ==========================================================================
+   Lightbox
+   ========================================================================== */
+
+.m-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.m-lightbox[hidden] {
+    display: none;
+}
+
+/* Semi-transparent backdrop */
+.m-lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+}
+
+/* Centred container */
+.m-lightbox-container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(95vw, 1200px);
+    max-height: 96vh;
+    pointer-events: none; /* children re-enable as needed */
+}
+
+/* ── Main image stage ────────────────────────────────────────────────────── */
+
+.m-lightbox-stage {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 0;
+    pointer-events: auto;
+}
+
+.m-lightbox-img {
+    max-width: 100%;
+    max-height: calc(95vh - 70px);
+    object-fit: contain;
+    display: block;
+    border-radius: 2px;
+    animation: m-lb-enter 0.2s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+@keyframes m-lb-enter {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+.m-lightbox-footer {
+    pointer-events: auto;
+    padding: 8px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.82);
+    min-height: 36px;
+    text-align: center;
+    flex-wrap: wrap;
+}
+
+.m-lightbox-caption {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.m-lightbox-caption[style*="display: none"],
+.m-lightbox-caption:empty {
+    display: none;
+}
+
+.m-lightbox-counter {
+    font-size: 12px;
+    opacity: 0.65;
+    white-space: nowrap;
+}
+
+/* ── Close button ────────────────────────────────────────────────────────── */
+
+.m-lightbox-close {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 9501;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    pointer-events: auto;
+}
+
+.m-lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.m-lightbox-close:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+/* ── Prev / Next navigation ──────────────────────────────────────────────── */
+
+.m-lightbox-nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 9501;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    pointer-events: auto;
+}
+
+.m-lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.m-lightbox-nav:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.m-lightbox-nav--prev { left: 12px; }
+.m-lightbox-nav--next { right: 12px; }
+
+@media (max-width: 480px) {
+    .m-lightbox-nav--prev { left: 4px; }
+    .m-lightbox-nav--next { right: 4px; }
+}

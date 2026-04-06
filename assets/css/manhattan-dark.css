@@ -1951,3 +1951,63 @@ body.m-dark .m-split-pane__divider:focus,
 body.m-dark .m-split-pane--dragging .m-split-pane__divider {
     background: var(--m-primary, #118AB2);
 }
+
+/* ── ImageViewer (dark) ─────────────────────────────────────────────────────── */
+body.m-dark .m-imageviewer,
+body.theme-dark .m-imageviewer {
+    background: #1e242b;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.m-dark .m-imageviewer-thumbstrip,
+body.theme-dark .m-imageviewer-thumbstrip {
+    background: #1e242b;
+    border-color: rgba(255, 255, 255, 0.1);
+    scrollbar-color: rgba(255, 255, 255, 0) transparent;
+}
+
+body.m-dark .m-imageviewer-thumbstrip:hover,
+body.theme-dark .m-imageviewer-thumbstrip:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+body.m-dark .m-imageviewer-thumbstrip::-webkit-scrollbar-thumb,
+body.theme-dark .m-imageviewer-thumbstrip::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+body.m-dark .m-imageviewer-thumbstrip:hover::-webkit-scrollbar-thumb,
+body.theme-dark .m-imageviewer-thumbstrip:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+body.m-dark .m-imageviewer-thumbstrip::-webkit-scrollbar-thumb:hover,
+body.theme-dark .m-imageviewer-thumbstrip::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+body.m-dark .m-imageviewer-thumb,
+body.theme-dark .m-imageviewer-thumb {
+    background: #252d36;
+    border-color: transparent;
+}
+
+body.m-dark .m-imageviewer-thumb:hover,
+body.theme-dark .m-imageviewer-thumb:hover,
+body.m-dark .m-imageviewer-thumb:focus-visible,
+body.theme-dark .m-imageviewer-thumb:focus-visible {
+    border-color: #2196F3;
+}
+
+body.m-dark .m-imageviewer-thumb.m-active,
+body.theme-dark .m-imageviewer-thumb.m-active {
+    border-color: #2196F3;
+}
+
+body.m-dark .m-imageviewer-stage,
+body.theme-dark .m-imageviewer-stage {
+    background: #121418;
+}
+
+/* ── Lightbox (dark) — the lightbox is already dark by design ───────────────── */
+/* No additional overrides needed; the component uses fixed dark rgba colours. */
