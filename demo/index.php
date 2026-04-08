@@ -222,6 +222,7 @@ $demoNav = [
     'chip'        => ['Chip',        'fa-circle-dot',         'Layout & Display'],
     'splitpane'   => ['SplitPane',   'fa-columns',            'Layout & Display'],
     'statcard'    => ['StatCard',    'fa-tachometer-alt',     'Layout & Display'],
+    'card'        => ['Card',        'fa-square',             'Layout & Display'],
     'emptystate'  => ['EmptyState',  'fa-inbox',              'Layout & Display'],
     'tabs'        => ['Tabs',        'fa-folder',             'Layout & Display'],
     'accordion'   => ['Accordion',   'fa-bars-staggered',     'Layout & Display'],

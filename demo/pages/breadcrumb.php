@@ -50,7 +50,7 @@
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->breadcrumb($id)', 'string', 'Create a breadcrumb component.'],
-    ['->home($url, $text)', 'string, string', 'Add a home item with <code>fa-home</code> icon. Default text: <code>"Dashboard"</code>.'],
+    ['->home($url, $text)', 'string, string', 'Add a home item with <code>fa-home</code> icon. Default text: <code>"Home"</code>.'],
     ['->item($text, $url, $icon)', 'string, ?string, ?string', 'Add a breadcrumb item. If <code>$url</code> is null, item is rendered as plain text (current page).'],
     ['->current()', '', 'Explicitly mark the last item as the current page (adds <code>aria-current="page"</code>).'],
 ]) ?>

@@ -48,7 +48,7 @@ final class Breadcrumb extends Component
      * @param string $text The text to display (default: 'Dashboard')
      * @return self
      */
-    public function home(string $url = '/', string $text = 'Dashboard'): self
+    public function home(string $url = '/', string $text = 'Home'): self
     {
         return $this->item($text, $url, 'fa-home');
     }

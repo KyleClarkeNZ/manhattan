@@ -75,16 +75,19 @@ class ImageViewer extends Component
      * Add an image item.
      *
      * @param string      $src     Full-size image URL
-     * @param string|null $thumb   Thumbnail URL (defaults to $src when null)
-     * @param string      $caption Optional caption
+     * @param string|null $thumb      Thumbnail URL (defaults to $src when null)
+     * @param string      $caption    Optional caption
+     * @param string|null $lightboxSrc Full-resolution URL to show in the lightbox
+     *                                 (defaults to $src when null)
      */
-    public function addImage(string $src, ?string $thumb = null, string $caption = ''): self
+    public function addImage(string $src, ?string $thumb = null, string $caption = '', ?string $lightboxSrc = null): self
     {
         $this->items[] = [
-            'type'    => 'image',
-            'src'     => $src,
-            'thumb'   => $thumb ?? $src,
-            'caption' => $caption,
+            'type'        => 'image',
+            'src'         => $src,
+            'thumb'       => $thumb ?? $src,
+            'caption'     => $caption,
+            'lightboxSrc' => $lightboxSrc,
         ];
         return $this;
     }
@@ -304,12 +307,17 @@ class ImageViewer extends Component
                    . ' data-type="'  . htmlspecialchars($item['type'], ENT_QUOTES, 'UTF-8') . '">';
 
             if ($item['type'] === 'image') {
+                $lbSrc = $item['lightboxSrc'] ?? null;
                 $html .= '<img'
                        . ' src="'     . htmlspecialchars($item['src'],     ENT_QUOTES, 'UTF-8') . '"'
                        . ' alt="'     . htmlspecialchars($item['caption'], ENT_QUOTES, 'UTF-8') . '"'
                        . ' class="m-imageviewer-img"'
                        . ' loading="lazy"'
-                       . ' draggable="false">';
+                       . ' draggable="false"';
+                if ($lbSrc !== null && $lbSrc !== $item['src']) {
+                    $html .= ' data-lightbox-src="' . htmlspecialchars($lbSrc, ENT_QUOTES, 'UTF-8') . '"';
+                }
+                $html .= '>';
             } elseif ($item['type'] === 'youtube') {
                 $html .= '<iframe'
                        . ' src="'          . htmlspecialchars($item['src'],     ENT_QUOTES, 'UTF-8') . '"'

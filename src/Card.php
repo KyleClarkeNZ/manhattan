@@ -82,7 +82,7 @@ class Card extends Component
 
     protected function renderHtml(): string
     {
-        $classes = array_merge(['m-card'], $this->getExtraClasses());
+        $classes = array_merge(['m-card', 'm-card-default'], $this->getExtraClasses());
         $classAttr = htmlspecialchars(implode(' ', array_filter($classes)), ENT_QUOTES, 'UTF-8');
         $idAttr = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8');
 

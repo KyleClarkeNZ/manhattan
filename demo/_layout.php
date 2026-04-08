@@ -74,6 +74,7 @@ if ($page !== 'overview' && isset($demoNav[$page])) {
             display: flex;
             margin-top: 48px;
             min-height: calc(100vh - 48px);
+            overflow-x: hidden;
         }
 
         /* Sidebar */
@@ -167,6 +168,7 @@ if ($page !== 'overview' && isset($demoNav[$page])) {
         /* Main content */
         .m-demo-main {
             flex: 1;
+            min-width: 0;
             margin-left: 240px;
             padding: 24px;
             max-width: 960px;
@@ -272,7 +274,7 @@ if ($page !== 'overview' && isset($demoNav[$page])) {
         }
 
         /* API reference table */
-        .m-api-section { margin-top: 24px; }
+        .m-api-section { margin-top: 24px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .m-api-section h3 {
             font-size: 15px;
             font-weight: 700;
@@ -361,7 +363,8 @@ if ($page !== 'overview' && isset($demoNav[$page])) {
                 transition: transform .25s ease;
             }
             .m-demo-sidebar.open { transform: translateX(0); }
-            .m-demo-main { margin-left: 0; padding: 16px; }
+            .m-demo-main { margin-left: 0; padding: 12px; }
+            .m-demo-section { padding: 16px; }
         }
     </style>
 </head>

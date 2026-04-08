@@ -5083,7 +5083,9 @@ textarea.m-wizard-field-error {
 .m-imageviewer {
     display: flex;           /* block-level, fills parent width */
     flex-direction: column;
+    box-sizing: border-box;
     width: 100%;
+    max-width: 100%;
     background: var(--m-surface, #fff);
     border: 1px solid var(--m-border, #e2e6ea);
     border-radius: 6px;
@@ -5096,6 +5098,7 @@ textarea.m-wizard-field-error {
     display: flex;
     flex: 1 1 auto;
     min-height: 0;
+    min-width: 0;
 }
 
 /* Side layout: thumbstrip left, stage right */

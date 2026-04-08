@@ -64,7 +64,10 @@
                 if (items[i].getAttribute('data-type') === 'image') {
                     var img = items[i].querySelector('img');
                     if (img) {
-                        list.push({ src: img.src, caption: img.alt || '' });
+                        // Prefer data-lightbox-src (e.g. a full-resolution URL) over
+                        // the stage src (which is typically a smaller preview).
+                        var src = items[i].getAttribute('data-lightbox-src') || img.src;
+                        list.push({ src: src, caption: img.alt || '' });
                     }
                 }
             }
@@ -227,6 +230,22 @@
             if (e.key === 'ArrowLeft')  { e.preventDefault(); prev(); }
             if (e.key === 'ArrowRight') { e.preventDefault(); next(); }
         });
+
+        // Touch swipe navigation
+        var touchStartX = 0;
+        var touchStartY = 0;
+        el.addEventListener('touchstart', function (e) {
+            touchStartX = e.changedTouches[0].clientX;
+            touchStartY = e.changedTouches[0].clientY;
+        }, { passive: true });
+        el.addEventListener('touchend', function (e) {
+            var dx = e.changedTouches[0].clientX - touchStartX;
+            var dy = e.changedTouches[0].clientY - touchStartY;
+            // Only trigger if horizontal movement dominates and exceeds threshold
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+                if (dx < 0) { next(); } else { prev(); }
+            }
+        }, { passive: true });
 
         // Lightbox on image click
         el.addEventListener('click', function (e) {
