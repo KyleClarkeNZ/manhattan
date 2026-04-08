@@ -66,7 +66,7 @@
                     if (img) {
                         // Prefer data-lightbox-src (e.g. a full-resolution URL) over
                         // the stage src (which is typically a smaller preview).
-                        var src = items[i].getAttribute('data-lightbox-src') || img.src;
+                        var src = img.getAttribute('data-lightbox-src') || img.src;
                         list.push({ src: src, caption: img.alt || '' });
                     }
                 }
