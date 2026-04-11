@@ -244,6 +244,145 @@ document.getElementById(\'rteEvents\')
     });'
     ) ?>
 
+    <!-- ============================================================ -->
+    <h3>Image Insertion — URL</h3>
+    <p class="m-demo-desc">
+        Adding <code>'image'</code> to the toolbar renders an <strong>Insert Image</strong> button.
+        Clicking it opens a dialog where you can enter any image URL and optional alt text.
+        No uploader configuration is required for URL-based insertion.
+    </p>
+
+    <?= $m->richTextEditor('rteImageUrl')
+        ->name('content_image_url')
+        ->placeholder('Click the image button in the toolbar to insert an image by URL…')
+        ->toolbar(['bold', 'italic', 'separator', 'image', 'separator', 'link'])
+        ->minHeight(140) ?>
+
+    <?= demoCodeTabs(
+        '// Add \'image\' to the toolbar — URL insertion always available
+<?= $m->richTextEditor(\'bodyEditor\')
+    ->name(\'body\')
+    ->toolbar([\'bold\', \'italic\', \'separator\', \'image\', \'separator\', \'link\'])
+    ->minHeight(200) ?>',
+        null
+    ) ?>
+
+    <!-- ============================================================ -->
+    <h3>Image Insertion — File Upload &amp; Paste</h3>
+    <p class="m-demo-desc">
+        To enable <strong>file upload</strong> (via the Insert Image dialog) and/or
+        <strong>paste-to-upload</strong>, configure an uploader endpoint using
+        <code>->uploader($url, $stem)</code>.
+        The endpoint receives a <code>multipart/form-data</code> POST with an <code>image</code>
+        file field (and an optional <code>stem</code> text field) and must return
+        <code>{ "url": "/path/to/saved/image.ext" }</code>.
+        Use <code>->allowPasteImages()</code> to also allow users to paste raw image data
+        (e.g. screenshots) directly into the editor.
+        If pasting is attempted and no uploader is configured a toaster error is shown automatically.
+    </p>
+
+    <?= $m->richTextEditor('rteImageUpload')
+        ->name('content_image_upload')
+        ->placeholder('Paste an image or use the toolbar button to upload one…')
+        ->toolbar(['bold', 'italic', 'separator', 'image'])
+        ->uploader('/demo/image-upload', 'demo_image')
+        ->allowPasteImages()
+        ->minHeight(140) ?>
+
+    <?= demoCodeTabs(
+        '// With file-upload support in the dialog
+<?= $m->richTextEditor(\'postEditor\')
+    ->name(\'body\')
+    ->toolbar([\'bold\', \'italic\', \'separator\', \'image\'])
+    ->uploader(\'/posts/upload-image\', \'post_img\') ?>
+
+// Also enable paste-to-upload (screenshots etc.)
+<?= $m->richTextEditor(\'articleEditor\')
+    ->name(\'content\')
+    ->toolbar([\'bold\', \'italic\', \'separator\', \'image\'])
+    ->uploader(\'/articles/upload-image\', \'article_img\')
+    ->allowPasteImages() ?>',
+        '// Listen for upload lifecycle events
+document.getElementById(\'articleEditor\')
+    .addEventListener(\'m:rte:upload:start\', function () {
+        console.log(\'Upload started\');
+    });
+
+document.getElementById(\'articleEditor\')
+    .addEventListener(\'m:rte:upload:end\', function (e) {
+        if (e.detail.success) {
+            console.log(\'Uploaded to:\', e.detail.url);
+        } else {
+            console.error(\'Upload failed:\', e.detail.error);
+        }
+    });
+
+// Listen for errors (uploader not configured etc.)
+document.getElementById(\'articleEditor\')
+    .addEventListener(\'m:rte:error\', function (e) {
+        console.error(\'RTE error:\', e.detail.message);
+    });
+
+// Insert programmatically
+var rte = m.richTextEditor(\'articleEditor\');
+rte.insertImage(\'/uploads/photo.jpg\', \'A scenic photo\');'
+    ) ?>
+
+    <!-- ============================================================ -->
+    <h3>Image Alignment &amp; Resize</h3>
+    <p class="m-demo-desc">
+        Clicking any image in the editor reveals a small <strong>alignment toolbar</strong>
+        above it — left, centre, or right. Alignment is always available when the
+        <code>'image'</code> tool is in the toolbar; no extra option is needed.
+        <br><br>
+        Enable <code>->allowImageResize()</code> to also show <strong>8-point drag handles</strong>
+        around the selected image. Corner handles resize proportionally; edge handles scale
+        on a single axis. The image's original natural dimensions are preserved in
+        <code>data-original-width</code> / <code>data-original-height</code> attributes on the
+        <code>&lt;img&gt;</code> element so the information is never lost.
+    </p>
+
+    <?= $m->richTextEditor('rteImageResize')
+        ->name('content_image_resize')
+        ->value('<p>Click the image below to select it, then use the alignment bar or drag the resize handles.</p><p><img src="https://picsum.photos/seed/manhattan/400/200" alt="Sample image" style="width:400px;height:200px;"></p><p>Text flows naturally around floated images.</p>')
+        ->toolbar(['bold', 'italic', 'separator', 'align', 'separator', 'image'])
+        ->allowImageResize()
+        ->minHeight(200) ?>
+
+    <?= demoCodeTabs(
+        '// Image resize enabled — click any image to see handles
+<?= $m->richTextEditor(\'contentEditor\')
+    ->name(\'content\')
+    ->toolbar([\'bold\', \'italic\', \'separator\', \'image\'])
+    ->allowImageResize()
+    ->minHeight(300) ?>
+
+// Combined: upload + paste + resize
+<?= $m->richTextEditor(\'articleEditor\')
+    ->name(\'content\')
+    ->toolbar([\'bold\', \'italic\', \'separator\', \'image\'])
+    ->uploader(\'/articles/upload-image\', \'article_img\')
+    ->allowPasteImages()
+    ->allowImageResize()
+    ->minHeight(300) ?>',
+        '// Image alignment: clicking an image shows a mini-toolbar automatically.
+// No JS needed — it is built into the component.
+
+// You can also align images programmatically via the API:
+var rte = m.richTextEditor(\'contentEditor\');
+
+// Resize handles are shown automatically when ->allowImageResize() is set.
+// After a resize, the img element will have updated width/height styles
+// and the original dimensions are in data attributes:
+//   <img data-original-width="800" data-original-height="400" style="width:400px;height:200px;">
+
+// Listen for changes after resize / alignment:
+document.getElementById(\'contentEditor\')
+    .addEventListener(\'m:rte:change\', function (e) {
+        console.log(\'Updated HTML:\', e.detail.value);
+    });'
+    ) ?>
+
 </div>
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
@@ -259,6 +398,9 @@ document.getElementById(\'rteEvents\')
     ['->minHeight($px)', 'int', 'Minimum height of the editing area in pixels. Default: <code>200</code>.'],
     ['->maxHeight($px)', 'int', 'Maximum height (enables scroll). Default: none.'],
     ['->readOnly()', '', 'Disable editing and dim the toolbar. Default: <code>false</code>.'],
+    ['->uploader($url, $stem)', 'string, string?', 'Configure the image upload endpoint. The POST endpoint must return <code>{ "url": "…" }</code>. Optional <code>$stem</code> is sent as a <code>stem</code> field to suggest a filename prefix.'],
+    ['->allowPasteImages()', '', 'Allow pasted raw images (screenshots etc.) to be auto-uploaded via the uploader. Requires <code>->uploader()</code>. Default: <code>false</code>.'],
+    ['->allowImageResize()', '', 'Show 8-point drag handles when an image is selected, allowing the user to resize it. The image\'s original natural dimensions are stored in <code>data-original-width</code> / <code>data-original-height</code> attributes. Default: <code>false</code>.'],
 ]) ?>
 
 <?= apiTable('Toolbar Tools', 'php', [
@@ -273,6 +415,7 @@ document.getElementById(\'rteEvents\')
     ['\'fontSize\'', '', 'Font size dropdown: Tiny → Huge.'],
     ['\'foreColor\'', '', 'Text colour picker (presets + custom).'],
     ['\'link\'', '', 'Insert / edit a hyperlink.'],
+    ['\'image\'', '', 'Insert an image. Opens a dialog for URL entry and (if uploader configured) file upload.'],
     ['\'undo\'', '', 'Undo.'],
     ['\'redo\'', '', 'Redo.'],
     ['\'clearFormat\'', '', 'Remove all inline formatting.'],
@@ -285,12 +428,16 @@ document.getElementById(\'rteEvents\')
     ['rte.setValue(html)', 'string', 'Replace the editor content programmatically.'],
     ['rte.focus()', '', 'Focus the editing area.'],
     ['rte.execCommand(cmd, val)', 'string, string?', 'Execute a toolbar command programmatically.'],
+    ['rte.insertImage(url, alt)', 'string, string?', 'Insert an image at the current cursor position.'],
 ]) ?>
 
 <?= eventsTable([
-    ['m:rte:change', '{ value: string }', 'Fired on the container whenever content changes. <code>detail.value</code> is the current HTML.'],
-    ['m:rte:focus',  '{}',                'Fired when the editing area receives focus.'],
-    ['m:rte:blur',   '{}',                'Fired when the editing area loses focus.'],
+    ['m:rte:change',       '{ value: string }',                               'Fired on the container whenever content changes. <code>detail.value</code> is the current HTML.'],
+    ['m:rte:focus',        '{}',                                              'Fired when the editing area receives focus.'],
+    ['m:rte:blur',         '{}',                                              'Fired when the editing area loses focus.'],
+    ['m:rte:error',        '{ message: string }',                             'Fired when an error occurs (e.g. paste attempted without uploader configured).'],
+    ['m:rte:upload:start', '{}',                                              'Fired when an image upload begins.'],
+    ['m:rte:upload:end',   '{ success: bool, url: string|null, error: string|null }', 'Fired when an upload completes. <code>detail.url</code> is the image URL on success.'],
 ]) ?>
 
 <script>

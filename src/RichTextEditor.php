@@ -31,6 +31,7 @@ class RichTextEditor extends Component
         'orderedList', 'bulletList',
         'heading', 'fontSize', 'foreColor',
         'link',
+        'image',
         'undo', 'redo', 'clearFormat',
         'separator',
     ];
@@ -45,6 +46,10 @@ class RichTextEditor extends Component
     private ?int $minChars = null;
     private ?int $maxChars = null;
     private bool $customColor = true;
+    private bool $allowPasteImages = false;
+    private ?string $uploaderUrl = null;
+    private ?string $uploaderStem = null;
+    private bool $allowImageResize = false;
 
     /** @var string[] */
     private array $toolbar = [
@@ -95,6 +100,18 @@ class RichTextEditor extends Component
         }
         if (isset($options['customColor'])) {
             $this->customColor = (bool)$options['customColor'];
+        }
+        if (isset($options['allowPasteImages'])) {
+            $this->allowPasteImages = (bool)$options['allowPasteImages'];
+        }
+        if (isset($options['uploaderUrl'])) {
+            $this->uploaderUrl = (string)$options['uploaderUrl'];
+        }
+        if (isset($options['uploaderStem'])) {
+            $this->uploaderStem = (string)$options['uploaderStem'];
+        }
+        if (isset($options['allowImageResize'])) {
+            $this->allowImageResize = (bool)$options['allowImageResize'];
         }
     }
 
@@ -177,6 +194,47 @@ class RichTextEditor extends Component
     }
 
     /**
+     * Configure the image uploader endpoint used by the toolbar Insert Image dialog
+     * and (optionally) paste-to-upload.
+     *
+     * The endpoint must accept a multipart/form-data POST with an `image` file field
+     * (and optionally a `stem` text field) and return JSON: { "url": "/path/to/image.ext" }.
+     *
+     * @param string      $url   The POST endpoint URL.
+     * @param string|null $stem  Optional filename stem appended when naming pasted images.
+     */
+    public function uploader(string $url, ?string $stem = null): self
+    {
+        $this->uploaderUrl  = $url;
+        $this->uploaderStem = $stem;
+        return $this;
+    }
+
+    /**
+     * Allow pasted raw image data (e.g. screenshots) to be automatically uploaded
+     * via the configured uploader endpoint. Requires uploader() to be set.
+     * Default: false.
+     */
+    public function allowPasteImages(bool $allow = true): self
+    {
+        $this->allowPasteImages = $allow;
+        return $this;
+    }
+
+    /**
+     * Enable interactive resize handles on images within the editor.
+     * When enabled, clicking an image shows draggable handles to resize it.
+     * The image's original natural dimensions are stored as data attributes
+     * so they are never lost.
+     * Default: false.
+     */
+    public function allowImageResize(bool $allow = true): self
+    {
+        $this->allowImageResize = $allow;
+        return $this;
+    }
+
+    /**
      * Minimum number of characters required (enables char counter automatically).
      */
     public function minChars(int $n): self
@@ -206,6 +264,7 @@ class RichTextEditor extends Component
      *   'fontSize'       — font size dropdown
      *   'foreColor'      — text colour picker
      *   'link'           — insert/edit link
+     *   'image'          — insert image (URL or file upload if uploader configured)
      *   'undo', 'redo'   — history
      *   'clearFormat'    — remove all inline formatting
      *   'separator'      — visual divider between groups
@@ -262,6 +321,18 @@ class RichTextEditor extends Component
         if ($this->maxChars !== null) {
             $dataAttrs .= ' data-max-chars="' . $this->maxChars . '"';
         }
+        if ($this->uploaderUrl !== null) {
+            $dataAttrs .= ' data-uploader-url="' . htmlspecialchars($this->uploaderUrl, ENT_QUOTES, 'UTF-8') . '"';
+        }
+        if ($this->uploaderStem !== null) {
+            $dataAttrs .= ' data-uploader-stem="' . htmlspecialchars($this->uploaderStem, ENT_QUOTES, 'UTF-8') . '"';
+        }
+        if ($this->allowPasteImages) {
+            $dataAttrs .= ' data-allow-paste-images="true"';
+        }
+        if ($this->allowImageResize) {
+            $dataAttrs .= ' data-allow-image-resize="true"';
+        }
 
         // Body style
         $bodyStyle = 'min-height:' . $this->minHeight . 'px;';
@@ -302,6 +373,12 @@ class RichTextEditor extends Component
             $linkDialogHtml = $this->renderLinkDialog($id);
         }
 
+        // Image dialog (rendered if 'image' is in the toolbar)
+        $imageDialogHtml = '';
+        if (in_array('image', $this->toolbar, true)) {
+            $imageDialogHtml = $this->renderImageDialog($id);
+        }
+
         // Initial content — if empty we leave it blank, JS will normalise
         $contentHtml = $this->value;
 
@@ -311,7 +388,7 @@ class RichTextEditor extends Component
     <div class="m-rte-body" style="{$bodyStyle}">
         <div class="m-rte-content m-richtext" contenteditable="{$editableAttr}"{$placeholderAttr}>{$contentHtml}</div>
     </div>
-    {$charCountHtml}{$hiddenField}{$linkDialogHtml}
+    {$charCountHtml}{$hiddenField}{$linkDialogHtml}{$imageDialogHtml}
 </div>
 HTML;
     }
@@ -398,6 +475,9 @@ HTML;
                     break;
                 case 'link':
                     $groupBuffer[] = $this->toolButton('link', 'fa-link', 'Insert Link');
+                    break;
+                case 'image':
+                    $groupBuffer[] = $this->toolButton('insertImage', 'fa-image', 'Insert Image');
                     break;
                 case 'undo':
                     $groupBuffer[] = $this->toolButton('undo', 'fa-undo', 'Undo (Ctrl+Z)');
@@ -553,6 +633,53 @@ HTML;
              .     '<button type="button" class="m-button m-rte-link-cancel">Cancel</button>'
              .     '<button type="button" class="m-button m-button-primary m-rte-link-insert">'
              .       '<i class="fas fa-link" aria-hidden="true"></i> Insert'
+             .     '</button>'
+             .   '</div>'
+             . '</div>'
+             . '</div>';
+    }
+
+    private function renderImageDialog(string $id): string
+    {
+        $urlInputId = htmlspecialchars($id . '_image_url', ENT_QUOTES, 'UTF-8');
+        $altInputId = htmlspecialchars($id . '_image_alt', ENT_QUOTES, 'UTF-8');
+
+        $uploadRowHtml = '';
+        if ($this->uploaderUrl !== null) {
+            $uploadRowHtml = '<div class="m-rte-image-upload-row">'
+                . '<span class="m-rte-image-or">— or —</span>'
+                . '<label class="m-rte-image-upload-label" data-m-tooltip="Upload from device" role="button" tabindex="0">'
+                . '<i class="fas fa-upload" aria-hidden="true"></i> Choose File'
+                . '<input type="file" class="m-rte-image-file-input" accept="image/*" tabindex="-1">'
+                . '</label>'
+                . '<span class="m-rte-image-file-name">No file chosen</span>'
+                . '</div>';
+        }
+
+        return '<div class="m-rte-image-dialog" hidden role="dialog" aria-modal="true" aria-label="Insert Image">'
+             . '<div class="m-rte-image-backdrop"></div>'
+             . '<div class="m-rte-image-panel">'
+             .   '<div class="m-rte-image-header">'
+             .     '<span><i class="fas fa-image" aria-hidden="true"></i> Insert Image</span>'
+             .     '<button type="button" class="m-rte-image-close" aria-label="Close dialog">'
+             .       '<i class="fas fa-times" aria-hidden="true"></i>'
+             .     '</button>'
+             .   '</div>'
+             .   '<div class="m-rte-image-body">'
+             .     '<label class="m-rte-image-field-label" for="' . $urlInputId . '">Image URL</label>'
+             .     '<input type="url" id="' . $urlInputId . '" class="m-textbox m-rte-image-url"'
+             .       ' placeholder="https://" autocomplete="off">'
+             .     $uploadRowHtml
+             .     '<label class="m-rte-image-field-label" for="' . $altInputId . '">'
+             .       'Alt Text <span class="m-rte-image-optional">(optional)</span>'
+             .     '</label>'
+             .     '<input type="text" id="' . $altInputId . '" class="m-textbox m-rte-image-alt"'
+             .       ' placeholder="Describe the image…">'
+             .   '</div>'
+             .   '<div class="m-rte-image-footer">'
+             .     '<button type="button" class="m-button m-rte-image-cancel">Cancel</button>'
+             .     '<button type="button" class="m-button m-button-primary m-rte-image-insert">'
+             .       '<i class="fas fa-image" aria-hidden="true"></i> Insert'
              .     '</button>'
              .   '</div>'
              . '</div>'

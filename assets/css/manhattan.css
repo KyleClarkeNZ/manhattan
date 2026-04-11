@@ -4493,6 +4493,7 @@ textarea.m-wizard-field-error {
     flex: 1;
     overflow-y: auto;
     border-radius: 0 0 8px 8px;
+    position: relative; /* anchor for the image resizer overlay */
 }
 
 /* When footer is present, body border-radius is removed on bottom */
@@ -4683,6 +4684,171 @@ textarea.m-wizard-field-error {
     background: var(--m-bg-alt, #f5f7fa);
 }
 
+/* --- Image dialog (fixed modal overlay) --- */
+.m-rte-image-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 9500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.m-rte-image-dialog[hidden] {
+    display: none;
+}
+
+.m-rte-image-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+}
+
+.m-rte-image-panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+    background: var(--m-bg, #fff);
+    border: 1px solid var(--m-border, #dde3ec);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    margin: 1rem;
+}
+
+.m-rte-image-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--m-border, #dde3ec);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--m-text, #23272f);
+    background: var(--m-bg-alt, #f5f7fa);
+}
+
+.m-rte-image-header i {
+    color: var(--m-primary, #2196F3);
+    margin-right: 6px;
+}
+
+.m-rte-image-close {
+    border: none;
+    background: transparent;
+    color: var(--m-text-muted, #a0aab4);
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background 0.15s ease, color 0.15s ease;
+    outline: none;
+}
+
+.m-rte-image-close:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--m-text, #23272f);
+}
+
+.m-rte-image-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.m-rte-image-field-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--m-text, #23272f);
+    margin-bottom: 2px;
+}
+
+.m-rte-image-optional {
+    font-weight: 400;
+    color: var(--m-text-muted, #a0aab4);
+}
+
+.m-rte-image-url,
+.m-rte-image-alt {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.m-rte-image-upload-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.m-rte-image-or {
+    font-size: 0.8125rem;
+    color: var(--m-text-muted, #a0aab4);
+    white-space: nowrap;
+}
+
+.m-rte-image-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--m-text, #23272f);
+    background: var(--m-bg-alt, #f5f7fa);
+    border: 1px solid var(--m-border, #dde3ec);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.m-rte-image-upload-label:hover {
+    background: var(--m-bg, #fff);
+    border-color: var(--m-primary, #2196F3);
+    color: var(--m-primary, #2196F3);
+}
+
+.m-rte-image-upload-label:focus-within {
+    outline: 2px solid var(--m-primary, #2196F3);
+    outline-offset: 2px;
+}
+
+.m-rte-image-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.m-rte-image-file-name {
+    font-size: 0.8125rem;
+    color: var(--m-text-muted, #a0aab4);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+}
+
+.m-rte-image-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--m-border, #dde3ec);
+    background: var(--m-bg-alt, #f5f7fa);
+}
+
 /* --- Read-only state --- */
 .m-richtexteditor-readonly .m-rte-toolbar {
     opacity: 0.45;
@@ -4692,6 +4858,160 @@ textarea.m-wizard-field-error {
 .m-richtexteditor-readonly .m-rte-content {
     background: var(--m-bg-alt, #f5f7fa);
     cursor: default;
+}
+
+/* --- Image selection indicator --- */
+.m-rte-content img {
+    cursor: pointer;
+}
+
+.m-rte-content img.m-rte-img-selected {
+    outline: 2px solid var(--m-primary, #2196F3);
+    outline-offset: 1px;
+}
+
+/* --- Image resizer overlay --- */
+.m-rte-body {
+    position: relative;
+}
+
+.m-rte-image-resizer {
+    position: absolute;
+    pointer-events: none;
+    border: 2px solid var(--m-primary, #2196F3);
+    border-radius: 2px;
+    box-sizing: border-box;
+    z-index: 10;
+}
+
+.m-rte-image-resizer[hidden] {
+    display: none;
+}
+
+/* Alignment mini-toolbar — appears above the resizer box */
+.m-rte-image-resizer-bar {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+    background: var(--m-bg, #fff);
+    border: 1px solid var(--m-border, #dde3ec);
+    border-radius: 8px;
+    padding: 3px 4px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    pointer-events: all;
+    white-space: nowrap;
+}
+
+.m-rte-imgbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: var(--m-text-muted, #a0aab4);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+    font-size: 0.75rem;
+}
+
+.m-rte-imgbar-btn:hover {
+    background: var(--m-bg-alt, #f5f7fa);
+    color: var(--m-text, #23272f);
+}
+
+.m-rte-imgbar-btn-active {
+    background: var(--m-primary-light, #e3f2fd);
+    color: var(--m-primary, #2196F3);
+}
+
+/* Resize handles — 8 points */
+.m-rte-resize-handle {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    background: var(--m-primary, #2196F3);
+    border: 2px solid #fff;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    pointer-events: all;
+    box-sizing: border-box;
+    z-index: 11;
+}
+
+.m-rte-resize-handle[data-handle="nw"] { top: -5px;  left: -5px;  cursor: nw-resize; }
+.m-rte-resize-handle[data-handle="n"]  { top: -5px;  left: calc(50% - 4px); cursor: n-resize; }
+.m-rte-resize-handle[data-handle="ne"] { top: -5px;  right: -5px; cursor: ne-resize; }
+.m-rte-resize-handle[data-handle="e"]  { top: calc(50% - 4px); right: -5px; cursor: e-resize; }
+.m-rte-resize-handle[data-handle="se"] { bottom: -5px; right: -5px; cursor: se-resize; }
+.m-rte-resize-handle[data-handle="s"]  { bottom: -5px; left: calc(50% - 4px); cursor: s-resize; }
+.m-rte-resize-handle[data-handle="sw"] { bottom: -5px; left: -5px;  cursor: sw-resize; }
+.m-rte-resize-handle[data-handle="w"]  { top: calc(50% - 4px); left: -5px;  cursor: w-resize; }
+
+/* --- Upload progress overlay --- */
+.m-rte-upload-overlay {
+    position: absolute;
+    pointer-events: none;
+    z-index: 12;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-radius: 2px;
+}
+
+.m-rte-upload-overlay[hidden] {
+    display: none;
+}
+
+.m-rte-upload-progress-track {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.m-rte-upload-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--m-primary, #118AB2);
+    transition: width 0.15s ease;
+    position: relative;
+    border-radius: 3px;
+}
+
+@keyframes m-rte-progress-sweep {
+    0%   { left: -40%; width: 40%; }
+    50%  { left: 40%;  width: 55%; }
+    100% { left: 110%; width: 40%; }
+}
+
+.m-rte-upload-progress-bar.m-rte-progress-indeterminate {
+    width: 100%;
+    background: transparent;
+}
+
+.m-rte-upload-progress-bar.m-rte-progress-indeterminate::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: var(--m-primary, #118AB2);
+    border-radius: 3px;
+    animation: m-rte-progress-sweep 1.4s ease-in-out infinite;
+}
+
+/* Uploading images — desaturated + dimmed until the server URL arrives */
+.m-rte-content img[data-rte-uploading] {
+    filter: grayscale(1) brightness(0.75);
+    pointer-events: none;
+    user-select: none;
 }
 
 /* =========================================================
@@ -4803,6 +5123,14 @@ textarea.m-wizard-field-error {
     border: none;
     border-top: 1px solid var(--m-border, #dde3ec);
     margin: 1em 0;
+}
+
+.m-richtext img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 @media (max-width: 640px) {

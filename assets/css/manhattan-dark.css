@@ -1782,6 +1782,108 @@ body.theme-dark .m-rte-link-footer {
     border-top-color: #2a3448;
 }
 
+/* --- Image dialog (dark) --- */
+body.m-dark .m-rte-image-panel,
+body.theme-dark .m-rte-image-panel {
+    background: #14202e;
+    border-color: #2a3448;
+}
+
+body.m-dark .m-rte-image-header,
+body.theme-dark .m-rte-image-header {
+    background: #0e1825;
+    border-bottom-color: #2a3448;
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-image-close,
+body.theme-dark .m-rte-image-close {
+    color: #8899aa;
+}
+
+body.m-dark .m-rte-image-close:hover,
+body.theme-dark .m-rte-image-close:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-image-field-label,
+body.theme-dark .m-rte-image-field-label {
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-image-upload-label,
+body.theme-dark .m-rte-image-upload-label {
+    background: #1e2a3a;
+    border-color: #2a3448;
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-image-upload-label:hover,
+body.theme-dark .m-rte-image-upload-label:hover {
+    background: #14202e;
+    border-color: #64b5f6;
+    color: #64b5f6;
+}
+
+body.m-dark .m-rte-image-footer,
+body.theme-dark .m-rte-image-footer {
+    background: #0e1825;
+    border-top-color: #2a3448;
+}
+
+/* --- Image resizer & alignment bar (dark) --- */
+body.m-dark .m-rte-image-resizer,
+body.theme-dark .m-rte-image-resizer {
+    border-color: #64b5f6;
+}
+
+body.m-dark .m-rte-content img.m-rte-img-selected,
+body.theme-dark .m-rte-content img.m-rte-img-selected {
+    outline-color: #64b5f6;
+}
+
+body.m-dark .m-rte-image-resizer-bar,
+body.theme-dark .m-rte-image-resizer-bar {
+    background: #14202e;
+    border-color: #2a3448;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+}
+
+body.m-dark .m-rte-imgbar-btn,
+body.theme-dark .m-rte-imgbar-btn {
+    color: #8899aa;
+}
+
+body.m-dark .m-rte-imgbar-btn:hover,
+body.theme-dark .m-rte-imgbar-btn:hover {
+    background: rgba(255,255,255,0.06);
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-imgbar-btn-active,
+body.theme-dark .m-rte-imgbar-btn-active {
+    background: rgba(100,181,246,0.15);
+    color: #64b5f6;
+}
+
+body.m-dark .m-rte-resize-handle,
+body.theme-dark .m-rte-resize-handle {
+    background: #64b5f6;
+    border-color: #0e1825;
+}
+
+/* Upload progress overlay (dark) */
+body.m-dark .m-rte-upload-progress-bar,
+body.theme-dark .m-rte-upload-progress-bar {
+    background: #64b5f6;
+}
+
+body.m-dark .m-rte-upload-progress-bar.m-rte-progress-indeterminate::before,
+body.theme-dark .m-rte-upload-progress-bar.m-rte-progress-indeterminate::before {
+    background: #64b5f6;
+}
+
 /* ========================================
    Pagination
    ======================================== */

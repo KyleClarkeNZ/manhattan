@@ -15,10 +15,15 @@
  *   Ctrl + Y (Windows/Linux)  — Redo
  *
  * Events:
- *   m:rte:change  — fired on the container when content changes
- *                   detail: { value: string (html) }
- *   m:rte:focus   — fired when the editor gains focus
- *   m:rte:blur    — fired when the editor loses focus
+ *   m:rte:change       — fired on the container when content changes
+ *                        detail: { value: string (html) }
+ *   m:rte:focus        — fired when the editor gains focus
+ *   m:rte:blur         — fired when the editor loses focus
+ *   m:rte:error        — fired when an error occurs (e.g. upload failure)
+ *                        detail: { message: string }
+ *   m:rte:upload:start — fired when an image upload begins
+ *   m:rte:upload:end   — fired when an image upload completes (success or failure)
+ *                        detail: { success: bool, url: string|null, error: string|null }
  *
  * JS API:
  *   var rte = m.richTextEditor('myEditor');
@@ -26,6 +31,7 @@
  *   rte.setValue(html)       — set content programmatically
  *   rte.focus()              — focus the editing area
  *   rte.execCommand(cmd, v)  — execute a toolbar command
+ *   rte.insertImage(url, alt) — insert an image at the current cursor position
  */
 (function (window) {
     'use strict';
@@ -47,10 +53,14 @@
 
         if (!content) { return null; }
 
-        var isReadOnly    = container.getAttribute('data-read-only') === 'true';
-        var placeholder   = content.getAttribute('data-placeholder') || '';
-        var minChars      = parseInt(container.getAttribute('data-min-chars'), 10) || 0;
-        var maxChars      = parseInt(container.getAttribute('data-max-chars'), 10) || 0;
+        var isReadOnly       = container.getAttribute('data-read-only') === 'true';
+        var placeholder      = content.getAttribute('data-placeholder') || '';
+        var minChars         = parseInt(container.getAttribute('data-min-chars'), 10) || 0;
+        var maxChars         = parseInt(container.getAttribute('data-max-chars'), 10) || 0;
+        var uploaderUrl      = container.getAttribute('data-uploader-url') || '';
+        var uploaderStem     = container.getAttribute('data-uploader-stem') || '';
+        var allowPasteImages = container.getAttribute('data-allow-paste-images') === 'true';
+        var allowImageResize = container.getAttribute('data-allow-image-resize') === 'true';
 
         // --- Paragraph separator ---
         try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) { /* ignore */ }
@@ -58,6 +68,398 @@
         // Initialise: ensure there is at least one paragraph
         if (content.innerHTML.trim() === '' || content.innerHTML === '<br>') {
             content.innerHTML = '<p><br></p>';
+        }
+
+        // =========================================================
+        // Image upload & insert helpers
+        // =========================================================
+
+        function showRteError(message) {
+            var toasterEl = document.querySelector('[data-component="toaster"]');
+            if (toasterEl && toasterEl.id) {
+                try { m.toaster(toasterEl.id).show(message, 'error'); } catch (e) { /* ignore */ }
+            }
+            utils.trigger(container, 'm:rte:error', { message: message });
+        }
+
+        function insertImageHtmlAtCursor(url, alt) {
+            var safeAlt = (alt || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            content.focus();
+            document.execCommand('insertHTML', false, '<img src="' + url + '" alt="' + safeAlt + '">');
+            syncHidden();
+            updateCharCount();
+            utils.trigger(container, 'm:rte:change', { value: getValue() });
+        }
+        function uploadImage(file, callback, onProgress) {
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            var csrf     = csrfMeta ? (csrfMeta.getAttribute('content') || '') : '';
+
+            var formData = new FormData();
+            formData.append('image', file);
+            if (uploaderStem) {
+                formData.append('stem', uploaderStem);
+            }
+
+            utils.trigger(container, 'm:rte:upload:start', {});
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', uploaderUrl, true);
+            if (csrf) { xhr.setRequestHeader('X-CSRF-Token', csrf); }
+
+            if (onProgress) {
+                xhr.upload.addEventListener('progress', function (e) {
+                    if (e.lengthComputable) {
+                        onProgress(Math.round(e.loaded / e.total * 100));
+                    }
+                });
+            }
+
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        var result = JSON.parse(xhr.responseText);
+                        if (result && result.url) {
+                            utils.trigger(container, 'm:rte:upload:end', { success: true, url: result.url, error: null });
+                            callback(null, result.url);
+                        } else {
+                            var msg = (result && result.message) ? result.message : 'Invalid response from upload server';
+                            utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: msg });
+                            callback(msg);
+                        }
+                    } catch (e) {
+                        var parseErr = 'Upload server returned an invalid response';
+                        utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: parseErr });
+                        callback(parseErr);
+                    }
+                } else {
+                    var httpErr = 'Upload failed (HTTP ' + xhr.status + ')';
+                    utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: httpErr });
+                    callback(httpErr);
+                }
+            };
+
+            xhr.onerror = function () {
+                var netErr = 'Image upload failed — network error';
+                utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: netErr });
+                callback(netErr);
+            };
+
+            xhr.send(formData);
+        }
+
+        // =========================================================
+        // Image selection, alignment & resize
+        // =========================================================
+
+        var imageBody        = container.querySelector('.m-rte-body');
+        var selectedImg      = null;
+        var resizerEl        = null;
+        var resizerBarEl     = null;
+        var uploadOverlayEl  = null;
+        var uploadProgressEl = null;
+        var uploadingImg     = null;
+
+        // Build the resizer overlay element (created once, reused)
+        (function buildResizer() {
+            resizerEl = document.createElement('div');
+            resizerEl.className = 'm-rte-image-resizer';
+            resizerEl.setAttribute('hidden', '');
+
+            // Alignment mini-toolbar (always present when an image is selected)
+            resizerBarEl = document.createElement('div');
+            resizerBarEl.className = 'm-rte-image-resizer-bar';
+            resizerBarEl.innerHTML =
+                '<button type="button" class="m-rte-imgbar-btn" data-img-align="left"   title="Align left">  <i class="fas fa-align-left"    aria-hidden="true"></i></button>' +
+                '<button type="button" class="m-rte-imgbar-btn" data-img-align="center" title="Align center"><i class="fas fa-align-center"  aria-hidden="true"></i></button>' +
+                '<button type="button" class="m-rte-imgbar-btn" data-img-align="right"  title="Align right"> <i class="fas fa-align-right"   aria-hidden="true"></i></button>';
+            resizerEl.appendChild(resizerBarEl);
+
+            // Resize handles (8-point, only interactive when allowImageResize)
+            if (allowImageResize) {
+                var handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+                handles.forEach(function (pos) {
+                    var h = document.createElement('div');
+                    h.className = 'm-rte-resize-handle';
+                    h.setAttribute('data-handle', pos);
+                    resizerEl.appendChild(h);
+                });
+            }
+
+            if (imageBody) {
+                imageBody.appendChild(resizerEl);
+            }
+        }());
+
+        // Build the upload progress overlay (one instance, reused while uploading)
+        (function buildUploadOverlay() {
+            uploadOverlayEl = document.createElement('div');
+            uploadOverlayEl.className = 'm-rte-upload-overlay';
+            uploadOverlayEl.setAttribute('hidden', '');
+
+            var track = document.createElement('div');
+            track.className = 'm-rte-upload-progress-track';
+
+            uploadProgressEl = document.createElement('div');
+            uploadProgressEl.className = 'm-rte-upload-progress-bar m-rte-progress-indeterminate';
+
+            track.appendChild(uploadProgressEl);
+            uploadOverlayEl.appendChild(track);
+
+            if (imageBody) { imageBody.appendChild(uploadOverlayEl); }
+        }());
+
+        function showUploadOverlay(img) {
+            if (!uploadOverlayEl || !imageBody) { return; }
+            uploadingImg = img;
+
+            function positionOverlay() {
+                var bodyRect   = imageBody.getBoundingClientRect();
+                var imgRect    = img.getBoundingClientRect();
+                var scrollTop  = imageBody.scrollTop  || 0;
+                var scrollLeft = imageBody.scrollLeft || 0;
+                uploadOverlayEl.style.top    = (imgRect.top  - bodyRect.top  + scrollTop)  + 'px';
+                uploadOverlayEl.style.left   = (imgRect.left - bodyRect.left + scrollLeft) + 'px';
+                uploadOverlayEl.style.width  = (imgRect.width  || 120) + 'px';
+                uploadOverlayEl.style.height = (imgRect.height || 80)  + 'px';
+            }
+
+            if (img.complete && img.naturalWidth) {
+                positionOverlay();
+            } else {
+                img.addEventListener('load', function onLoad() {
+                    img.removeEventListener('load', onLoad);
+                    positionOverlay();
+                });
+            }
+
+            if (uploadProgressEl) {
+                uploadProgressEl.classList.add('m-rte-progress-indeterminate');
+                uploadProgressEl.style.width = '';
+            }
+            uploadOverlayEl.removeAttribute('hidden');
+        }
+
+        function updateUploadProgress(percent) {
+            if (!uploadProgressEl) { return; }
+            uploadProgressEl.classList.remove('m-rte-progress-indeterminate');
+            uploadProgressEl.style.width = Math.min(100, percent) + '%';
+        }
+
+        function hideUploadOverlay() {
+            if (uploadOverlayEl) { uploadOverlayEl.setAttribute('hidden', ''); }
+            uploadingImg = null;
+        }
+
+        function positionResizer(img) {
+            if (!resizerEl || !imageBody) { return; }
+            // Position relative to .m-rte-body
+            var bodyRect   = imageBody.getBoundingClientRect();
+            var imgRect    = img.getBoundingClientRect();
+            var scrollTop  = imageBody.scrollTop  || 0;
+            var scrollLeft = imageBody.scrollLeft || 0;
+            var top  = imgRect.top  - bodyRect.top  + scrollTop;
+            var left = imgRect.left - bodyRect.left + scrollLeft;
+            resizerEl.style.top    = top  + 'px';
+            resizerEl.style.left   = left + 'px';
+            resizerEl.style.width  = imgRect.width  + 'px';
+            resizerEl.style.height = imgRect.height + 'px';
+
+            // Reflect current alignment on mini-toolbar buttons
+            var currentAlign = getImageAlign(img);
+            resizerBarEl.querySelectorAll('.m-rte-imgbar-btn').forEach(function (btn) {
+                btn.classList.toggle('m-rte-imgbar-btn-active', btn.getAttribute('data-img-align') === currentAlign);
+            });
+        }
+
+        function getImageAlign(img) {
+            if (!img) { return 'left'; }
+            var fl = img.style.cssFloat || img.style.float || '';
+            if (fl === 'right') { return 'right'; }
+            var disp   = img.style.display    || '';
+            var mLeft  = img.style.marginLeft || '';
+            if (disp === 'block' && (mLeft === 'auto' || mLeft === '')) {
+                var mRight = img.style.marginRight || '';
+                if (mRight === 'auto') { return 'center'; }
+            }
+            return 'left';
+        }
+
+        function applyImageAlign(img, align) {
+            if (!img) { return; }
+            // Clear all alignment styles first
+            img.style.cssFloat    = '';
+            img.style.float       = '';
+            img.style.display     = '';
+            img.style.marginLeft  = '';
+            img.style.marginRight = '';
+            img.style.marginBottom = '';
+
+            // Also clear any text-align set on the parent block by execCommand
+            var parent = img.parentNode;
+            if (parent && parent !== content) {
+                parent.style.textAlign = '';
+            }
+
+            switch (align) {
+                case 'center':
+                    img.style.display     = 'block';
+                    img.style.marginLeft  = 'auto';
+                    img.style.marginRight = 'auto';
+                    break;
+                case 'right':
+                    img.style.cssFloat     = 'right';
+                    img.style.marginLeft   = '1em';
+                    img.style.marginBottom = '0.5em';
+                    break;
+                default: // left — natural inline flow
+                    break;
+            }
+            syncHidden();
+            utils.trigger(container, 'm:rte:change', { value: getValue() });
+        }
+
+        function selectImage(img) {
+            if (isReadOnly) { return; }
+            if (img.getAttribute('data-rte-uploading')) { return; } // still uploading
+            // Set browser selection to encapsulate the image
+            content.focus();
+            var sel = window.getSelection();
+            if (sel) {
+                var range = document.createRange();
+                range.selectNode(img);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            selectedImg = img;
+
+            // Store original natural dimensions the first time we touch this image
+            if (!img.getAttribute('data-original-width') && img.naturalWidth) {
+                img.setAttribute('data-original-width',  img.naturalWidth);
+                img.setAttribute('data-original-height', img.naturalHeight);
+            }
+
+            // Visual selection indicator
+            content.querySelectorAll('img').forEach(function (i) { i.classList.remove('m-rte-img-selected'); });
+            img.classList.add('m-rte-img-selected');
+
+            // Show overlay
+            resizerEl.removeAttribute('hidden');
+            positionResizer(img);
+            updateToolbarState();
+        }
+
+        function dismissImageSelection() {
+            if (selectedImg) {
+                selectedImg.classList.remove('m-rte-img-selected');
+                selectedImg = null;
+            }
+            if (resizerEl) { resizerEl.setAttribute('hidden', ''); }
+        }
+
+        // Click inside the editor — select image or dismiss
+        content.addEventListener('click', function (e) {
+            var img = e.target.nodeName === 'IMG' ? e.target : null;
+            if (img && content.contains(img)) {
+                e.stopPropagation();
+                selectImage(img);
+            } else {
+                dismissImageSelection();
+            }
+        });
+
+        // Alignment mini-toolbar clicks
+        resizerBarEl.addEventListener('mousedown', function (e) {
+            e.preventDefault(); // Keep selection intact
+            var btn = e.target.closest('.m-rte-imgbar-btn');
+            if (!btn || !selectedImg) { return; }
+            applyImageAlign(selectedImg, btn.getAttribute('data-img-align'));
+            positionResizer(selectedImg);
+        });
+
+        // ---- Resize drag logic ----
+        if (allowImageResize) {
+            var dragState = null;
+
+            resizerEl.addEventListener('mousedown', function (e) {
+                var handle = e.target.closest('.m-rte-resize-handle');
+                if (!handle || !selectedImg) { return; }
+                e.preventDefault();
+
+                // Record original dimensions on first drag
+                if (!selectedImg.getAttribute('data-original-width') && selectedImg.naturalWidth) {
+                    selectedImg.setAttribute('data-original-width',  selectedImg.naturalWidth);
+                    selectedImg.setAttribute('data-original-height', selectedImg.naturalHeight);
+                }
+
+                var startX = e.clientX;
+                var startY = e.clientY;
+                var startW = selectedImg.offsetWidth  || selectedImg.naturalWidth  || 100;
+                var startH = selectedImg.offsetHeight || selectedImg.naturalHeight || 100;
+                var pos    = handle.getAttribute('data-handle');
+                var aspect = startH > 0 ? startW / startH : 1;
+
+                dragState = { startX: startX, startY: startY, startW: startW, startH: startH, pos: pos, aspect: aspect };
+            });
+
+            document.addEventListener('mousemove', function (e) {
+                if (!dragState || !selectedImg) { return; }
+                var dx  = e.clientX - dragState.startX;
+                var dy  = e.clientY - dragState.startY;
+                var pos = dragState.pos;
+                var newW = dragState.startW;
+                var newH = dragState.startH;
+
+                // Edge handles — single axis; corner handles — proportional
+                if (pos === 'e' || pos === 'ne' || pos === 'se') {
+                    newW = Math.max(20, dragState.startW + dx);
+                } else if (pos === 'w' || pos === 'nw' || pos === 'sw') {
+                    newW = Math.max(20, dragState.startW - dx);
+                } else if (pos === 's') {
+                    newH = Math.max(20, dragState.startH + dy);
+                    newW = Math.round(newH * dragState.aspect);
+                } else if (pos === 'n') {
+                    newH = Math.max(20, dragState.startH - dy);
+                    newW = Math.round(newH * dragState.aspect);
+                }
+
+                // Maintain aspect ratio for corner handles
+                if (pos === 'nw' || pos === 'ne' || pos === 'se' || pos === 'sw') {
+                    newH = Math.round(newW / dragState.aspect);
+                }
+
+                selectedImg.style.width  = newW + 'px';
+                selectedImg.style.height = newH + 'px';
+                positionResizer(selectedImg);
+            });
+
+            document.addEventListener('mouseup', function () {
+                if (!dragState) { return; }
+                dragState = null;
+                if (selectedImg) {
+                    syncHidden();
+                    utils.trigger(container, 'm:rte:change', { value: getValue() });
+                }
+            });
+        }
+
+        // Dismiss when clicking outside the entire editor
+        document.addEventListener('click', function (e) {
+            if (resizerEl && !container.contains(e.target)) {
+                dismissImageSelection();
+            }
+        });
+
+        // Re-position resizer when the body scrolls (when maxHeight is set)
+        if (imageBody) {
+            imageBody.addEventListener('scroll', function () {
+                if (selectedImg && !resizerEl.hasAttribute('hidden')) {
+                    positionResizer(selectedImg);
+                }
+            });
         }
 
         // =========================================================
@@ -70,6 +472,7 @@
 
         function setValue(html) {
             content.innerHTML = html && html.trim() ? html : '<p><br></p>';
+            dismissImageSelection();
             syncHidden();
             updateCharCount();
             updateToolbarState();
@@ -305,6 +708,11 @@
                     break;
                 }
 
+                case 'insertImage': {
+                    openImageDialog();
+                    break;
+                }
+
                 case 'undo':
                     document.execCommand('undo', false, null);
                     break;
@@ -330,6 +738,14 @@
         // =========================================================
 
         content.addEventListener('keydown', function (e) {
+            // Dismiss image selection on any key that edits content
+            if (selectedImg && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                var nav = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Escape','Tab'];
+                if (nav.indexOf(e.key) === -1) {
+                    dismissImageSelection();
+                }
+            }
+            if (e.key === 'Escape') { dismissImageSelection(); }
             var isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
             var mod   = isMac ? e.metaKey : e.ctrlKey;
             if (!mod) { return; }
@@ -483,6 +899,166 @@
         }
 
         // =========================================================
+        // Image dialog
+        // =========================================================
+
+        var imageDialog    = container.querySelector('.m-rte-image-dialog');
+        var imageUrlInput  = imageDialog && imageDialog.querySelector('.m-rte-image-url');
+        var imageAltInput  = imageDialog && imageDialog.querySelector('.m-rte-image-alt');
+        var imageInsertBtn = imageDialog && imageDialog.querySelector('.m-rte-image-insert');
+        var imageCancelBtn = imageDialog && imageDialog.querySelector('.m-rte-image-cancel');
+        var imageCloseBtn  = imageDialog && imageDialog.querySelector('.m-rte-image-close');
+        var imageBackdrop  = imageDialog && imageDialog.querySelector('.m-rte-image-backdrop');
+        var imageFileInput = imageDialog && imageDialog.querySelector('.m-rte-image-file-input');
+        var imageFileName  = imageDialog && imageDialog.querySelector('.m-rte-image-file-name');
+
+        var savedImageRange  = null;
+        var pendingImageFile = null;
+
+        function setImageInsertBusy(busy) {
+            if (!imageInsertBtn) { return; }
+            imageInsertBtn.disabled = busy;
+            imageInsertBtn.classList.toggle('m-button-disabled', busy);
+            imageInsertBtn.innerHTML = busy
+                ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Uploading…'
+                : '<i class="fas fa-image" aria-hidden="true"></i> Insert';
+        }
+
+        function openImageDialog() {
+            if (!imageDialog) { return; }
+            var sel = window.getSelection();
+            savedImageRange = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
+            if (imageUrlInput) { imageUrlInput.value = ''; }
+            if (imageAltInput) { imageAltInput.value = ''; }
+            if (imageFileInput) { imageFileInput.value = ''; }
+            if (imageFileName)  { imageFileName.textContent = 'No file chosen'; }
+            pendingImageFile = null;
+            setImageInsertBusy(false);
+            imageDialog.hidden = false;
+            setTimeout(function () {
+                if (imageUrlInput) { imageUrlInput.focus(); }
+            }, 50);
+        }
+
+        function closeImageDialog(restoreSelection) {
+            if (!imageDialog) { return; }
+            imageDialog.hidden = true;
+            if (restoreSelection) {
+                content.focus();
+                var sel = window.getSelection();
+                if (sel) {
+                    if (savedImageRange) {
+                        sel.removeAllRanges();
+                        sel.addRange(savedImageRange);
+                    } else if (sel.rangeCount === 0) {
+                        // No saved range — place cursor at end of editor as fallback
+                        var r = document.createRange();
+                        r.selectNodeContents(content);
+                        r.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(r);
+                    }
+                }
+            }
+        }
+
+        function doInsertImage() {
+            var url = imageUrlInput ? imageUrlInput.value.trim() : '';
+            var alt = imageAltInput ? imageAltInput.value.trim() : '';
+
+            if (url) {
+                closeImageDialog(true);
+                insertImageHtmlAtCursor(url, alt);
+                return;
+            }
+
+            if (pendingImageFile) {
+                if (!uploaderUrl) {
+                    showRteError('Image uploader is not configured for this editor.');
+                    return;
+                }
+                // Close the dialog and insert a blob placeholder immediately so the
+                // user sees the image in the editor while it uploads in the background.
+                var fileToUpload = pendingImageFile;
+                var altText      = alt;
+                var blobUrl      = URL.createObjectURL(fileToUpload);
+                closeImageDialog(true);
+                insertImageHtmlAtCursor(blobUrl, altText);
+                var placeholderImg = content.querySelector('img[src="' + blobUrl + '"]');
+                if (placeholderImg) {
+                    placeholderImg.setAttribute('data-rte-uploading', 'true');
+                    showUploadOverlay(placeholderImg);
+                }
+                uploadImage(fileToUpload, function (err, uploadedUrl) {
+                    if (placeholderImg && placeholderImg.parentNode) {
+                        if (err) {
+                            placeholderImg.parentNode.removeChild(placeholderImg);
+                        } else {
+                            placeholderImg.src = uploadedUrl;
+                            placeholderImg.removeAttribute('data-rte-uploading');
+                        }
+                    }
+                    URL.revokeObjectURL(blobUrl);
+                    hideUploadOverlay();
+                    if (err) {
+                        showRteError('Image upload failed: ' + err);
+                    } else {
+                        syncHidden();
+                        updateCharCount();
+                        utils.trigger(container, 'm:rte:change', { value: getValue() });
+                    }
+                }, function (percent) {
+                    updateUploadProgress(percent);
+                });
+                return;
+            }
+
+            // Neither URL nor file provided — give the user feedback
+            showRteError('Please enter an image URL or select a file to upload.');
+            if (imageUrlInput) { imageUrlInput.focus(); }
+        }
+
+        if (imageDialog) {
+            if (imageInsertBtn) { imageInsertBtn.addEventListener('click', doInsertImage); }
+            if (imageCancelBtn) { imageCancelBtn.addEventListener('click', function () { closeImageDialog(false); }); }
+            if (imageCloseBtn)  { imageCloseBtn.addEventListener('click',  function () { closeImageDialog(false); }); }
+            if (imageBackdrop)  { imageBackdrop.addEventListener('click',  function () { closeImageDialog(false); }); }
+
+            if (imageFileInput) {
+                imageFileInput.addEventListener('change', function () {
+                    if (imageFileInput.files && imageFileInput.files.length > 0) {
+                        pendingImageFile = imageFileInput.files[0];
+                        if (imageFileName) { imageFileName.textContent = pendingImageFile.name; }
+                        // Clear URL field when a file is chosen
+                        if (imageUrlInput) { imageUrlInput.value = ''; }
+                    }
+                });
+            }
+
+            if (imageUrlInput) {
+                imageUrlInput.addEventListener('input', function () {
+                    // If user types a URL, clear the pending file selection
+                    if (imageUrlInput.value.trim()) {
+                        pendingImageFile = null;
+                        if (imageFileInput) { imageFileInput.value = ''; }
+                        if (imageFileName)  { imageFileName.textContent = 'No file chosen'; }
+                    }
+                });
+                imageUrlInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') { e.preventDefault(); closeImageDialog(false); }
+                    if (e.key === 'Enter')  { e.preventDefault(); doInsertImage(); }
+                });
+            }
+
+            if (imageAltInput) {
+                imageAltInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') { e.preventDefault(); closeImageDialog(false); }
+                    if (e.key === 'Enter')  { e.preventDefault(); doInsertImage(); }
+                });
+            }
+        }
+
+        // =========================================================
         // Link dialog
         // =========================================================
 
@@ -611,6 +1187,12 @@
             if (!sel || sel.rangeCount === 0) { return; }
             var range = sel.getRangeAt(0);
             if (content.contains(range.commonAncestorContainer)) {
+                // If selection moved away from the selected image, dismiss it
+                // (range.intersectsNode correctly handles range.selectNode(img) where
+                // commonAncestorContainer is the image's parent, not the image itself)
+                if (selectedImg && !range.intersectsNode(selectedImg)) {
+                    dismissImageSelection();
+                }
                 updateToolbarState();
             }
         });
@@ -622,8 +1204,64 @@
         content.addEventListener('paste', function (e) {
             e.preventDefault();
             var clipData = e.clipboardData || window.clipboardData;
-            var html  = clipData ? clipData.getData('text/html') : '';
-            var text  = clipData ? clipData.getData('text/plain') : '';
+
+            // --- Check for a raw image blob (e.g. screenshot, copied image file) ---
+            var imageFile = null;
+            if (clipData && clipData.items) {
+                for (var idx = 0; idx < clipData.items.length; idx++) {
+                    var item = clipData.items[idx];
+                    if (item.kind === 'file' && item.type.indexOf('image') === 0) {
+                        imageFile = item.getAsFile();
+                        break;
+                    }
+                }
+            }
+
+            if (imageFile) {
+                if (!allowPasteImages) {
+                    // Silently discard the pasted image (current behaviour for image-less editors)
+                    return;
+                }
+                if (!uploaderUrl) {
+                    showRteError('Image uploader is not configured for this editor.');
+                    return;
+                }
+                // Insert a local blob placeholder immediately so the user sees the
+                // image in-place; swap the src for the server URL once upload finishes.
+                var blobUrl = URL.createObjectURL(imageFile);
+                insertImageHtmlAtCursor(blobUrl, '');
+                var placeholderImg = content.querySelector('img[src="' + blobUrl + '"]');
+                if (placeholderImg) {
+                    placeholderImg.setAttribute('data-rte-uploading', 'true');
+                    showUploadOverlay(placeholderImg);
+                }
+                uploadImage(imageFile, function (err, url) {
+                    if (placeholderImg && placeholderImg.parentNode) {
+                        if (err) {
+                            placeholderImg.parentNode.removeChild(placeholderImg);
+                        } else {
+                            placeholderImg.src = url;
+                            placeholderImg.removeAttribute('data-rte-uploading');
+                        }
+                    }
+                    URL.revokeObjectURL(blobUrl);
+                    hideUploadOverlay();
+                    if (err) {
+                        showRteError('Image upload failed: ' + err);
+                    } else {
+                        syncHidden();
+                        updateCharCount();
+                        utils.trigger(container, 'm:rte:change', { value: getValue() });
+                    }
+                }, function (percent) {
+                    updateUploadProgress(percent);
+                });
+                return;
+            }
+
+            // --- No raw image — process text/html or text/plain as normal ---
+            var html = clipData ? clipData.getData('text/html') : '';
+            var text = clipData ? clipData.getData('text/plain') : '';
 
             if (html) {
                 html = cleanPastedHtml(html);
@@ -656,6 +1294,12 @@
                 '[class*="Mso"], [style*="mso-"], [lang], ' +
                 'o\\:p'
             ).forEach(function (el) {
+                var parent = el.parentNode;
+                if (parent) { parent.removeChild(el); }
+            });
+
+            // Strip <img> elements — external images must go through the Insert Image dialog
+            tmp.querySelectorAll('img').forEach(function (el) {
                 var parent = el.parentNode;
                 if (parent) { parent.removeChild(el); }
             });
@@ -723,6 +1367,7 @@
             setValue:    setValue,
             focus:       function () { content.focus(); },
             execCommand: execCmd,
+            insertImage: insertImageHtmlAtCursor,
         };
 
         container._mRte = api;
