@@ -715,6 +715,11 @@
                     break;
                 }
 
+                case 'insertYouTube': {
+                    openYouTubeDialog();
+                    break;
+                }
+
                 case 'undo':
                     document.execCommand('undo', false, null);
                     break;
@@ -1144,6 +1149,127 @@
                 linkUrlInput.addEventListener('keydown', function (e) {
                     if (e.key === 'Escape') { e.preventDefault(); closeLinkDialog(false); }
                     if (e.key === 'Enter')  { e.preventDefault(); insertLink(); }
+                });
+            }
+        }
+
+        // =========================================================
+        // YouTube embed dialog
+        // =========================================================
+
+        var ytDialog    = container.querySelector('.m-rte-youtube-dialog');
+        var ytUrlInput  = ytDialog && ytDialog.querySelector('.m-rte-youtube-url');
+        var ytInsertBtn = ytDialog && ytDialog.querySelector('.m-rte-youtube-insert');
+        var ytCancelBtn = ytDialog && ytDialog.querySelector('.m-rte-youtube-cancel');
+        var ytCloseBtn  = ytDialog && ytDialog.querySelector('.m-rte-youtube-close');
+        var ytBackdrop  = ytDialog && ytDialog.querySelector('.m-rte-youtube-backdrop');
+
+        var savedYtRange = null;
+
+        /**
+         * Extract an 11-character YouTube video ID from any flavour of YouTube URL,
+         * or return the string itself if it already looks like a bare video ID.
+         *
+         * Supported inputs:
+         *   https://www.youtube.com/watch?v=dQw4w9WgXcQ
+         *   https://youtu.be/dQw4w9WgXcQ
+         *   https://www.youtube.com/embed/dQw4w9WgXcQ
+         *   https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ
+         *   dQw4w9WgXcQ  (bare ID)
+         */
+        function parseYouTubeId(input) {
+            var str = (input || '').trim();
+            if (!str) { return null; }
+
+            // youtu.be/ID
+            var m1 = str.match(/youtu\.be\/([A-Za-z0-9_\-]{11})/);
+            if (m1) { return m1[1]; }
+
+            // /embed/ID or /v/ID
+            var m2 = str.match(/\/(?:embed|v)\/([A-Za-z0-9_\-]{11})/);
+            if (m2) { return m2[1]; }
+
+            // ?v=ID or &v=ID
+            var m3 = str.match(/[?&]v=([A-Za-z0-9_\-]{11})/);
+            if (m3) { return m3[1]; }
+
+            // Bare 11-char ID
+            if (/^[A-Za-z0-9_\-]{11}$/.test(str)) { return str; }
+
+            return null;
+        }
+
+        function openYouTubeDialog() {
+            if (!ytDialog) { return; }
+            var sel = window.getSelection();
+            savedYtRange = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
+            if (ytUrlInput) { ytUrlInput.value = ''; }
+            ytDialog.hidden = false;
+            setTimeout(function () {
+                if (ytUrlInput) { ytUrlInput.focus(); }
+            }, 50);
+        }
+
+        function closeYouTubeDialog(restoreSelection) {
+            if (!ytDialog) { return; }
+            ytDialog.hidden = true;
+            if (restoreSelection) {
+                content.focus();
+                var sel = window.getSelection();
+                if (sel) {
+                    if (savedYtRange) {
+                        sel.removeAllRanges();
+                        sel.addRange(savedYtRange);
+                    } else if (sel.rangeCount === 0) {
+                        var r = document.createRange();
+                        r.selectNodeContents(content);
+                        r.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(r);
+                    }
+                }
+            }
+        }
+
+        function doInsertYouTube() {
+            if (!ytUrlInput) { return; }
+            var raw = ytUrlInput.value.trim();
+            var videoId = parseYouTubeId(raw);
+
+            if (!videoId) {
+                showRteError('Please enter a valid YouTube URL or video ID.');
+                if (ytUrlInput) { ytUrlInput.focus(); }
+                return;
+            }
+
+            closeYouTubeDialog(true);
+
+            // Responsive 16:9 wrapper + privacy-enhanced nocookie embed
+            var embedUrl = 'https://www.youtube-nocookie.com/embed/' + videoId;
+            var html = '<div class="m-rte-youtube-wrapper" contenteditable="false">'
+                     + '<iframe src="' + embedUrl + '"'
+                     + ' title="YouTube video"'
+                     + ' frameborder="0"'
+                     + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
+                     + ' allowfullscreen'
+                     + ' loading="lazy"></iframe>'
+                     + '</div><p><br></p>';
+
+            document.execCommand('insertHTML', false, html);
+            syncHidden();
+            updateCharCount();
+            utils.trigger(container, 'm:rte:change', { value: getValue() });
+        }
+
+        if (ytDialog) {
+            if (ytInsertBtn) { ytInsertBtn.addEventListener('click', doInsertYouTube); }
+            if (ytCancelBtn) { ytCancelBtn.addEventListener('click', function () { closeYouTubeDialog(false); }); }
+            if (ytCloseBtn)  { ytCloseBtn.addEventListener('click',  function () { closeYouTubeDialog(false); }); }
+            if (ytBackdrop)  { ytBackdrop.addEventListener('click',  function () { closeYouTubeDialog(false); }); }
+            if (ytUrlInput) {
+                ytUrlInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') { e.preventDefault(); closeYouTubeDialog(false); }
+                    if (e.key === 'Enter')  { e.preventDefault(); doInsertYouTube(); }
                 });
             }
         }

@@ -1832,6 +1832,47 @@ body.theme-dark .m-rte-image-footer {
     border-top-color: #2a3448;
 }
 
+/* --- YouTube embed dialog (dark) --- */
+body.m-dark .m-rte-youtube-panel,
+body.theme-dark .m-rte-youtube-panel {
+    background: #14202e;
+    border-color: #2a3448;
+}
+
+body.m-dark .m-rte-youtube-header,
+body.theme-dark .m-rte-youtube-header {
+    background: #0e1825;
+    border-bottom-color: #2a3448;
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-youtube-close,
+body.theme-dark .m-rte-youtube-close {
+    color: #8899aa;
+}
+
+body.m-dark .m-rte-youtube-close:hover,
+body.theme-dark .m-rte-youtube-close:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-youtube-field-label,
+body.theme-dark .m-rte-youtube-field-label {
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-youtube-hint,
+body.theme-dark .m-rte-youtube-hint {
+    color: #8899aa;
+}
+
+body.m-dark .m-rte-youtube-footer,
+body.theme-dark .m-rte-youtube-footer {
+    background: #0e1825;
+    border-top-color: #2a3448;
+}
+
 /* --- Image resizer & alignment bar (dark) --- */
 body.m-dark .m-rte-image-resizer,
 body.theme-dark .m-rte-image-resizer {

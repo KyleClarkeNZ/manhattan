@@ -32,6 +32,7 @@ class RichTextEditor extends Component
         'heading', 'fontSize', 'foreColor',
         'link',
         'image',
+        'youtube',
         'undo', 'redo', 'clearFormat',
         'separator',
     ];
@@ -265,6 +266,7 @@ class RichTextEditor extends Component
      *   'foreColor'      — text colour picker
      *   'link'           — insert/edit link
      *   'image'          — insert image (URL or file upload if uploader configured)
+     *   'youtube'        — embed a YouTube video by URL
      *   'undo', 'redo'   — history
      *   'clearFormat'    — remove all inline formatting
      *   'separator'      — visual divider between groups
@@ -379,6 +381,12 @@ class RichTextEditor extends Component
             $imageDialogHtml = $this->renderImageDialog($id);
         }
 
+        // YouTube dialog (rendered if 'youtube' is in the toolbar)
+        $youtubeDialogHtml = '';
+        if (in_array('youtube', $this->toolbar, true)) {
+            $youtubeDialogHtml = $this->renderYouTubeDialog($id);
+        }
+
         // Initial content — if empty we leave it blank, JS will normalise
         $contentHtml = $this->value;
 
@@ -388,7 +396,7 @@ class RichTextEditor extends Component
     <div class="m-rte-body" style="{$bodyStyle}">
         <div class="m-rte-content m-richtext" contenteditable="{$editableAttr}"{$placeholderAttr}>{$contentHtml}</div>
     </div>
-    {$charCountHtml}{$hiddenField}{$linkDialogHtml}{$imageDialogHtml}
+    {$charCountHtml}{$hiddenField}{$linkDialogHtml}{$imageDialogHtml}{$youtubeDialogHtml}
 </div>
 HTML;
     }
@@ -479,6 +487,9 @@ HTML;
                 case 'image':
                     $groupBuffer[] = $this->toolButton('insertImage', 'fa-image', 'Insert Image');
                     break;
+                case 'youtube':
+                    $groupBuffer[] = $this->toolButton('insertYouTube', 'fa-youtube', 'Embed YouTube Video', 'fab');
+                    break;
                 case 'undo':
                     $groupBuffer[] = $this->toolButton('undo', 'fa-undo', 'Undo (Ctrl+Z)');
                     break;
@@ -496,11 +507,11 @@ HTML;
         return $html;
     }
 
-    private function toolButton(string $command, string $icon, string $tooltip): string
+    private function toolButton(string $command, string $icon, string $tooltip, string $iconFamily = 'fas'): string
     {
         $safeCmd     = htmlspecialchars($command, ENT_QUOTES, 'UTF-8');
         $safeTooltip = htmlspecialchars($tooltip, ENT_QUOTES, 'UTF-8');
-        $iconClass   = 'fas ' . htmlspecialchars($icon, ENT_QUOTES, 'UTF-8');
+        $iconClass   = htmlspecialchars($iconFamily, ENT_QUOTES, 'UTF-8') . ' ' . htmlspecialchars($icon, ENT_QUOTES, 'UTF-8');
 
         return '<button type="button" class="m-button-group-btn m-rte-tool-btn"'
             . ' data-rte-command="' . $safeCmd . '"'
@@ -683,6 +694,34 @@ HTML;
              .     '</button>'
              .   '</div>'
              . '</div>'
+             . '</div>';
+    }
+
+    private function renderYouTubeDialog(string $id): string
+    {
+        $urlInputId = htmlspecialchars($id . '_yt_url', ENT_QUOTES, 'UTF-8');
+
+        return '<div class="m-rte-youtube-dialog" hidden role="dialog" aria-modal="true" aria-label="Embed YouTube Video">'
+             . '<div class="m-rte-youtube-backdrop"></div>'
+             . '<div class="m-rte-youtube-panel">'
+             .   '<div class="m-rte-youtube-header">'
+             .     '<span><i class="fab fa-youtube" aria-hidden="true"></i> Embed YouTube Video</span>'
+             .     '<button type="button" class="m-rte-youtube-close" aria-label="Close dialog">'
+             .       '<i class="fas fa-times" aria-hidden="true"></i>'
+             .     '</button>'
+             .   '</div>'
+             .   '<div class="m-rte-youtube-body">'
+             .     '<label class="m-rte-youtube-field-label" for="' . $urlInputId . '">YouTube URL or Video ID</label>'
+             .     '<input type="text" id="' . $urlInputId . '" class="m-textbox m-rte-youtube-url"'
+             .       ' placeholder="https://www.youtube.com/watch?v=… or video ID" autocomplete="off">'
+             .     '<p class="m-rte-youtube-hint">Paste any YouTube link — watch, shortened (youtu.be), or embed URL.</p>'
+             .   '</div>'
+             .   '<div class="m-rte-youtube-footer">'
+             .     '<button type="button" class="m-button m-rte-youtube-cancel">Cancel</button>'
+             .     '<button type="button" class="m-button m-button-primary m-rte-youtube-insert">'
+             .       '<i class="fab fa-youtube" aria-hidden="true"></i> Embed'
+             .     '</button>'
+             .   '</div>'
              . '</div>';
     }
 

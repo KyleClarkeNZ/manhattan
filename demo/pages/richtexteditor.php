@@ -385,6 +385,44 @@ document.getElementById(\'contentEditor\')
 
 </div>
 
+    <!-- ============================================================ -->
+    <h3>YouTube Video Embed</h3>
+    <p class="m-demo-desc">
+        Adding <code>'youtube'</code> to the toolbar renders an <strong>Embed YouTube Video</strong> button
+        (<i class="fab fa-youtube" style="color:#ff0000"></i>).
+        Clicking it opens a dialog where you can paste any YouTube URL — watch links, shortened
+        <code>youtu.be</code> links, embed URLs, or even bare 11-character video IDs.
+        A responsive 16:9 iframe wrapper (<code>.m-rte-youtube-wrapper</code>) is inserted at the cursor.
+        Videos are served via <code>youtube-nocookie.com</code> for privacy.
+    </p>
+
+    <?= $m->richTextEditor('rteYoutube')
+        ->name('content_youtube')
+        ->placeholder('Click the YouTube button to embed a video…')
+        ->toolbar(['bold', 'italic', 'separator', 'image', 'youtube', 'separator', 'link'])
+        ->minHeight(200) ?>
+
+    <?= demoCodeTabs(
+        '// Add \'youtube\' to the toolbar to enable the embed dialog
+<?= $m->richTextEditor(\'blogEditor\')
+    ->name(\'content\')
+    ->toolbar([\'bold\', \'italic\', \'separator\', \'image\', \'youtube\', \'separator\', \'link\'])
+    ->minHeight(300) ?>',
+        '// YouTube embeds are inserted as a responsive .m-rte-youtube-wrapper div.
+// You can retrieve the full HTML (including the embed) via getValue():
+var rte = m.richTextEditor(\'blogEditor\');
+console.log(rte.getValue());
+
+// The wrapper has contenteditable="false" so it is treated as an atom
+// by the browser — select and delete it like any block element.
+
+// When rendering stored content, apply .m-richtext to your wrapper
+// so the responsive embed styles are automatically applied:
+// <div class="m-richtext"><?= $savedHtml ?></div>'
+    ) ?>
+
+</div>
+
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->richTextEditor($id)', 'string', 'Create a RichTextEditor component.'],
     ['->name($name)', 'string', 'Set the hidden input\'s <code>name</code> attribute for form submission.'],
@@ -416,6 +454,7 @@ document.getElementById(\'contentEditor\')
     ['\'foreColor\'', '', 'Text colour picker (presets + custom).'],
     ['\'link\'', '', 'Insert / edit a hyperlink.'],
     ['\'image\'', '', 'Insert an image. Opens a dialog for URL entry and (if uploader configured) file upload.'],
+    ['\'youtube\'', '', 'Embed a YouTube video. Opens a dialog where you paste any YouTube URL or video ID — a responsive 16:9 iframe is inserted.'],
     ['\'undo\'', '', 'Undo.'],
     ['\'redo\'', '', 'Redo.'],
     ['\'clearFormat\'', '', 'Remove all inline formatting.'],
