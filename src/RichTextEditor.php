@@ -722,6 +722,7 @@ HTML;
              .       '<i class="fab fa-youtube" aria-hidden="true"></i> Embed'
              .     '</button>'
              .   '</div>'
+             . '</div>'
              . '</div>';
     }
 
