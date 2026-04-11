@@ -123,8 +123,8 @@
                     try {
                         var result = JSON.parse(xhr.responseText);
                         if (result && result.url) {
-                            utils.trigger(container, 'm:rte:upload:end', { success: true, url: result.url, error: null });
                             callback(null, result.url);
+                            utils.trigger(container, 'm:rte:upload:end', { success: true, url: result.url, error: null, response: result });
                         } else {
                             var msg = (result && result.message) ? result.message : 'Invalid response from upload server';
                             utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: msg });
@@ -341,6 +341,8 @@
                 img.setAttribute('data-original-width',  img.naturalWidth);
                 img.setAttribute('data-original-height', img.naturalHeight);
             }
+            // Always clear inline height so the browser auto-sizes from the width
+            img.style.height = '';
 
             // Visual selection indicator
             content.querySelectorAll('img').forEach(function (i) { i.classList.remove('m-rte-img-selected'); });
@@ -432,7 +434,7 @@
                 }
 
                 selectedImg.style.width  = newW + 'px';
-                selectedImg.style.height = newH + 'px';
+                selectedImg.style.height = '';   // always auto — maintains natural ratio
                 positionResizer(selectedImg);
             });
 

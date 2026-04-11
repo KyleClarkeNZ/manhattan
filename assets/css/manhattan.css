@@ -4863,6 +4863,8 @@ textarea.m-wizard-field-error {
 /* --- Image selection indicator --- */
 .m-rte-content img {
     cursor: pointer;
+    max-width: 100%;
+    height: auto;
 }
 
 .m-rte-content img.m-rte-img-selected {
