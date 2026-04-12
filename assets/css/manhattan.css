@@ -4884,34 +4884,39 @@ textarea.m-wizard-field-error {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 14px 16px;
     background: var(--m-bg-alt, #f5f7fa);
     border-bottom: 1px solid var(--m-border, #dde3ec);
     font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--m-text, #222);
+    font-size: 0.9375rem;
+    color: var(--m-text, #23272f);
 }
 
-.m-rte-youtube-header i {
+.m-rte-youtube-header > span i {
     color: #ff0000;
     margin-right: 6px;
 }
 
 .m-rte-youtube-close {
-    background: none;
     border: none;
+    background: transparent;
+    color: var(--m-text-muted, #a0aab4);
     cursor: pointer;
-    color: var(--m-text-muted, #6b7280);
-    padding: 4px 6px;
-    border-radius: 4px;
-    line-height: 1;
-    font-size: 1rem;
-    transition: background 0.15s, color 0.15s;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background 0.15s ease, color 0.15s ease;
+    outline: none;
+    padding: 0;
+    flex-shrink: 0;
 }
 
 .m-rte-youtube-close:hover {
-    background: var(--m-border, #dde3ec);
-    color: var(--m-text, #222);
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--m-text, #23272f);
 }
 
 .m-rte-youtube-body {
@@ -4940,6 +4945,24 @@ textarea.m-wizard-field-error {
     color: var(--m-text-muted, #6b7280);
 }
 
+/* YouTube embed width input row */
+.m-rte-youtube-width-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 0.5rem;
+}
+
+.m-rte-youtube-width {
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.m-rte-youtube-width-unit {
+    font-size: 0.9rem;
+    color: var(--m-text-muted, #6b7280);
+}
+
 .m-rte-youtube-footer {
     display: flex;
     align-items: center;
@@ -4953,12 +4976,12 @@ textarea.m-wizard-field-error {
 /* --- YouTube embed responsive wrapper --- */
 .m-rte-youtube-wrapper {
     position: relative;
+    display: block;
     width: 100%;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
-    height: 0;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     border-radius: 4px;
-    margin: 0.5em 0;
+    margin: 0.5em auto;
     background: #000;
 }
 
@@ -4975,6 +4998,55 @@ textarea.m-wizard-field-error {
 .m-richtext .m-rte-youtube-wrapper {
     margin: 0.75em 0;
 }
+
+/* Click shield — transparent overlay that captures clicks on the iframe
+   while editing. Stripped from saved HTML by getValue(). */
+.m-rte-yt-click-shield {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    cursor: pointer;
+    background: transparent;
+}
+
+/* Selected state */
+.m-rte-youtube-wrapper.m-rte-yt-selected {
+    outline: 2px solid var(--m-primary, #2196F3);
+    outline-offset: 1px;
+}
+
+/* YouTube resizer overlay */
+.m-rte-yt-resizer {
+    position: absolute;
+    pointer-events: none;
+    border: 2px solid var(--m-primary, #2196F3);
+    border-radius: 4px;
+    box-sizing: border-box;
+    z-index: 12;
+}
+
+.m-rte-yt-resizer[hidden] {
+    display: none;
+}
+
+/* Left/right drag handles */
+.m-rte-yt-resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--m-primary, #2196F3);
+    border: 2px solid #fff;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    pointer-events: all;
+    box-sizing: border-box;
+    z-index: 13;
+}
+
+.m-rte-yt-resize-handle[data-yt-handle="w"] { left:  -6px; cursor: w-resize; }
+.m-rte-yt-resize-handle[data-yt-handle="e"] { right: -6px; cursor: e-resize; }
 
 /* --- Read-only state --- */
 .m-richtexteditor-readonly .m-rte-toolbar {
@@ -5059,7 +5131,45 @@ textarea.m-wizard-field-error {
     color: var(--m-primary, #2196F3);
 }
 
-/* Resize handles — 8 points */
+/* Vertical separator in image toolbar */
+.m-rte-imgbar-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--m-border, #dde3ec);
+    margin: 0 3px;
+    align-self: center;
+    flex-shrink: 0;
+}
+
+/* Alt text input inside image toolbar */
+.m-rte-imgbar-alt {
+    height: 26px;
+    padding: 0 7px;
+    font-size: 0.75rem;
+    border: 1px solid var(--m-border, #dde3ec);
+    border-radius: 4px;
+    background: var(--m-bg, #fff);
+    color: var(--m-text, #23272f);
+    width: 120px;
+    min-width: 0;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.m-rte-imgbar-alt:focus {
+    border-color: var(--m-primary, #2196F3);
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.15);
+}
+
+/* Remove button — danger colour */
+.m-rte-imgbar-btn.m-rte-imgbar-btn-remove {
+    color: var(--m-danger, #e74c3c);
+}
+
+.m-rte-imgbar-btn.m-rte-imgbar-btn-remove:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: var(--m-danger, #e74c3c);
+}
 .m-rte-resize-handle {
     position: absolute;
     width: 9px;

@@ -159,9 +159,15 @@
         var selectedImg      = null;
         var resizerEl        = null;
         var resizerBarEl     = null;
+        var imgAltInput      = null;
         var uploadOverlayEl  = null;
         var uploadProgressEl = null;
         var uploadingImg     = null;
+
+        // YouTube wrapper selection & resize
+        var selectedYt   = null;
+        var ytResizerEl  = null;
+        var ytDragState  = null;
 
         // Build the resizer overlay element (created once, reused)
         (function buildResizer() {
@@ -175,7 +181,12 @@
             resizerBarEl.innerHTML =
                 '<button type="button" class="m-rte-imgbar-btn" data-img-align="left"   title="Align left">  <i class="fas fa-align-left"    aria-hidden="true"></i></button>' +
                 '<button type="button" class="m-rte-imgbar-btn" data-img-align="center" title="Align center"><i class="fas fa-align-center"  aria-hidden="true"></i></button>' +
-                '<button type="button" class="m-rte-imgbar-btn" data-img-align="right"  title="Align right"> <i class="fas fa-align-right"   aria-hidden="true"></i></button>';
+                '<button type="button" class="m-rte-imgbar-btn" data-img-align="right"  title="Align right"> <i class="fas fa-align-right"   aria-hidden="true"></i></button>' +
+                '<div class="m-rte-imgbar-sep" aria-hidden="true"></div>' +
+                '<input type="text" class="m-rte-imgbar-alt" placeholder="Alt text\u2026" aria-label="Image alt text" title="Alt text">' +
+                '<div class="m-rte-imgbar-sep" aria-hidden="true"></div>' +
+                '<button type="button" class="m-rte-imgbar-btn m-rte-imgbar-btn-remove" data-img-remove="true" title="Remove image" aria-label="Remove image"><i class="fas fa-trash-alt" aria-hidden="true"></i></button>';
+            imgAltInput = resizerBarEl.querySelector('.m-rte-imgbar-alt');
             resizerEl.appendChild(resizerBarEl);
 
             // Resize handles (8-point, only interactive when allowImageResize)
@@ -210,6 +221,22 @@
             uploadOverlayEl.appendChild(track);
 
             if (imageBody) { imageBody.appendChild(uploadOverlayEl); }
+        }());
+
+        // Build the YouTube resizer overlay (created once, reused)
+        (function buildYtResizer() {
+            ytResizerEl = document.createElement('div');
+            ytResizerEl.className = 'm-rte-yt-resizer';
+            ytResizerEl.setAttribute('hidden', '');
+
+            ['w', 'e'].forEach(function (pos) {
+                var h = document.createElement('div');
+                h.className = 'm-rte-yt-resize-handle';
+                h.setAttribute('data-yt-handle', pos);
+                ytResizerEl.appendChild(h);
+            });
+
+            if (imageBody) { imageBody.appendChild(ytResizerEl); }
         }());
 
         function showUploadOverlay(img) {
@@ -348,6 +375,9 @@
             content.querySelectorAll('img').forEach(function (i) { i.classList.remove('m-rte-img-selected'); });
             img.classList.add('m-rte-img-selected');
 
+            // Populate alt text field
+            if (imgAltInput) { imgAltInput.value = img.getAttribute('alt') || ''; }
+
             // Show overlay
             resizerEl.removeAttribute('hidden');
             positionResizer(img);
@@ -362,25 +392,107 @@
             if (resizerEl) { resizerEl.setAttribute('hidden', ''); }
         }
 
-        // Click inside the editor — select image or dismiss
+        // ---- YouTube wrapper helpers ----
+
+        function addYtClickShields() {
+            if (isReadOnly) { return; }
+            content.querySelectorAll('.m-rte-youtube-wrapper').forEach(function (wrapper) {
+                if (!wrapper.querySelector('.m-rte-yt-click-shield')) {
+                    var shield = document.createElement('div');
+                    shield.className = 'm-rte-yt-click-shield';
+                    wrapper.appendChild(shield);
+                }
+            });
+        }
+
+        function positionYtResizer(wrapper) {
+            if (!ytResizerEl || !imageBody) { return; }
+            var bodyRect   = imageBody.getBoundingClientRect();
+            var wrapRect   = wrapper.getBoundingClientRect();
+            var scrollTop  = imageBody.scrollTop  || 0;
+            var scrollLeft = imageBody.scrollLeft || 0;
+            ytResizerEl.style.top    = (wrapRect.top  - bodyRect.top  + scrollTop)  + 'px';
+            ytResizerEl.style.left   = (wrapRect.left - bodyRect.left + scrollLeft) + 'px';
+            ytResizerEl.style.width  = wrapRect.width  + 'px';
+            ytResizerEl.style.height = wrapRect.height + 'px';
+        }
+
+        function selectYtWrapper(wrapper) {
+            if (isReadOnly) { return; }
+            content.querySelectorAll('.m-rte-youtube-wrapper').forEach(function (w) {
+                w.classList.remove('m-rte-yt-selected');
+            });
+            selectedYt = wrapper;
+            wrapper.classList.add('m-rte-yt-selected');
+            ytResizerEl.removeAttribute('hidden');
+            positionYtResizer(wrapper);
+        }
+
+        function dismissYtSelection() {
+            if (selectedYt) {
+                selectedYt.classList.remove('m-rte-yt-selected');
+                selectedYt = null;
+            }
+            if (ytResizerEl) { ytResizerEl.setAttribute('hidden', ''); }
+        }
+
+        // Click inside the editor — select image/youtube-wrapper or dismiss
         content.addEventListener('click', function (e) {
             var img = e.target.nodeName === 'IMG' ? e.target : null;
+            // The click shield sits on top of the iframe; clicking it selects the wrapper
+            var isShield    = e.target.classList.contains('m-rte-yt-click-shield');
+            var ytWrapper   = isShield ? e.target.parentNode : null;
+
             if (img && content.contains(img)) {
                 e.stopPropagation();
+                dismissYtSelection();
                 selectImage(img);
+            } else if (ytWrapper && content.contains(ytWrapper)) {
+                e.stopPropagation();
+                dismissImageSelection();
+                selectYtWrapper(ytWrapper);
             } else {
                 dismissImageSelection();
+                dismissYtSelection();
             }
         });
 
         // Alignment mini-toolbar clicks
         resizerBarEl.addEventListener('mousedown', function (e) {
-            e.preventDefault(); // Keep selection intact
+            // Allow normal interaction with the alt text input
+            if (e.target.closest('.m-rte-imgbar-alt')) { return; }
+            e.preventDefault(); // Keep image selection intact
             var btn = e.target.closest('.m-rte-imgbar-btn');
             if (!btn || !selectedImg) { return; }
-            applyImageAlign(selectedImg, btn.getAttribute('data-img-align'));
-            positionResizer(selectedImg);
+
+            if (btn.getAttribute('data-img-remove')) {
+                if (selectedImg.parentNode) {
+                    selectedImg.parentNode.removeChild(selectedImg);
+                }
+                dismissImageSelection();
+                syncHidden();
+                updateCharCount();
+                utils.trigger(container, 'm:rte:change', { value: getValue() });
+                return;
+            }
+
+            var align = btn.getAttribute('data-img-align');
+            if (align) {
+                applyImageAlign(selectedImg, align);
+                positionResizer(selectedImg);
+            }
         });
+
+        // Alt text input — update image attribute live
+        if (imgAltInput) {
+            imgAltInput.addEventListener('input', function () {
+                if (selectedImg) {
+                    selectedImg.setAttribute('alt', imgAltInput.value);
+                    syncHidden();
+                    utils.trigger(container, 'm:rte:change', { value: getValue() });
+                }
+            });
+        }
 
         // ---- Resize drag logic ----
         if (allowImageResize) {
@@ -448,18 +560,59 @@
             });
         }
 
-        // Dismiss when clicking outside the entire editor
-        document.addEventListener('click', function (e) {
-            if (resizerEl && !container.contains(e.target)) {
-                dismissImageSelection();
+        // YouTube resize drag
+        ytResizerEl.addEventListener('mousedown', function (e) {
+            var handle = e.target.closest('.m-rte-yt-resize-handle');
+            if (!handle || !selectedYt) { return; }
+            e.preventDefault();
+            var pos         = handle.getAttribute('data-yt-handle');
+            var parentEl    = selectedYt.parentNode;
+            var parentWidth = parentEl ? (parentEl.offsetWidth || parentEl.clientWidth) : 0;
+            ytDragState = {
+                pos:        pos,
+                startX:     e.clientX,
+                startWidth: selectedYt.offsetWidth,
+                parentWidth: parentWidth || selectedYt.offsetWidth
+            };
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (!ytDragState || !selectedYt) { return; }
+            var dx = e.clientX - ytDragState.startX;
+            var newWidth = ytDragState.pos === 'e'
+                ? ytDragState.startWidth + dx
+                : ytDragState.startWidth - dx;
+            var pct = Math.round(newWidth / ytDragState.parentWidth * 100);
+            pct = Math.min(100, Math.max(10, pct));
+            selectedYt.style.width = pct + '%';
+            positionYtResizer(selectedYt);
+        });
+
+        document.addEventListener('mouseup', function () {
+            if (!ytDragState) { return; }
+            ytDragState = null;
+            if (selectedYt) {
+                syncHidden();
+                utils.trigger(container, 'm:rte:change', { value: getValue() });
             }
         });
 
-        // Re-position resizer when the body scrolls (when maxHeight is set)
+        // Dismiss when clicking outside the entire editor
+        document.addEventListener('click', function (e) {
+            if (!container.contains(e.target)) {
+                dismissImageSelection();
+                dismissYtSelection();
+            }
+        });
+
+        // Re-position resizers when the body scrolls (when maxHeight is set)
         if (imageBody) {
             imageBody.addEventListener('scroll', function () {
                 if (selectedImg && !resizerEl.hasAttribute('hidden')) {
                     positionResizer(selectedImg);
+                }
+                if (selectedYt && ytResizerEl && !ytResizerEl.hasAttribute('hidden')) {
+                    positionYtResizer(selectedYt);
                 }
             });
         }
@@ -469,12 +622,24 @@
         // =========================================================
 
         function getValue() {
-            return content.innerHTML;
+            // Clone so we can strip editor-only elements without touching the live DOM
+            var clone = content.cloneNode(true);
+            clone.querySelectorAll('.m-rte-yt-click-shield').forEach(function (el) {
+                if (el.parentNode) { el.parentNode.removeChild(el); }
+            });
+            // Images still uploading (data: src) are stripped from saved output to
+            // avoid persisting huge base64 payloads — they'll be replaced once uploaded.
+            clone.querySelectorAll('img[data-rte-uploading]').forEach(function (el) {
+                if (el.parentNode) { el.parentNode.removeChild(el); }
+            });
+            return clone.innerHTML;
         }
 
         function setValue(html) {
             content.innerHTML = html && html.trim() ? html : '<p><br></p>';
             dismissImageSelection();
+            dismissYtSelection();
+            addYtClickShields();
             syncHidden();
             updateCharCount();
             updateToolbarState();
@@ -1157,9 +1322,10 @@
         // YouTube embed dialog
         // =========================================================
 
-        var ytDialog    = container.querySelector('.m-rte-youtube-dialog');
-        var ytUrlInput  = ytDialog && ytDialog.querySelector('.m-rte-youtube-url');
-        var ytInsertBtn = ytDialog && ytDialog.querySelector('.m-rte-youtube-insert');
+        var ytDialog     = container.querySelector('.m-rte-youtube-dialog');
+        var ytUrlInput   = ytDialog && ytDialog.querySelector('.m-rte-youtube-url');
+        var ytWidthInput = ytDialog && ytDialog.querySelector('.m-rte-youtube-width');
+        var ytInsertBtn  = ytDialog && ytDialog.querySelector('.m-rte-youtube-insert');
         var ytCancelBtn = ytDialog && ytDialog.querySelector('.m-rte-youtube-cancel');
         var ytCloseBtn  = ytDialog && ytDialog.querySelector('.m-rte-youtube-close');
         var ytBackdrop  = ytDialog && ytDialog.querySelector('.m-rte-youtube-backdrop');
@@ -1245,8 +1411,10 @@
             closeYouTubeDialog(true);
 
             // Responsive 16:9 wrapper + privacy-enhanced nocookie embed
+            var rawWidth  = ytWidthInput ? parseInt(ytWidthInput.value, 10) : 80;
+            var embedWidth = Math.min(100, Math.max(10, isNaN(rawWidth) ? 80 : rawWidth));
             var embedUrl = 'https://www.youtube-nocookie.com/embed/' + videoId;
-            var html = '<div class="m-rte-youtube-wrapper" contenteditable="false">'
+            var html = '<div class="m-rte-youtube-wrapper" contenteditable="false" style="width:' + embedWidth + '%;margin-left:auto;margin-right:auto">'
                      + '<iframe src="' + embedUrl + '"'
                      + ' title="YouTube video"'
                      + ' frameborder="0"'
@@ -1256,6 +1424,7 @@
                      + '</div><p><br></p>';
 
             document.execCommand('insertHTML', false, html);
+            addYtClickShields();
             syncHidden();
             updateCharCount();
             utils.trigger(container, 'm:rte:change', { value: getValue() });
@@ -1268,6 +1437,12 @@
             if (ytBackdrop)  { ytBackdrop.addEventListener('click',  function () { closeYouTubeDialog(false); }); }
             if (ytUrlInput) {
                 ytUrlInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') { e.preventDefault(); closeYouTubeDialog(false); }
+                    if (e.key === 'Enter')  { e.preventDefault(); doInsertYouTube(); }
+                });
+            }
+            if (ytWidthInput) {
+                ytWidthInput.addEventListener('keydown', function (e) {
                     if (e.key === 'Escape') { e.preventDefault(); closeYouTubeDialog(false); }
                     if (e.key === 'Enter')  { e.preventDefault(); doInsertYouTube(); }
                 });
@@ -1333,9 +1508,15 @@
             e.preventDefault();
             var clipData = e.clipboardData || window.clipboardData;
 
-            // --- Check for a raw image blob (e.g. screenshot, copied image file) ---
+            var html = clipData ? clipData.getData('text/html') : '';
+            var text = clipData ? clipData.getData('text/plain') : '';
+
+            // --- Check for a raw image file item (e.g. screenshot) ---
+            // Only use the raw-file path when there is no richer HTML alongside it.
+            // When HTML is present (e.g. copying an image on a webpage), the HTML
+            // path handles it and avoids uploading a redundant copy.
             var imageFile = null;
-            if (clipData && clipData.items) {
+            if (!html && clipData && clipData.items) {
                 for (var idx = 0; idx < clipData.items.length; idx++) {
                     var item = clipData.items[idx];
                     if (item.kind === 'file' && item.type.indexOf('image') === 0) {
@@ -1346,16 +1527,12 @@
             }
 
             if (imageFile) {
-                if (!allowPasteImages) {
-                    // Silently discard the pasted image (current behaviour for image-less editors)
-                    return;
-                }
+                // Pure raw image (screenshot / file copy) — no text content alongside it
+                if (!allowPasteImages) { return; }
                 if (!uploaderUrl) {
                     showRteError('Image uploader is not configured for this editor.');
                     return;
                 }
-                // Insert a local blob placeholder immediately so the user sees the
-                // image in-place; swap the src for the server URL once upload finishes.
                 var blobUrl = URL.createObjectURL(imageFile);
                 insertImageHtmlAtCursor(blobUrl, '');
                 var placeholderImg = content.querySelector('img[src="' + blobUrl + '"]');
@@ -1387,13 +1564,15 @@
                 return;
             }
 
-            // --- No raw image — process text/html or text/plain as normal ---
-            var html = clipData ? clipData.getData('text/html') : '';
-            var text = clipData ? clipData.getData('text/plain') : '';
-
+            // --- HTML paste (may include inline images alongside text) ---
             if (html) {
                 html = cleanPastedHtml(html);
                 document.execCommand('insertHTML', false, html);
+
+                // Upload any base64 data: images that cleanPastedHtml kept
+                if (allowPasteImages && uploaderUrl) {
+                    uploadDataImages();
+                }
             } else if (text) {
                 // Convert plain text — each line becomes a <p>
                 var lines     = text.split(/\r?\n/);
@@ -1426,10 +1605,28 @@
                 if (parent) { parent.removeChild(el); }
             });
 
-            // Strip <img> elements — external images must go through the Insert Image dialog
+            // Sanitise images:
+            //   http(s) src  — safe external URL; keep src + alt only
+            //   data: src    — embedded base64; keep for async upload if uploader configured, else strip
+            //   everything else (blob:, file:, etc.) — strip
             tmp.querySelectorAll('img').forEach(function (el) {
-                var parent = el.parentNode;
-                if (parent) { parent.removeChild(el); }
+                var src = el.getAttribute('src') || '';
+                if (/^https?:\/\//i.test(src)) {
+                    // Keep external image — preserve only src and alt
+                    var keepAlt = el.getAttribute('alt') || '';
+                    while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
+                    el.setAttribute('src', src);
+                    if (keepAlt) { el.setAttribute('alt', keepAlt); }
+                } else if (/^data:image\//i.test(src) && allowPasteImages && uploaderUrl) {
+                    // Embedded base64 image — mark for async upload after insert
+                    while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
+                    el.setAttribute('src', src);
+                    el.setAttribute('data-rte-uploading', 'true');
+                } else {
+                    // Unsafe or unsupported src — remove entirely
+                    var parent = el.parentNode;
+                    if (parent) { parent.removeChild(el); }
+                }
             });
 
             // Strip class/id attributes; sanitise inline styles
@@ -1451,6 +1648,66 @@
             });
 
             return tmp.innerHTML;
+        }
+
+        /**
+         * After inserting pasted HTML, find any img[data-rte-uploading] elements
+         * whose src is a data: URL and upload each one, swapping the src on completion.
+         */
+        function uploadDataImages() {
+            var imgs = content.querySelectorAll('img[data-rte-uploading]');
+            imgs.forEach(function (img) {
+                var src = img.getAttribute('src') || '';
+                if (src.indexOf('data:') !== 0) { return; }
+
+                var blob = dataUrlToBlob(src);
+                if (!blob) {
+                    img.removeAttribute('data-rte-uploading');
+                    return;
+                }
+
+                showUploadOverlay(img);
+
+                // Capture reference in closure
+                (function (targetImg) {
+                    uploadImage(blob, function (err, url) {
+                        if (targetImg.parentNode) {
+                            if (err) {
+                                targetImg.parentNode.removeChild(targetImg);
+                            } else {
+                                targetImg.src = url;
+                                targetImg.removeAttribute('data-rte-uploading');
+                            }
+                        }
+                        hideUploadOverlay();
+                        if (err) {
+                            showRteError('Image upload failed: ' + err);
+                        } else {
+                            syncHidden();
+                            updateCharCount();
+                            utils.trigger(container, 'm:rte:change', { value: getValue() });
+                        }
+                    }, null);
+                }(img));
+            });
+        }
+
+        /** Convert a base64 data URL to a Blob suitable for upload. */
+        function dataUrlToBlob(dataUrl) {
+            try {
+                var parts = dataUrl.split(',');
+                if (parts.length < 2) { return null; }
+                var mimeMatch = parts[0].match(/:([^;]+);/);
+                if (!mimeMatch) { return null; }
+                var mime = mimeMatch[1];
+                var bstr = atob(parts[1]);
+                var n = bstr.length;
+                var u8arr = new Uint8Array(n);
+                for (var i = 0; i < n; i++) { u8arr[i] = bstr.charCodeAt(i); }
+                return new Blob([u8arr], { type: mime });
+            } catch (ex) {
+                return null;
+            }
         }
 
         var ALLOWED_STYLE_PROPS = [
@@ -1483,6 +1740,7 @@
         // Initial state
         // =========================================================
 
+        addYtClickShields();
         syncHidden();
         updateCharCount();
 

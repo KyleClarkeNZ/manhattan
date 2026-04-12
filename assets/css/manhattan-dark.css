@@ -1867,6 +1867,11 @@ body.theme-dark .m-rte-youtube-hint {
     color: #8899aa;
 }
 
+body.m-dark .m-rte-youtube-width-unit,
+body.theme-dark .m-rte-youtube-width-unit {
+    color: #8899aa;
+}
+
 body.m-dark .m-rte-youtube-footer,
 body.theme-dark .m-rte-youtube-footer {
     background: #0e1825;
@@ -1908,8 +1913,53 @@ body.theme-dark .m-rte-imgbar-btn-active {
     color: #64b5f6;
 }
 
+body.m-dark .m-rte-imgbar-sep,
+body.theme-dark .m-rte-imgbar-sep {
+    background: #2a3448;
+}
+
+body.m-dark .m-rte-imgbar-alt,
+body.theme-dark .m-rte-imgbar-alt {
+    background: #0e1825;
+    border-color: #2a3448;
+    color: #cdd6e0;
+}
+
+body.m-dark .m-rte-imgbar-alt:focus,
+body.theme-dark .m-rte-imgbar-alt:focus {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.15);
+}
+
+body.m-dark .m-rte-imgbar-btn.m-rte-imgbar-btn-remove,
+body.theme-dark .m-rte-imgbar-btn.m-rte-imgbar-btn-remove {
+    color: #e57373;
+}
+
+body.m-dark .m-rte-imgbar-btn.m-rte-imgbar-btn-remove:hover,
+body.theme-dark .m-rte-imgbar-btn.m-rte-imgbar-btn-remove:hover {
+    background: rgba(229, 115, 115, 0.12);
+    color: #e57373;
+}
+
 body.m-dark .m-rte-resize-handle,
 body.theme-dark .m-rte-resize-handle {
+    background: #64b5f6;
+    border-color: #0e1825;
+}
+
+body.m-dark .m-rte-youtube-wrapper.m-rte-yt-selected,
+body.theme-dark .m-rte-youtube-wrapper.m-rte-yt-selected {
+    outline-color: #64b5f6;
+}
+
+body.m-dark .m-rte-yt-resizer,
+body.theme-dark .m-rte-yt-resizer {
+    border-color: #64b5f6;
+}
+
+body.m-dark .m-rte-yt-resize-handle,
+body.theme-dark .m-rte-yt-resize-handle {
     background: #64b5f6;
     border-color: #0e1825;
 }
