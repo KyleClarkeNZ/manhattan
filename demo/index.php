@@ -191,6 +191,24 @@ if (strpos($uri, '/popoverContent') !== false && $method === 'GET') {
     exit;
 }
 
+if (strpos($uri, '/carouselData') !== false && $method === 'GET') {
+    header('Content-Type: application/json');
+    $seeds    = ['cs1','cs2','cs3','cs4','cs5','cs6','cs7','cs8','cs9','cs10'];
+    $captions = ['Landscape','Portrait','Abstract','Architecture','Nature','Street','Documentary','Aerial','Underwater','Astro'];
+    $titles   = ['Golden Hour','Blue Yonder','Urban Grid','Stone & Glass','Deep Forest','Night Market','Field Report','Above the Clouds','Coral Garden','Milky Way'];
+    $tiles = [];
+    foreach ($seeds as $i => $seed) {
+        $tiles[] = [
+            'title'    => $titles[$i],
+            'href'     => '#demo-' . ($i + 1),
+            'imageUrl' => 'https://picsum.photos/seed/' . $seed . '/320/240',
+            'caption'  => $captions[$i],
+        ];
+    }
+    echo json_encode(['tiles' => $tiles]);
+    exit;
+}
+
 // ---------------------------------------------------------------------------
 // Manhattan setup
 // ---------------------------------------------------------------------------
@@ -227,6 +245,7 @@ $demoNav = [
     'tabs'        => ['Tabs',        'fa-folder',             'Layout & Display'],
     'accordion'   => ['Accordion',   'fa-bars-staggered',     'Layout & Display'],
     'imageviewer' => ['ImageViewer', 'fa-images',             'Layout & Display'],
+    'carousel'    => ['Carousel',    'fa-film',               'Layout & Display'],
     // Actions & Navigation
     'button'      => ['Button',      'fa-hand-pointer',       'Actions & Navigation'],
     'buttongroup' => ['ButtonGroup', 'fa-table-columns',      'Actions & Navigation'],

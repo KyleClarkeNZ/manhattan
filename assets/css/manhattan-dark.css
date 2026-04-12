@@ -2199,3 +2199,37 @@ body.theme-dark .m-imageviewer-stage {
 
 /* ── Lightbox (dark) — the lightbox is already dark by design ───────────────── */
 /* No additional overrides needed; the component uses fixed dark rgba colours. */
+
+/* =============================================================================
+   Carousel (dark)
+   ============================================================================= */
+
+body.m-dark .m-carousel-tile-link,
+body.theme-dark .m-carousel-tile-link {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--m-border-color, #3b2a55);
+}
+
+body.m-dark .m-carousel-tile-link:hover,
+body.theme-dark .m-carousel-tile-link:hover {
+    border-color: var(--m-primary, #118AB2);
+    box-shadow: 0 4px 14px rgba(17, 138, 178, 0.22);
+}
+
+body.m-dark .m-carousel-tile-img,
+body.theme-dark .m-carousel-tile-img {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+body.m-dark .m-carousel-btn,
+body.theme-dark .m-carousel-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--m-border-color, #3b2a55);
+    color: var(--m-text-muted, #aaa);
+    box-shadow: none;
+}
+
+body.m-dark .m-carousel-dot,
+body.theme-dark .m-carousel-dot {
+    background: rgba(255, 255, 255, 0.2);
+}

@@ -576,6 +576,17 @@ class HtmlHelper
     }
 
     /**
+     * Create a Carousel component.
+     *
+     * @param string $id      Unique element ID.
+     * @param array  $options Optional configuration (dots, tileWidth, tileGap, remoteUrl, perPage).
+     */
+    public function carousel(string $id, array $options = []): Carousel
+    {
+        return new Carousel($id, $options);
+    }
+
+    /**
      * Create a Lightbox component — full-screen overlay image viewer.
      *
      * Can be pre-populated with images via PHP or supplied dynamically at open
@@ -631,6 +642,7 @@ class HtmlHelper
 <script src="{$js}/components/splitpane.js" defer></script>
 <script src="{$js}/components/lightbox.js" defer></script>
 <script src="{$js}/components/imageviewer.js" defer></script>
+<script src="{$js}/components/carousel.js" defer></script>
 HTML;
     }
 
