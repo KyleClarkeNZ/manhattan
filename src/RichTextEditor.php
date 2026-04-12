@@ -699,8 +699,7 @@ HTML;
 
     private function renderYouTubeDialog(string $id): string
     {
-        $urlInputId   = htmlspecialchars($id . '_yt_url',   ENT_QUOTES, 'UTF-8');
-        $widthInputId = htmlspecialchars($id . '_yt_width', ENT_QUOTES, 'UTF-8');
+        $urlInputId = htmlspecialchars($id . '_yt_url', ENT_QUOTES, 'UTF-8');
 
         return '<div class="m-rte-youtube-dialog" hidden role="dialog" aria-modal="true" aria-label="Embed YouTube Video">'
              . '<div class="m-rte-youtube-backdrop"></div>'
@@ -716,12 +715,6 @@ HTML;
              .     '<input type="text" id="' . $urlInputId . '" class="m-textbox m-rte-youtube-url"'
              .       ' placeholder="https://www.youtube.com/watch?v=… or video ID" autocomplete="off">'
              .     '<p class="m-rte-youtube-hint">Paste any YouTube link — watch, shortened (youtu.be), or embed URL.</p>'
-             .     '<label class="m-rte-youtube-field-label" for="' . $widthInputId . '">Width</label>'
-             .     '<div class="m-rte-youtube-width-row">'
-             .       '<input type="number" id="' . $widthInputId . '" class="m-textbox m-rte-youtube-width"'
-             .         ' value="80" min="10" max="100" step="5" aria-label="Embed width percentage">'
-             .       '<span class="m-rte-youtube-width-unit">%</span>'
-             .     '</div>'
              .   '</div>'
              .   '<div class="m-rte-youtube-footer">'
              .     '<button type="button" class="m-button m-rte-youtube-cancel">Cancel</button>'

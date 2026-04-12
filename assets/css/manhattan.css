@@ -2247,6 +2247,28 @@
     margin-right: 1rem;
 }
 
+/* Image-in-paragraph text wrapping.
+ * When an <img> shares a <p> with text, it floats left so text wraps to its right.
+ * Float right instead by adding the .m-float-right class to the <img>.
+ * To prevent wrapping, place the image in its own <p> (with no surrounding text). */
+p img {
+    float: left;
+    max-width: 50%;
+    margin: 0 1rem 0.75rem 0;
+}
+
+p img.m-float-right {
+    float: right;
+    margin: 0 0 0.75rem 1rem;
+}
+
+/* Clearfix: contain floated images within their paragraph */
+p::after {
+    content: '';
+    display: table;
+    clear: both;
+}
+
 /* === Form Group Styling === */
 .form-group {
     margin-bottom: 1.5rem;
