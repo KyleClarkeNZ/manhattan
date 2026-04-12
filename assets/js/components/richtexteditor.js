@@ -1416,6 +1416,7 @@
             var embedUrl = 'https://www.youtube-nocookie.com/embed/' + videoId;
             var html = '<div class="m-rte-youtube-wrapper" contenteditable="false" style="width:' + embedWidth + '%;margin-left:auto;margin-right:auto">'
                      + '<iframe src="' + embedUrl + '"'
+                     + ' width="560" height="315"'
                      + ' title="YouTube video"'
                      + ' frameborder="0"'
                      + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
