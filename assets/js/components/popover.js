@@ -76,6 +76,7 @@
         var rect = triggerEl.getBoundingClientRect();
         var preferred = popEl.getAttribute('data-placement') || 'auto';
         var placement = resolvePlacement(preferred, rect);
+        var align     = popEl.getAttribute('data-align') || 'center';
 
         popEl.classList.remove('m-popover-top', 'm-popover-bottom', 'm-popover-left', 'm-popover-right');
         popEl.classList.add('m-popover-' + placement);
@@ -93,10 +94,22 @@
 
         var left, top;
         if (placement === 'bottom') {
-            left = sx + rect.left + rect.width  / 2 - popW / 2;
+            if (align === 'start') {
+                left = sx + rect.left;
+            } else if (align === 'end') {
+                left = sx + rect.right - popW;
+            } else {
+                left = sx + rect.left + rect.width  / 2 - popW / 2;
+            }
             top  = sy + rect.bottom + offset;
         } else if (placement === 'top') {
-            left = sx + rect.left + rect.width  / 2 - popW / 2;
+            if (align === 'start') {
+                left = sx + rect.left;
+            } else if (align === 'end') {
+                left = sx + rect.right - popW;
+            } else {
+                left = sx + rect.left + rect.width  / 2 - popW / 2;
+            }
             top  = sy + rect.top - popH - offset;
         } else if (placement === 'left') {
             left = sx + rect.left - popW - offset;

@@ -383,8 +383,6 @@ document.getElementById(\'contentEditor\')
     });'
     ) ?>
 
-</div>
-
     <!-- ============================================================ -->
     <h3>YouTube Video Embed</h3>
     <p class="m-demo-desc">

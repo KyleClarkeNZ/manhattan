@@ -242,15 +242,16 @@ $demoNav = [
     'address'     => ['Address',     'fa-map-marker-alt',     'Editors & Forms'],
     'iconpicker'  => ['IconPicker',  'fa-icons',              'Editors & Forms'],
     'richtexteditor' => ['RichTextEditor', 'fa-pen-to-square',  'Editors & Forms'],
+    'codearea'    => ['CodeArea',    'fa-code',               'Editors & Forms'],
     'form'        => ['Form',        'fa-edit',               'Editors & Forms'],
     'validator'   => ['Validator',   'fa-check-circle',       'Editors & Forms'],
+    'wizard'      => ['Wizard',      'fa-layer-group',        'Editors & Forms'],
     // Data & Visualisation
     'datagrid'    => ['DataGrid',    'fa-table',              'Data & Visualisation'],
     'list'        => ['List',        'fa-list',               'Data & Visualisation'],
     'chart'       => ['Chart',       'fa-chart-bar',          'Data & Visualisation'],
     'progressbar' => ['ProgressBar', 'fa-tasks',              'Data & Visualisation'],
     'rating'      => ['Rating',      'fa-star',               'Data & Visualisation'],
-    // Data & Visualisation
     'pagination'  => ['Pagination',  'fa-ellipsis-h',         'Data & Visualisation'],
     // Overlays & Feedback
     'window'      => ['Window',      'fa-window-maximize',    'Overlays & Feedback'],
@@ -260,10 +261,7 @@ $demoNav = [
     'tooltip'     => ['Tooltip',     'fa-comment',            'Overlays & Feedback'],
     'popover'     => ['Popover',     'fa-comment-alt',        'Overlays & Feedback'],
     'lightbox'    => ['Lightbox',    'fa-expand',             'Overlays & Feedback'],
-    // Utilities
-    'codearea'    => ['CodeArea',    'fa-code',               'Utilities'],
-    // Composites
-    'wizard'      => ['Wizard',      'fa-layer-group',        'Composites'],
+
 ];
 
 // Parse page slug from URI: /demo/button → button, /demo/ → overview

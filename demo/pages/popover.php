@@ -239,6 +239,7 @@ document.getElementById(\'my-pop\').addEventListener(\'m:popover:content-loaded\
     ['->trigger($elementId)', 'self', 'Bind to a single DOM element by ID.'],
     ['->triggerSelector($css)', 'self', 'Bind to all elements matching a CSS selector.'],
     ['->placement($p)', 'self', 'Placement: <code>auto</code> (default), <code>top</code>, <code>bottom</code>, <code>left</code>, <code>right</code>.'],
+    ['->align($a)', 'self', 'Horizontal alignment for top/bottom placements: <code>center</code> (default), <code>start</code> (left-edge), <code>end</code> (right-edge). No effect on left/right placements.'],
     ['->triggerOn($event)', 'self', 'Trigger event: <code>hover</code> (default) or <code>click</code>.'],
     ['->delay($show, $hide)', 'self', 'Show/hide delays in ms. Default: 200 / 300.'],
     ['->remote($url)', 'self', 'Load body content from a URL via AJAX.'],

@@ -38,6 +38,7 @@ final class Popover extends Component
     private ?string $trigger = null;
     private ?string $triggerSelector = null;
     private string $placement = 'auto';
+    private string $align = 'center';
     private string $triggerOn = 'hover';
     private int $delayShow = 200;
     private int $delayHide = 300;
@@ -91,6 +92,19 @@ final class Popover extends Component
     public function placement(string $placement): self
     {
         $this->placement = $placement;
+        return $this;
+    }
+
+    /**
+     * Horizontal alignment for top/bottom placements.
+     * - 'center' (default): popover is centred over the trigger
+     * - 'start':  left edge of popover aligns with left edge of trigger
+     * - 'end':    right edge of popover aligns with right edge of trigger
+     * Has no effect for left/right placements.
+     */
+    public function align(string $align): self
+    {
+        $this->align = $align;
         return $this;
     }
 
@@ -176,6 +190,9 @@ final class Popover extends Component
             $data .= ' data-trigger-selector="' . htmlspecialchars($this->triggerSelector, ENT_QUOTES, 'UTF-8') . '"';
         }
         $data .= ' data-placement="' . htmlspecialchars($this->placement, ENT_QUOTES, 'UTF-8') . '"';
+        if ($this->align !== 'center') {
+            $data .= ' data-align="' . htmlspecialchars($this->align, ENT_QUOTES, 'UTF-8') . '"';
+        }
         $data .= ' data-trigger-on="' . htmlspecialchars($this->triggerOn, ENT_QUOTES, 'UTF-8') . '"';
         $data .= ' data-delay-show="' . $this->delayShow . '"';
         $data .= ' data-delay-hide="' . $this->delayHide . '"';
