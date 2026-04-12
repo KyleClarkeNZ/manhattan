@@ -4967,24 +4967,6 @@ textarea.m-wizard-field-error {
     color: var(--m-text-muted, #6b7280);
 }
 
-/* YouTube embed width input row */
-.m-rte-youtube-width-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 0.5rem;
-}
-
-.m-rte-youtube-width {
-    width: 80px;
-    flex-shrink: 0;
-}
-
-.m-rte-youtube-width-unit {
-    font-size: 0.9rem;
-    color: var(--m-text-muted, #6b7280);
-}
-
 .m-rte-youtube-footer {
     display: flex;
     align-items: center;
