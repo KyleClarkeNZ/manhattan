@@ -5044,6 +5044,31 @@ textarea.m-wizard-field-error {
     outline-offset: 1px;
 }
 
+/* YouTube video credit line rendered inside the wrapper */
+.m-rte-youtube-credit {
+    margin: 0;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.65);
+    line-height: 1.3;
+}
+
+.m-rte-youtube-credit a {
+    color: #ff9090;
+    text-decoration: none;
+}
+
+.m-rte-youtube-credit a:hover {
+    text-decoration: underline;
+}
+
+/* Displayed in .m-richtext (read-only) */
+.m-richtext .m-rte-youtube-credit {
+    pointer-events: all;
+}
+
 /* YouTube resizer overlay */
 .m-rte-yt-resizer {
     position: absolute;
@@ -5976,6 +6001,24 @@ textarea.m-wizard-field-error {
     line-height: 1.4;
     pointer-events: none;
     z-index: 2;
+}
+
+/* Enable interaction for the Video Credit link inside captions */
+.m-imageviewer-caption a {
+    pointer-events: all;
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.m-imageviewer-caption a:hover {
+    opacity: 0.8;
+}
+
+.m-imageviewer-credit {
+    display: inline;
+    font-size: 11px;
+    opacity: 0.9;
 }
 
 .m-imageviewer-caption[hidden] {

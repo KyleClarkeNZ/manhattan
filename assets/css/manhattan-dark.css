@@ -1948,6 +1948,11 @@ body.theme-dark .m-rte-youtube-wrapper.m-rte-yt-selected {
     outline-color: #64b5f6;
 }
 
+body.m-dark .m-rte-youtube-credit a,
+body.theme-dark .m-rte-youtube-credit a {
+    color: #ffb3b3;
+}
+
 body.m-dark .m-rte-yt-resizer,
 body.theme-dark .m-rte-yt-resizer {
     border-color: #64b5f6;

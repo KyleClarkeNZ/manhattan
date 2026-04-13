@@ -20,6 +20,8 @@ $ivImages = [
         Two layouts are available: <strong>side</strong> (default — vertical thumbnail strip on the left)
         and <strong>below</strong> (horizontal strip beneath the main image).
         Optional auto-advance, forward/back arrows, and lightbox integration are included.
+        When navigating to a YouTube item the caption automatically fetches and displays a
+        <strong>Video Credit</strong> link to the video's channel via the YouTube oEmbed API.
     </p>
 
     <!-- ─────────────────────────────────────────────────────────── -->

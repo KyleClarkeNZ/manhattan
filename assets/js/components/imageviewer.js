@@ -51,6 +51,83 @@
 
         var count = items.length;
 
+        // Cache for YouTube oEmbed data — keyed by video ID
+        var ytOEmbedCache = {};
+
+        // ── YouTube credit helpers ────────────────────────────────────────
+
+        /** Allow only YouTube channel / user / handle URLs as the credit href. */
+        function sanitizeYtChannelUrl(url) {
+            if (!url) { return ''; }
+            if (/^https:\/\/(www\.)?youtube\.com\/(channel\/|user\/|c\/|@)[A-Za-z0-9_\-@.%]+/.test(url)) {
+                return url;
+            }
+            return '';
+        }
+
+        /**
+         * Rebuild captionEl with the video credit appended.
+         * Uses DOM construction (no innerHTML) to prevent XSS.
+         */
+        function renderYtCredit(captionEl, captionText, info) {
+            captionEl.innerHTML = '';
+            if (captionText) {
+                captionEl.appendChild(document.createTextNode(captionText));
+            }
+            var safeUrl = info && info.url ? sanitizeYtChannelUrl(info.url) : '';
+            if (info && info.name && safeUrl) {
+                if (captionText) {
+                    captionEl.appendChild(document.createTextNode(' \u2014 '));
+                }
+                var creditSpan = document.createElement('span');
+                creditSpan.className = 'm-imageviewer-credit';
+                creditSpan.appendChild(document.createTextNode('Video Credit: '));
+                var link = document.createElement('a');
+                link.href   = safeUrl;
+                link.target = '_blank';
+                link.rel    = 'noopener noreferrer';
+                link.textContent = info.name;
+                creditSpan.appendChild(link);
+                captionEl.appendChild(creditSpan);
+            }
+            if (captionEl.childNodes.length > 0) {
+                captionEl.removeAttribute('hidden');
+            } else {
+                captionEl.setAttribute('hidden', '');
+            }
+        }
+
+        /**
+         * Fetch oEmbed data for videoId and update captionEl.
+         * Uses cached data when available.
+         */
+        function fetchYtCredit(captionEl, captionText, videoId) {
+            if (ytOEmbedCache[videoId]) {
+                renderYtCredit(captionEl, captionText, ytOEmbedCache[videoId]);
+                return;
+            }
+            var oEmbedUrl = 'https://www.youtube.com/oembed?url='
+                + encodeURIComponent('https://www.youtube.com/watch?v=' + videoId)
+                + '&format=json';
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', oEmbedUrl, true);
+            xhr.timeout = 6000;
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        var info = { name: data.author_name || null, url: data.author_url || null };
+                        ytOEmbedCache[videoId] = info;
+                        // Only update if this item is still active
+                        renderYtCredit(captionEl, captionText, info);
+                    } catch (e) { /* ignore */ }
+                }
+            };
+            xhr.onerror   = function () { /* no-op */ };
+            xhr.ontimeout = function () { /* no-op */ };
+            xhr.send();
+        }
+
         // ── Lightbox integration ──────────────────────────────────────────
 
         function initLightbox() {
@@ -125,11 +202,27 @@
                 if (mediaEl) {
                     caption = mediaEl.getAttribute('alt') || mediaEl.getAttribute('title') || '';
                 }
-                captionEl.textContent = caption;
-                if (caption) {
-                    captionEl.removeAttribute('hidden');
+
+                if (activeItem.getAttribute('data-type') === 'youtube' && mediaEl) {
+                    // Show plain caption immediately, then fetch/cache channel credit
+                    captionEl.textContent = caption;
+                    if (caption) {
+                        captionEl.removeAttribute('hidden');
+                    } else {
+                        captionEl.setAttribute('hidden', '');
+                    }
+                    var ytSrc     = mediaEl.getAttribute('src') || '';
+                    var ytIdMatch = ytSrc.match(/\/embed\/([A-Za-z0-9_\-]{11})/);
+                    if (ytIdMatch) {
+                        fetchYtCredit(captionEl, caption, ytIdMatch[1]);
+                    }
                 } else {
-                    captionEl.setAttribute('hidden', '');
+                    captionEl.textContent = caption;
+                    if (caption) {
+                        captionEl.removeAttribute('hidden');
+                    } else {
+                        captionEl.setAttribute('hidden', '');
+                    }
                 }
             }
 

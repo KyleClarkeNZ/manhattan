@@ -302,6 +302,8 @@
             if (triggerOn === 'click') {
                 el.addEventListener('click', function (e) {
                     e.stopPropagation();
+                    // Prevent navigation when the trigger is an anchor element
+                    if (el.tagName === 'A') { e.preventDefault(); }
                     if (popEl.classList.contains('m-popover-visible') && activeTrigger === el) {
                         hide();
                     } else {

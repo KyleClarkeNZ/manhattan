@@ -1420,6 +1420,41 @@
             }
         }
 
+        /**
+         * Fetch YouTube oEmbed data for a video ID.
+         * Calls callback(channelName, channelUrl) — both may be null on failure.
+         */
+        function fetchYouTubeOEmbed(videoId, callback) {
+            var oEmbedUrl = 'https://www.youtube.com/oembed?url='
+                + encodeURIComponent('https://www.youtube.com/watch?v=' + videoId)
+                + '&format=json';
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', oEmbedUrl, true);
+            xhr.timeout = 6000;
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        callback(data.author_name || null, data.author_url || null);
+                        return;
+                    } catch (e) { /* fall through */ }
+                }
+                callback(null, null);
+            };
+            xhr.onerror   = function () { callback(null, null); };
+            xhr.ontimeout = function () { callback(null, null); };
+            xhr.send();
+        }
+
+        /** Allow only YouTube channel / user / handle URLs as the credit href. */
+        function sanitizeYouTubeChannelUrl(url) {
+            if (!url) { return ''; }
+            if (/^https:\/\/(www\.)?youtube\.com\/(channel\/|user\/|c\/|@)[A-Za-z0-9_\-@.%]+/.test(url)) {
+                return url;
+            }
+            return '';
+        }
+
         function doInsertYouTube() {
             if (!ytUrlInput) { return; }
             var raw = ytUrlInput.value.trim();
@@ -1431,26 +1466,54 @@
                 return;
             }
 
-            closeYouTubeDialog(true);
+            // Disable the Insert button while we fetch channel info
+            if (ytInsertBtn) {
+                ytInsertBtn.disabled = true;
+                ytInsertBtn.textContent = 'Fetching…';
+            }
 
-            // Responsive 16:9 wrapper + privacy-enhanced nocookie embed
-            var embedWidth = 80;
-            var embedUrl = 'https://www.youtube-nocookie.com/embed/' + videoId;
-            var html = '<div class="m-rte-youtube-wrapper" contenteditable="false" style="width:' + embedWidth + '%;margin-left:auto;margin-right:auto">'
-                     + '<iframe src="' + embedUrl + '"'
-                     + ' width="560" height="315"'
-                     + ' title="YouTube video"'
-                     + ' frameborder="0"'
-                     + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
-                     + ' allowfullscreen'
-                     + ' loading="lazy"></iframe>'
-                     + '</div><p><br></p>';
+            fetchYouTubeOEmbed(videoId, function (channelName, channelUrl) {
+                // Re-enable button regardless of outcome
+                if (ytInsertBtn) {
+                    ytInsertBtn.disabled = false;
+                    ytInsertBtn.innerHTML = '<i class="fab fa-youtube" aria-hidden="true"></i> Embed';
+                }
 
-            document.execCommand('insertHTML', false, html);
-            addYtClickShields();
-            syncHidden();
-            updateCharCount();
-            utils.trigger(container, 'm:rte:change', { value: getValue() });
+                closeYouTubeDialog(true);
+
+                // Build optional credit line
+                var creditHtml = '';
+                if (channelName && channelUrl) {
+                    var safeUrl  = sanitizeYouTubeChannelUrl(channelUrl);
+                    var safeName = escapeHtml(channelName);
+                    if (safeUrl) {
+                        creditHtml = '<p class="m-rte-youtube-credit">'
+                                   + 'Video Credit: <a href="' + safeUrl + '" target="_blank" rel="noopener noreferrer">'
+                                   + safeName + '</a>'
+                                   + '</p>';
+                    }
+                }
+
+                // Responsive 16:9 wrapper + privacy-enhanced nocookie embed
+                var embedWidth = 80;
+                var embedUrl = 'https://www.youtube-nocookie.com/embed/' + videoId;
+                var html = '<div class="m-rte-youtube-wrapper" contenteditable="false" style="width:' + embedWidth + '%;margin-left:auto;margin-right:auto">'
+                         + '<iframe src="' + embedUrl + '"'
+                         + ' width="560" height="315"'
+                         + ' title="YouTube video"'
+                         + ' frameborder="0"'
+                         + ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
+                         + ' allowfullscreen'
+                         + ' loading="lazy"></iframe>'
+                         + creditHtml
+                         + '</div><p><br></p>';
+
+                document.execCommand('insertHTML', false, html);
+                addYtClickShields();
+                syncHidden();
+                updateCharCount();
+                utils.trigger(container, 'm:rte:change', { value: getValue() });
+            });
         }
 
         if (ytDialog) {

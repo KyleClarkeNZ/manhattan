@@ -403,6 +403,9 @@ document.getElementById(\'contentEditor\')
         Videos are <strong>always block-centred</strong> — they cannot be floated. Width is adjustable
         via drag handles; the embed stays centred regardless of width.
         Videos are served via <code>youtube-nocookie.com</code> for privacy.
+        A <strong>Video Credit</strong> line is automatically fetched from the YouTube oEmbed API and
+        appended below each embed, linking to the video's channel by name. The credit is part of the
+        saved HTML output and is styled via <code>.m-rte-youtube-credit</code>.
     </p>
 
     <?= $m->richTextEditor('rteYoutube')
@@ -418,7 +421,14 @@ document.getElementById(\'contentEditor\')
     ->toolbar([\'bold\', \'italic\', \'separator\', \'image\', \'youtube\', \'separator\', \'link\'])
     ->minHeight(300) ?>',
         '// YouTube embeds are inserted as a responsive .m-rte-youtube-wrapper div.
-// You can retrieve the full HTML (including the embed) via getValue():
+// A "Video Credit" line is automatically fetched from the YouTube oEmbed API
+// and appended inside the wrapper, linking to the channel by name:
+//   <p class="m-rte-youtube-credit">
+//     <i class="fab fa-youtube"></i>
+//     Video Credit: <a href="..." target="_blank" rel="noopener noreferrer">Channel Name</a>
+//   </p>
+
+// You can retrieve the full HTML (including embed + credit) via getValue():
 var rte = m.richTextEditor(\'blogEditor\');
 console.log(rte.getValue());
 
