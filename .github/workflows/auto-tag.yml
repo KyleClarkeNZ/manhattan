@@ -70,32 +70,6 @@ jobs:
             echo "Tag $NEW_TAG does not exist, will create..."
           fi
       
-      - name: Update composer.json version
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.next_version.outputs.version_no_v }}"
-          # Update version in composer.json
-          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" composer.json
-          
-          # Check if anything changed
-          if git diff --quiet composer.json; then
-            echo "No version change needed"
-          else
-            echo "Updated composer.json to version $VERSION"
-          fi
-      
-      - name: Commit version bump
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.next_version.outputs.version_no_v }}"
-          if ! git diff --quiet composer.json; then
-            git config user.name "GitHub Actions"
-            git config user.email "actions@github.com"
-            git add composer.json
-            git commit -m "chore: bump version to $VERSION [skip ci]"
-            git push origin master
-          fi
-      
       - name: Create and push tag
         if: steps.check_tag.outputs.exists == 'false'
         run: |
