@@ -306,43 +306,61 @@
             if (!img) { return 'left'; }
             var fl = img.style.cssFloat || img.style.float || '';
             if (fl === 'right') { return 'right'; }
-            var disp   = img.style.display    || '';
-            var mLeft  = img.style.marginLeft || '';
-            if (disp === 'block' && (mLeft === 'auto' || mLeft === '')) {
-                var mRight = img.style.marginRight || '';
-                if (mRight === 'auto') { return 'center'; }
-            }
+            if (fl === 'left')  { return 'left'; }
+            // Check parent for text-align:center (set by applyImageAlign for belt-and-suspenders)
+            var parent = img.parentNode;
+            if (parent && parent.style && parent.style.textAlign === 'center') { return 'center'; }
+            // Fallback: display:block + margin:auto approach
+            var disp   = img.style.display     || '';
+            var mLeft  = img.style.marginLeft  || '';
+            var mRight = img.style.marginRight || '';
+            if (disp === 'block' && mLeft === 'auto' && mRight === 'auto') { return 'center'; }
             return 'left';
         }
 
         function applyImageAlign(img, align) {
             if (!img) { return; }
-            // Clear all alignment styles first
-            img.style.cssFloat    = '';
-            img.style.float       = '';
-            img.style.display     = '';
-            img.style.marginLeft  = '';
-            img.style.marginRight = '';
+            // Clear all alignment inline styles
+            img.style.cssFloat     = '';
+            img.style.float        = '';
+            img.style.display      = '';
+            img.style.marginLeft   = '';
+            img.style.marginRight  = '';
             img.style.marginBottom = '';
 
-            // Also clear any text-align set on the parent block by execCommand
+            // Clear any text-align previously set on the parent block
             var parent = img.parentNode;
             if (parent && parent !== content) {
                 parent.style.textAlign = '';
             }
 
             switch (align) {
+                case 'left':
+                    // Float left — text wraps to the right of the image
+                    img.style.cssFloat     = 'left';
+                    img.style.marginRight  = '1em';
+                    img.style.marginBottom = '0.5em';
+                    break;
                 case 'center':
+                    // Block-centred — no text wrapping.
+                    // display:block + margin:auto works for images narrower than the
+                    // container; text-align:center on the parent is the belt-and-suspenders
+                    // fallback that covers images constrained to 100% by max-width.
                     img.style.display     = 'block';
                     img.style.marginLeft  = 'auto';
                     img.style.marginRight = 'auto';
+                    if (parent && parent !== content) {
+                        parent.style.textAlign = 'center';
+                    }
                     break;
                 case 'right':
+                    // Float right — text wraps to the left of the image
                     img.style.cssFloat     = 'right';
                     img.style.marginLeft   = '1em';
                     img.style.marginBottom = '0.5em';
                     break;
-                default: // left — natural inline flow
+                default:
+                    // Inline flow — no explicit alignment
                     break;
             }
             syncHidden();
@@ -479,7 +497,13 @@
             var align = btn.getAttribute('data-img-align');
             if (align) {
                 applyImageAlign(selectedImg, align);
-                positionResizer(selectedImg);
+                // Defer resizer repositioning until after the browser has reflowed
+                // the new alignment (e.g. float removed, display:block applied).
+                // Without this the resizer snaps to the pre-reflow position.
+                var imgForReposition = selectedImg;
+                requestAnimationFrame(function () {
+                    if (imgForReposition) { positionResizer(imgForReposition); }
+                });
             }
         });
 
@@ -1491,6 +1515,85 @@
                 }
                 updateToolbarState();
             }
+        });
+
+        // =========================================================
+        // Drop handler — intercept image file drops
+        // =========================================================
+        //
+        // Without this, the browser's default drop behaviour inserts the
+        // dropped image as a huge inline base64 data URI into the
+        // contenteditable area.  We intercept image files and route them
+        // through the same uploadImage() path used by the paste handler.
+
+        content.addEventListener('dragover', function (e) {
+            // Allow drop so that the 'drop' event fires
+            e.preventDefault();
+        });
+
+        content.addEventListener('drop', function (e) {
+            var files = e.dataTransfer && e.dataTransfer.files;
+            if (!files || !files.length) { return; } // let browser handle text/url drops
+
+            // Check if any dropped file is an image
+            var imageFile = null;
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].type.indexOf('image') === 0) {
+                    imageFile = files[i];
+                    break;
+                }
+            }
+
+            if (!imageFile) { return; } // non-image drop — let browser handle it
+
+            // We have an image file — take over entirely
+            e.preventDefault();
+
+            if (!uploaderUrl) {
+                showRteError('Image uploader is not configured. Drag-and-drop images are not supported.');
+                return;
+            }
+
+            // Position cursor at the drop point before inserting the placeholder
+            if (document.caretRangeFromPoint) {
+                var range = document.caretRangeFromPoint(e.clientX, e.clientY);
+                if (range) {
+                    var selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            }
+
+            // Insert a placeholder so the user sees visual feedback immediately
+            var blobUrl = URL.createObjectURL(imageFile);
+            insertImageHtmlAtCursor(blobUrl, '');
+            var placeholderImg = content.querySelector('img[src="' + blobUrl + '"]');
+            if (placeholderImg) {
+                placeholderImg.setAttribute('data-rte-uploading', 'true');
+                showUploadOverlay(placeholderImg);
+            }
+
+            uploadImage(imageFile, function (err, url) {
+                if (placeholderImg && placeholderImg.parentNode) {
+                    if (err) {
+                        placeholderImg.parentNode.removeChild(placeholderImg);
+                    } else {
+                        placeholderImg.src = url;
+                        placeholderImg.removeAttribute('data-rte-uploading');
+                    }
+                }
+                URL.revokeObjectURL(blobUrl);
+                hideUploadOverlay();
+                if (err) {
+                    showRteError('Image upload failed: ' + err);
+                } else {
+                    syncHidden();
+                    updateCharCount();
+                    utils.trigger(container, 'm:rte:change', { value: getValue() });
+                }
+            }, function (percent) {
+                updateUploadProgress(percent);
+            });
         });
 
         // =========================================================

@@ -18,9 +18,15 @@ namespace Manhattan;
  *       ->tile('Another', '/showcase/2/another',  '/assets/other.jpg')
  *       ->dots('below');
  *
+ * Usage — server-side tiles with chips:
+ *   echo $m->carousel('relCarousel')
+ *       ->tile('Draft Item', '/showcase/1/draft', '/assets/thumb.jpg', null, 'Draft', 'warning')
+ *       ->tile('Published',  '/showcase/2/pub',   '/assets/other.jpg', 'Props', 'Featured', 'primary')
+ *       ->dots('below');
+ *
  * Usage — bulk tiles:
  *   echo $m->carousel('featuredCarousel')
- *       ->tiles($itemsArray)    // [{title, href, imageUrl, caption}]
+ *       ->tiles($itemsArray)    // [{title, href, imageUrl, caption, chip, chipVariant}]
  *       ->tileWidth('200px')
  *       ->dots('above');
  *
@@ -86,18 +92,22 @@ final class Carousel extends Component
     /**
      * Add a single tile.
      *
-     * @param string      $title    Tile title text.
-     * @param string      $href     URL the tile links to.
-     * @param string|null $imageUrl Optional thumbnail image URL.
-     * @param string|null $caption  Optional secondary caption below the title.
+     * @param string      $title       Tile title text.
+     * @param string      $href        URL the tile links to.
+     * @param string|null $imageUrl    Optional thumbnail image URL.
+     * @param string|null $caption     Optional secondary caption below the title.
+     * @param string|null $chip        Optional chip label shown as an image overlay.
+     * @param string      $chipVariant Chip colour variant: primary, success, warning, danger, purple, secondary, info (default: secondary).
      */
-    public function tile(string $title, string $href, ?string $imageUrl = null, ?string $caption = null): self
+    public function tile(string $title, string $href, ?string $imageUrl = null, ?string $caption = null, ?string $chip = null, string $chipVariant = 'secondary'): self
     {
         $this->tiles[] = [
-            'title'    => $title,
-            'href'     => $href,
-            'imageUrl' => $imageUrl,
-            'caption'  => $caption,
+            'title'       => $title,
+            'href'        => $href,
+            'imageUrl'    => $imageUrl,
+            'caption'     => $caption,
+            'chip'        => $chip,
+            'chipVariant' => $chipVariant,
         ];
         return $this;
     }
@@ -105,7 +115,7 @@ final class Carousel extends Component
     /**
      * Add multiple tiles at once from an array.
      *
-     * Each element may have keys: title, href, imageUrl, caption.
+     * Each element may have keys: title, href, imageUrl, caption, chip, chipVariant.
      *
      * @param array<int, array<string, mixed>> $tiles
      */
@@ -113,10 +123,12 @@ final class Carousel extends Component
     {
         foreach ($tiles as $t) {
             $this->tile(
-                (string)($t['title']    ?? ''),
-                (string)($t['href']     ?? '#'),
-                isset($t['imageUrl']) && $t['imageUrl'] !== null ? (string)$t['imageUrl'] : null,
-                isset($t['caption'])  && $t['caption']  !== null ? (string)$t['caption']  : null
+                (string)($t['title']       ?? ''),
+                (string)($t['href']        ?? '#'),
+                isset($t['imageUrl'])    && $t['imageUrl']    !== null ? (string)$t['imageUrl']    : null,
+                isset($t['caption'])     && $t['caption']     !== null ? (string)$t['caption']     : null,
+                isset($t['chip'])        && $t['chip']        !== null ? (string)$t['chip']        : null,
+                isset($t['chipVariant']) && $t['chipVariant'] !== null ? (string)$t['chipVariant'] : 'secondary'
             );
         }
         return $this;
@@ -253,13 +265,19 @@ final class Carousel extends Component
      */
     private function renderTile(array $tile): string
     {
-        $title    = htmlspecialchars((string)($tile['title'] ?? ''), ENT_QUOTES, 'UTF-8');
-        $href     = htmlspecialchars((string)($tile['href']  ?? '#'), ENT_QUOTES, 'UTF-8');
-        $imageUrl = isset($tile['imageUrl']) && $tile['imageUrl'] !== null
+        $title       = htmlspecialchars((string)($tile['title'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $href        = htmlspecialchars((string)($tile['href']  ?? '#'), ENT_QUOTES, 'UTF-8');
+        $imageUrl    = isset($tile['imageUrl']) && $tile['imageUrl'] !== null
             ? (string)$tile['imageUrl']
             : null;
-        $caption  = isset($tile['caption']) && $tile['caption'] !== null
+        $caption     = isset($tile['caption']) && $tile['caption'] !== null
             ? htmlspecialchars((string)$tile['caption'], ENT_QUOTES, 'UTF-8')
+            : null;
+        $chipText    = isset($tile['chip']) && $tile['chip'] !== null && (string)$tile['chip'] !== ''
+            ? htmlspecialchars((string)$tile['chip'], ENT_QUOTES, 'UTF-8')
+            : null;
+        $chipVariant = $chipText !== null
+            ? htmlspecialchars((string)($tile['chipVariant'] ?? 'secondary'), ENT_QUOTES, 'UTF-8')
             : null;
 
         if ($imageUrl !== null && $imageUrl !== '') {
@@ -278,11 +296,18 @@ final class Carousel extends Component
             . ($caption !== null ? '<span class="m-carousel-tile-sub">' . $caption . '</span>' : '')
             . '</div>';
 
+        // Chip is rendered outside the <a> so it is not clipped by the link's overflow:hidden.
+        // pointer-events:none (via CSS) lets click events pass through to the underlying tile link.
+        $chipHtml = $chipText !== null
+            ? '<span class="m-chip m-chip-' . $chipVariant . ' m-carousel-tile-chip">' . $chipText . '</span>'
+            : '';
+
         return '<div class="m-carousel-tile" role="group" aria-label="' . $title . '">'
             . '<a href="' . $href . '" class="m-carousel-tile-link" tabindex="0">'
             . $imgHtml
             . $captionHtml
             . '</a>'
+            . $chipHtml
             . '</div>';
     }
 }

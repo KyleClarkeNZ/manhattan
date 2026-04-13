@@ -1,8 +1,13 @@
 /**
  * Manhattan ButtonGroup Component
  *
- * Mutually exclusive icon-only toggle button group (radio behaviour).
+ * Mutually exclusive toggle button group (radio behaviour).
+ * Supports icon-only buttons or icon + label buttons.
  * Auto-initialises all [data-component="button-group"] elements on DOMContentLoaded.
+ *
+ * When any button in the PHP definition includes a 'label' key, the group
+ * receives the `m-button-group--labeled` CSS modifier which switches to
+ * auto-sized pill buttons.
  *
  * Events:
  *   m:buttongroup:change — fired on the group element when the active button changes.

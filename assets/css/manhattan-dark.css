@@ -1358,8 +1358,8 @@ body.theme-dark .m-datagrid-filter-input:focus {
    colour already handled by the existing m-choice dark rules — no extra needed) */
 
 /* === Form Component (Dark Theme) === */
-body.m-dark .form-group label,
-body.theme-dark .form-group label {
+body.m-dark .form-group label:not([class*="m-"]),
+body.theme-dark .form-group label:not([class*="m-"]) {
     color: #cbd5e0;
 }
 

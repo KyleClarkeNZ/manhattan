@@ -1068,6 +1068,7 @@
     border-color: #ccc;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
 }
 
 .m-button:active {
@@ -2274,7 +2275,7 @@ p::after {
     margin-bottom: 1.5rem;
 }
 
-.form-group label {
+.form-group label:not([class*="m-"]) {
     display: block;
     margin-bottom: 0.5rem;
     color: #555;
@@ -3591,7 +3592,7 @@ body::-webkit-scrollbar-thumb:hover {
     margin-bottom: 0;
 }
 
-.form-group label {
+.form-group label:not([class*="m-"]) {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
@@ -3599,7 +3600,7 @@ body::-webkit-scrollbar-thumb:hover {
     font-size: 0.9375rem;
 }
 
-.form-group label .required {
+.form-group label:not([class*="m-"]) .required {
     color: #e74c3c;
     margin-left: 0.25rem;
 }
@@ -3651,7 +3652,7 @@ body::-webkit-scrollbar-thumb:hover {
     margin-bottom: 1.5rem;
 }
 
-.form-group-inline label {
+.form-group-inline label:not([class*="m-"]) {
     margin-bottom: 0;
     flex-shrink: 0;
 }
@@ -3664,7 +3665,7 @@ body::-webkit-scrollbar-thumb:hover {
     align-items: start;
 }
 
-.m-form--horizontal .form-group label {
+.m-form--horizontal .form-group label:not([class*="m-"]) {
     margin-bottom: 0;
     padding-top: 0.625rem;
     text-align: right;
@@ -3720,7 +3721,7 @@ body::-webkit-scrollbar-thumb:hover {
         grid-template-columns: 1fr;
     }
     
-    .m-form--horizontal .form-group label {
+    .m-form--horizontal .form-group label:not([class*="m-"]) {
         text-align: left;
         padding-top: 0;
     }
@@ -4251,6 +4252,21 @@ textarea.m-wizard-field-error {
     color: #fff;
 }
 
+/* Labeled button group — icon + text, auto-sized pill buttons */
+.m-button-group--labeled .m-button-group-btn {
+    width: auto;
+    height: auto;
+    padding: 0.5rem 0.875rem;
+    gap: 0.4rem;
+    line-height: 1.5;
+}
+
+.m-button-group-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
 /* Separator between logical groups in the same toolbar */
 .m-button-group-sep {
     width: 1px;
@@ -4550,6 +4566,12 @@ textarea.m-wizard-field-error {
 }
 
 /* Empty check: p with just br counts as empty */
+.m-rte-content p::after {
+    content: '';
+    display: table;
+    clear: both;
+}
+
 .m-rte-content[data-placeholder]:not(:focus) > p:only-child > br:only-child ~ *,
 .m-rte-content[data-placeholder]:not(:focus) > p:only-child:only-child::before {
     /* no-op rule to aid specificity */
@@ -4998,7 +5020,12 @@ textarea.m-wizard-field-error {
 
 /* Used in .m-richtext display as well */
 .m-richtext .m-rte-youtube-wrapper {
-    margin: 0.75em auto;
+    /* YouTube embeds are always block-centred — never floated or inline */
+    display: block;
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Click shield — transparent overlay that captures clicks on the iframe
@@ -5268,6 +5295,8 @@ textarea.m-wizard-field-error {
 
 .m-richtext p {
     margin: 0 0 0.75em;
+    /* Contain floated images within their paragraph */
+    overflow: hidden;
 }
 
 .m-richtext p:last-child {
@@ -5372,6 +5401,30 @@ textarea.m-wizard-field-error {
     border-radius: 4px;
     display: inline-block;
     vertical-align: middle;
+}
+
+/* Centred images carry display:block;margin:auto inline styles from the editor.
+   The parent also receives text-align:center as a belt-and-suspenders fallback
+   for images constrained to full-width by max-width:100%. */
+.m-richtext p[style*="text-align: center"] > img,
+.m-richtext p[style*="text-align:center"] > img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Floated image margin safety-net (inline styles set by the editor take
+   precedence, but these ensure correct spacing if styles are stripped) */
+.m-richtext img[style*="float: left"],
+.m-richtext img[style*="float:left"] {
+    margin-right: 1em;
+    margin-bottom: 0.5em;
+}
+
+.m-richtext img[style*="float: right"],
+.m-richtext img[style*="float:right"] {
+    margin-left: 1em;
+    margin-bottom: 0.5em;
 }
 
 @media (max-width: 640px) {

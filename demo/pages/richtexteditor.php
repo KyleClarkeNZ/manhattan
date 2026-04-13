@@ -332,49 +332,58 @@ rte.insertImage(\'/uploads/photo.jpg\', \'A scenic photo\');'
     <h3>Image Alignment &amp; Resize</h3>
     <p class="m-demo-desc">
         Clicking any image in the editor reveals a small <strong>alignment toolbar</strong>
-        above it — left, centre, or right. Alignment is always available when the
-        <code>'image'</code> tool is in the toolbar; no extra option is needed.
+        above it with three modes:
+    </p>
+    <ul style="margin:0 0 1em 1.5em;line-height:1.8">
+        <li><strong>Left</strong> — <code>float: left</code>. Text in the same paragraph wraps to the right of the image.</li>
+        <li><strong>Centre</strong> — <code>display: block; margin: auto</code> (+ <code>text-align: center</code> on the parent paragraph as a fallback). The image sits on its own centred line with no text wrapping.</li>
+        <li><strong>Right</strong> — <code>float: right</code>. Text in the same paragraph wraps to the left of the image.</li>
+    </ul>
+    <p class="m-demo-desc">
+        Alignment is always available when the <code>'image'</code> tool is in the toolbar; no extra option is needed.
+        Paragraphs containing floated images are automatically cleared (via CSS <code>overflow: hidden</code> in
+        <code>.m-richtext</code> and a <code>::after</code> clearfix in the editor) so the float never bleeds
+        into the next paragraph.
         <br><br>
         Enable <code>->allowImageResize()</code> to also show <strong>8-point drag handles</strong>
         around the selected image. Corner handles resize proportionally; edge handles scale
         on a single axis. The image's original natural dimensions are preserved in
-        <code>data-original-width</code> / <code>data-original-height</code> attributes on the
-        <code>&lt;img&gt;</code> element so the information is never lost.
+        <code>data-original-width</code> / <code>data-original-height</code> attributes.
     </p>
 
     <?= $m->richTextEditor('rteImageResize')
         ->name('content_image_resize')
-        ->value('<p>Click the image below to select it, then use the alignment bar or drag the resize handles.</p><p><img src="https://picsum.photos/seed/manhattan/400/200" alt="Sample image" style="width:400px;height:200px;"></p><p>Text flows naturally around floated images.</p>')
+        ->value('<p>Click the image below to select it, then try each alignment button. Float left/right lets text wrap around the image; centre isolates it on its own line.</p><p><img src="https://picsum.photos/seed/manhattan/300/180" alt="Sample image" style="width:300px;"> Text that wraps to the right when the image is float-left. Try clicking Right align to make this text move to the other side instead.</p>')
         ->toolbar(['bold', 'italic', 'separator', 'align', 'separator', 'image'])
         ->allowImageResize()
         ->minHeight(200) ?>
 
     <?= demoCodeTabs(
-        '// Image resize enabled — click any image to see handles
+        '// Image resize enabled — click any image to see handles and alignment bar
 <?= $m->richTextEditor(\'contentEditor\')
     ->name(\'content\')
     ->toolbar([\'bold\', \'italic\', \'separator\', \'image\'])
     ->allowImageResize()
     ->minHeight(300) ?>
 
-// Combined: upload + paste + resize
+// Combined: upload + paste + resize + YouTube
 <?= $m->richTextEditor(\'articleEditor\')
     ->name(\'content\')
-    ->toolbar([\'bold\', \'italic\', \'separator\', \'image\'])
+    ->toolbar([\'bold\', \'italic\', \'separator\', \'image\', \'youtube\'])
     ->uploader(\'/articles/upload-image\', \'article_img\')
     ->allowPasteImages()
     ->allowImageResize()
     ->minHeight(300) ?>',
-        '// Image alignment: clicking an image shows a mini-toolbar automatically.
-// No JS needed — it is built into the component.
+        '// Image alignment: clicking an image shows the mini-toolbar automatically.
+// Three modes:
+//   Left   — float:left  (text wraps to the right)
+//   Centre — display:block + margin:auto (centred, no wrap)
+//   Right  — float:right (text wraps to the left)
 
-// You can also align images programmatically via the API:
-var rte = m.richTextEditor(\'contentEditor\');
-
-// Resize handles are shown automatically when ->allowImageResize() is set.
-// After a resize, the img element will have updated width/height styles
-// and the original dimensions are in data attributes:
-//   <img data-original-width="800" data-original-height="400" style="width:400px;height:200px;">
+// Saved HTML examples:
+// float left:   <img style="float:left;margin-right:1em;margin-bottom:0.5em" src="...">
+// centre:       <p style="text-align:center"><img style="display:block;margin-left:auto;margin-right:auto" src="..."></p>
+// float right:  <img style="float:right;margin-left:1em;margin-bottom:0.5em" src="...">
 
 // Listen for changes after resize / alignment:
 document.getElementById(\'contentEditor\')
@@ -391,6 +400,8 @@ document.getElementById(\'contentEditor\')
         Clicking it opens a dialog where you can paste any YouTube URL — watch links, shortened
         <code>youtu.be</code> links, embed URLs, or even bare 11-character video IDs.
         A responsive 16:9 iframe wrapper (<code>.m-rte-youtube-wrapper</code>) is inserted at the cursor.
+        Videos are <strong>always block-centred</strong> — they cannot be floated. Width is adjustable
+        via drag handles; the embed stays centred regardless of width.
         Videos are served via <code>youtube-nocookie.com</code> for privacy.
     </p>
 

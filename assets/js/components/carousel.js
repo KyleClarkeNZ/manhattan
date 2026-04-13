@@ -78,6 +78,8 @@
         var currentTile    = 0;
         var isProgrammatic = false;
         var scrollDebounce;
+        var lastPageCount  = 0;
+        var lastPageCount  = 0;
 
         // ─── Tile helpers ──────────────────────────────────────────────────────
 
@@ -105,26 +107,65 @@
             }
         }
 
+
+        // ─── Page helpers (tiles grouped into viewport-sized pages) ──────────
+
+        function getVisibleCount() {
+            var tw  = getTileWidth();
+            var gap = getGap();
+            var vw  = viewport.clientWidth;
+            if (tw <= 0) { return 1; }
+            return Math.max(1, Math.floor((vw + gap) / (tw + gap)));
+        }
+
+        function getPageCount() {
+            return Math.max(1, Math.ceil(getTileCount() / getVisibleCount()));
+        }
+
+        function getCurrentPage() {
+            return Math.floor(currentTile / getVisibleCount());
+        }
+
+
+        // ─── Page helpers (tiles grouped into viewport-sized pages) ──────────
+
+        function getVisibleCount() {
+            var tw  = getTileWidth();
+            var gap = getGap();
+            var vw  = viewport.clientWidth;
+            if (tw <= 0) { return 1; }
+            return Math.max(1, Math.floor((vw + gap) / (tw + gap)));
+        }
+
+        function getPageCount() {
+            return Math.max(1, Math.ceil(getTileCount() / getVisibleCount()));
+        }
+
+        function getCurrentPage() {
+            return Math.floor(currentTile / getVisibleCount());
+        }
+
         // ─── Dot rendering ────────────────────────────────────────────────────
 
         function renderDots() {
             if (!dotsEl) { return; }
 
-            var count = getTileCount();
+            var pc = getPageCount();
+            var cp = getCurrentPage();
             dotsEl.innerHTML = '';
 
-            if (count <= 1) { return; }
+            if (pc <= 1) { return; }
 
-            for (var i = 0; i < count; i++) {
+            for (var i = 0; i < pc; i++) {
                 var dot = document.createElement('button');
                 dot.type        = 'button';
-                dot.className   = 'm-carousel-dot' + (i === currentTile ? ' m-active' : '');
-                dot.setAttribute('aria-label', 'Item ' + (i + 1));
+                dot.className   = 'm-carousel-dot' + (i === cp ? ' m-active' : '');
+                dot.setAttribute('aria-label', 'Page ' + (i + 1));
                 dot.setAttribute('role', 'tab');
-                dot.setAttribute('aria-selected', i === currentTile ? 'true' : 'false');
+                dot.setAttribute('aria-selected', i === cp ? 'true' : 'false');
 
                 (function (idx) {
-                    dot.addEventListener('click', function () { goTo(idx); });
+                    dot.addEventListener('click', function () { goToPage(idx); });
                 }(i));
 
                 dotsEl.appendChild(dot);
@@ -134,25 +175,30 @@
         // ─── Button / dot state update ────────────────────────────────────────
 
         function updateState() {
-            var count  = getTileCount();
-            var single = (count <= 1);
+            var pc     = getPageCount();
+            var cp     = getCurrentPage();
+            var single = (pc <= 1);
 
-            if (prevBtn) {
-                prevBtn.disabled         = (currentTile <= 0);
-                prevBtn.style.visibility = single ? 'hidden' : '';
-            }
-            if (nextBtn) {
-                nextBtn.disabled         = (currentTile >= count - 1);
-                nextBtn.style.visibility = single ? 'hidden' : '';
-            }
-
-            if (dotsEl) {
+            // Re-render dots whenever the number of pages changes (e.g. after resize)
+            if (pc !== lastPageCount) {
+                lastPageCount = pc;
+                renderDots();
+            } else if (dotsEl) {
                 var dots = dotsEl.querySelectorAll('.m-carousel-dot');
                 for (var i = 0; i < dots.length; i++) {
-                    var isActive = (i === currentTile);
+                    var isActive = (i === cp);
                     dots[i].className = 'm-carousel-dot' + (isActive ? ' m-active' : '');
                     dots[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
                 }
+            }
+
+            if (prevBtn) {
+                prevBtn.disabled         = (cp <= 0);
+                prevBtn.style.visibility = single ? 'hidden' : '';
+            }
+            if (nextBtn) {
+                nextBtn.disabled         = (cp >= pc - 1);
+                nextBtn.style.visibility = single ? 'hidden' : '';
             }
 
             utils.trigger(container, 'm:carousel:change', { index: currentTile });
@@ -197,6 +243,12 @@
             }
         }
 
+        function goToPage(page) {
+            var pc = getPageCount();
+            page = Math.max(0, Math.min(page, pc - 1));
+            goTo(page * getVisibleCount());
+        }
+
         // ─── Derive tile from scrollLeft ──────────────────────────────────────
 
         function tileFromScrollLeft() {
@@ -234,10 +286,10 @@
         // ─── Button handlers ──────────────────────────────────────────────────
 
         if (prevBtn) {
-            prevBtn.addEventListener('click', function () { goTo(currentTile - 1); });
+            prevBtn.addEventListener('click', function () { goToPage(getCurrentPage() - 1); });
         }
         if (nextBtn) {
-            nextBtn.addEventListener('click', function () { goTo(currentTile + 1); });
+            nextBtn.addEventListener('click', function () { goToPage(getCurrentPage() + 1); });
         }
 
         // ─── Keyboard navigation on focused viewport ──────────────────────────
@@ -245,16 +297,16 @@
         viewport.addEventListener('keydown', function (e) {
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                goTo(currentTile + 1);
+                goToPage(getCurrentPage() + 1);
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                goTo(currentTile - 1);
+                goToPage(getCurrentPage() - 1);
             } else if (e.key === 'Home') {
                 e.preventDefault();
-                goTo(0);
+                goToPage(0);
             } else if (e.key === 'End') {
                 e.preventDefault();
-                goTo(getTileCount() - 1);
+                goToPage(getPageCount() - 1);
             }
         });
 
@@ -340,8 +392,16 @@
             }
             capHtml += '</div>';
 
+            // Chip rendered outside the <a> so it is not clipped by overflow:hidden on the link.
+            var chipHtml = '';
+            if (t.chip) {
+                var chipVariant = t.chipVariant || 'secondary';
+                chipHtml = '<span class="m-chip m-chip-' + escAttr(chipVariant) + ' m-carousel-tile-chip">'
+                    + escHtml(t.chip) + '</span>';
+            }
+
             tile.innerHTML = '<a href="' + escAttr(t.href || '#') + '" class="m-carousel-tile-link" tabindex="0">'
-                + imgHtml + capHtml + '</a>';
+                + imgHtml + capHtml + '</a>' + chipHtml;
 
             return tile;
         }
@@ -375,17 +435,26 @@
             /** Navigate to a specific tile by zero-based index. */
             goTo: function (idx) { goTo(idx); },
 
-            /** Navigate to the next tile. */
-            next: function () { goTo(currentTile + 1); },
+            /** Navigate to the next page. */
+            next: function () { goToPage(getCurrentPage() + 1); },
 
-            /** Navigate to the previous tile. */
-            prev: function () { goTo(currentTile - 1); },
+            /** Navigate to the previous page. */
+            prev: function () { goToPage(getCurrentPage() - 1); },
+
+            /** Navigate to a specific page by zero-based index. */
+            goToPage: function (page) { goToPage(page); },
 
             /** Return the current tile index (0-based). */
             current: function () { return currentTile; },
 
+            /** Return the current page index (0-based). */
+            currentPage: function () { return getCurrentPage(); },
+
             /** Return the total number of tiles. */
             count: function () { return getTileCount(); },
+
+            /** Return the total number of pages. */
+            pageCount: function () { return getPageCount(); },
 
             /**
              * Reload tiles from a remote URL.

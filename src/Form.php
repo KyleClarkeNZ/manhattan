@@ -26,6 +26,7 @@ class Form extends Component
     protected string $layout = 'vertical';
     protected bool $autoValidate = true;
     protected bool $autoCsrf = true;
+    protected bool $dirtyFormProtection = false;
     protected array $formAttributes = [];
     
     public function __construct(string $id)
@@ -254,6 +255,22 @@ class Form extends Component
         $this->autoCsrf = false;
         return $this;
     }
+
+    /**
+     * Enable dirty form protection.
+     *
+     * When enabled, the user will be prompted with a Manhattan confirmation
+     * dialog if they try to leave or cancel the form with unsaved changes.
+     * Pre-populated forms are only considered dirty after a human edit.
+     *
+     * @param bool $enabled Whether to enable dirty form protection. Default: true.
+     * @return self
+     */
+    public function dirtyFormProtection(bool $enabled = true): self
+    {
+        $this->dirtyFormProtection = $enabled;
+        return $this;
+    }
     
     /**
      * Add custom attributes to the form element
@@ -337,6 +354,11 @@ class Form extends Component
         // Add AJAX data attribute
         if ($this->ajax) {
             $formAttrs['data-m-ajax'] = 'true';
+        }
+
+        // Add dirty form protection data attribute
+        if ($this->dirtyFormProtection) {
+            $formAttrs['data-m-dirty-protection'] = 'true';
         }
         
         // Merge custom form attributes

@@ -206,7 +206,50 @@ document.getElementById(\'ajaxCarousel\')
     });'
     ) ?>
 
-    <!-- ── Example 7: JS API demo ────────────────────────────────────────── -->
+    <!-- ── Example 7: Tiles with chips ─────────────────────────────────── -->
+    <h3>Tiles with chips</h3>
+    <p class="m-demo-desc">
+        Pass an optional <code>chip</code> (and optional <code>chipVariant</code>) per tile to show a coloured
+        chip label overlaid in the top-right corner of the tile image.
+        Variants: <code>primary</code>, <code>success</code>, <code>warning</code>, <code>danger</code>,
+        <code>purple</code>, <code>secondary</code> (default), <code>info</code>.
+    </p>
+    <div class="m-demo-row">
+        <?php
+        $tilesChip = [
+            ['title' => 'Ocean Sunset',  'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/ch1/320/240', 'caption' => 'Photography', 'chip' => 'Featured',  'chipVariant' => 'primary'],
+            ['title' => 'Draft Article', 'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/ch2/320/240', 'caption' => 'Writing',     'chip' => 'Draft',     'chipVariant' => 'warning'],
+            ['title' => 'Forest Path',   'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/ch3/320/240', 'caption' => 'Nature',      'chip' => 'Published', 'chipVariant' => 'success'],
+            ['title' => 'Sold Out Item', 'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/ch4/320/240', 'caption' => 'Product',     'chip' => 'Sold Out',  'chipVariant' => 'danger'],
+            ['title' => 'No Chip Tile',  'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/ch5/320/240', 'caption' => 'Standard'],
+            ['title' => 'New Arrival',   'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/ch6/320/240', 'caption' => 'Product',     'chip' => 'New'],
+        ];
+        echo $m->carousel('demoCarouselChips')
+            ->tiles($tilesChip)
+            ->tileWidth('180px')
+            ->dots('below');
+        ?>
+    </div>
+
+    <?= demoCodeTabs(
+        '// Via ->tiles() array — include chip and optional chipVariant:
+$tiles = [
+    [\'title\' => \'Featured\', \'href\' => \'/1\', \'imageUrl\' => \'/img.jpg\', \'chip\' => \'Featured\', \'chipVariant\' => \'primary\'],
+    [\'title\' => \'Draft\',    \'href\' => \'/2\', \'imageUrl\' => \'/img2.jpg\', \'chip\' => \'Draft\',   \'chipVariant\' => \'warning\'],
+    [\'title\' => \'Normal\',   \'href\' => \'/3\', \'imageUrl\' => \'/img3.jpg\'],   // no chip
+];
+echo $m->carousel(\'chipDemo\')->tiles($tiles)->dots(\'below\');
+
+// Or via ->tile() directly (chip is 5th param, chipVariant is 6th):
+echo $m->carousel(\'chipDemo\')
+    ->tile(\'Featured Item\', \'/link\', \'/img.jpg\', \'Category\', \'Featured\', \'primary\')
+    ->tile(\'Draft Item\',    \'/link\', \'/img2.jpg\', null, \'Draft\', \'warning\')
+    ->tile(\'Normal Tile\',   \'/link\', \'/img3.jpg\');
+
+// chipVariant: primary | success | warning | danger | purple | secondary (default) | info'
+    ) ?>
+
+    <!-- ── Example 8: JS API demo ────────────────────────────────────────── -->
     <h3>JS API</h3>
     <p class="m-demo-desc">Control the carousel programmatically using <code>m.carousel(id)</code>.</p>
     <div class="m-demo-row">
@@ -233,9 +276,9 @@ document.getElementById(\'ajaxCarousel\')
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->carousel($id)', 'string', 'Create a Carousel component.'],
-    ['->tile($title, $href, $imageUrl, $caption)', 'string, string, ?string, ?string', 'Add a single tile. <code>imageUrl</code> and <code>caption</code> are optional.'],
-    ['->tiles($tiles)', 'array', 'Add multiple tiles at once. Each element: <code>{title, href, imageUrl?, caption?}</code>.'],
-    ['->remoteUrl($url)', 'string', 'Client-side remote datasource URL. Response: <code>{"tiles":[…]}</code>. Use instead of <code>->tiles()</code>.'],
+    ['->tile($title, $href, $imageUrl, $caption, $chip, $chipVariant)', 'string, string, ?string, ?string, ?string, string', 'Add a single tile. <code>imageUrl</code>, <code>caption</code>, and <code>chip</code> are optional. <code>chipVariant</code> defaults to <code>\'secondary\'</code>.'],
+    ['->tiles($tiles)', 'array', 'Add multiple tiles at once. Each element: <code>{title, href, imageUrl?, caption?, chip?, chipVariant?}</code>.'],
+    ['->remoteUrl($url)', 'string', 'Client-side remote datasource URL. Response: <code>{"tiles":[…]}</code>. Each tile object may include <code>chip</code> and <code>chipVariant</code>.'],
     ['->perPage($n)', 'int', 'Tiles per remote fetch (appended as <code>?perPage=N</code>). Default: <code>0</code> (load all).'],
     ['->dots($placement)', 'string', 'Dot indicator placement. <code>\'below\'</code> (default), <code>\'above\'</code>, or <code>\'none\'</code>.'],
     ['->tileWidth($css)', 'string', 'CSS width of each tile. Default: <code>\'160px\'</code>. Accepts any CSS length.'],
