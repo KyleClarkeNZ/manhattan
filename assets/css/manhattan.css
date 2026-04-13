@@ -5731,6 +5731,7 @@ textarea.m-wizard-field-error {
     display: flex;           /* block-level, fills parent width */
     flex-direction: column;
     box-sizing: border-box;
+    container-type: inline-size; /* enables @container queries on this element */
     width: 100%;
     max-width: 100%;
     background: var(--m-surface, #fff);
@@ -6039,9 +6040,16 @@ textarea.m-wizard-field-error {
     line-height: 1.6;
 }
 
-/* ── Responsive: stack side layout on narrow screens ─────────────────────── */
-
-@media (max-width: 600px) {
+/* ── Responsive: stack side layout on narrow component widths ────────────── */
+/*
+ * Uses a CSS Container Query so the breakpoint is based on the imageviewer's
+ * own rendered width, not the viewport. This correctly handles cases where the
+ * component is embedded in a narrow column that is itself narrower than the
+ * 600 px viewport threshold (e.g. showcase at 700 px tablet viewport).
+ * The @media fallback below preserves the behaviour on browsers without CQ
+ * support (pre-Chrome 105, pre-Firefox 110).
+ */
+@container (max-width: 480px) {
     .m-imageviewer--side .m-imageviewer-body {
         flex-direction: column;
     }
@@ -6053,7 +6061,27 @@ textarea.m-wizard-field-error {
         height: auto;
         border-right: none;
         border-top: 1px solid var(--m-border, #e2e6ea);
-        order: 1; /* thumbs go below on mobile */
+        order: 1; /* thumbs go below on narrow */
+    }
+    .m-imageviewer--side .m-imageviewer-stage {
+        order: 0;
+    }
+}
+
+/* Fallback for browsers without CSS Container Query support */
+@media (max-width: 480px) {
+    .m-imageviewer--side .m-imageviewer-body {
+        flex-direction: column;
+    }
+    .m-imageviewer--side .m-imageviewer-thumbstrip {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: auto;
+        height: auto;
+        border-right: none;
+        border-top: 1px solid var(--m-border, #e2e6ea);
+        order: 1;
     }
     .m-imageviewer--side .m-imageviewer-stage {
         order: 0;
