@@ -100,7 +100,12 @@ $groupedCategories = [
 <?= $m->dropdown(\'remote\')
     ->remoteUrl(\'/api/options\')
     ->loaderText(\'Loading...\') ?>',
-        '// Listen for changes
+        '// Listen for changes (addEventListener on the element)
+document.getElementById(\'priority\').addEventListener(\'m:dropdown:change\', function(e) {
+    console.log(e.detail.value, e.detail.text);
+});
+
+// Legacy callback (options.events.change) — still supported
 m.dropdown(\'priority\', {
     events: {
         change: function(data) {
@@ -158,7 +163,7 @@ dd.clear();'
 ]) ?>
 
 <?= eventsTable([
-    ['change', '{value, text}', 'Fired on the <code>.m-dropdown-custom</code> element when the selection changes.'],
+    ['m:dropdown:change', '{value, text}', 'Fired on the dropdown element when the selection changes. Listen with <code>el.addEventListener(\'m:dropdown:change\', fn)</code>. The underlying <code>&lt;select&gt;</code> also receives a native <code>change</code> event.'],
 ]) ?>
 
 <script>

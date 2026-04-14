@@ -207,11 +207,19 @@ eventsTable($rows)                // Events documentation
 ## Versioning & Publishing
 
 ### Version Management
-1. Edit `composer.json` version field (e.g., `"version": "1.4.2"`)
-2. Commit changes
-3. Create git tag: `git tag v1.4.2`
-4. Downstream projects using path repositories will see commit updates immediately
-5. Version number changes require manual `composer update kyleclarkenz/manhattan`
+The `auto-tag.yml` GitHub Actions workflow **automatically creates and pushes a version tag** whenever you push to `master`. The tag is applied directly to your pushed commit — CI does **not** commit anything back to `master`.
+
+**IMPORTANT — do NOT manually create tags.** The CI handles tagging automatically:
+- `feat:` or `feature:` prefix → minor bump (e.g. `v1.5.0`)
+- `fix:`, `chore:`, `docs:`, etc. → patch bump (e.g. `v1.5.1`)
+- `BREAKING:` or `major:` prefix → major bump (e.g. `v2.0.0`)
+
+**Version workflow:**
+1. Bump `composer.json` version field manually in your commit (e.g. `"version": "1.5.0"`) to keep it in sync — this is informational only
+2. Push to `master` — the CI tags automatically, no further action needed
+3. Downstream projects on path repositories see the new commit immediately; those on tagged releases run `composer update kyleclarkenz/manhattan`
+
+**Do NOT** run `git tag` manually — if you create a tag that matches what CI calculates, CI will skip tagging (it checks first), which is fine. But creating tags locally and pushing them can cause the CI to skip versions unintentionally.
 
 ### Asset Publishing
 `composer install` / `composer update` automatically runs `Manhattan\Installer::publishAssets`, which copies:

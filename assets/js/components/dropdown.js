@@ -433,7 +433,13 @@
             });
         }
 
-        // Trigger custom event
+        // Fire m:dropdown:change on the custom wrapper element so callers can listen with addEventListener.
+        utils.trigger(dropdown, 'm:dropdown:change', {
+            value: value,
+            text: valueSpan ? valueSpan.textContent : ''
+        });
+
+        // Legacy callback pattern (options.events.change)
         if (options.events && options.events.change) {
             const handler = options.events.change;
             const data = {
