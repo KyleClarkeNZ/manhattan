@@ -415,6 +415,12 @@
         function addYtClickShields() {
             if (isReadOnly) { return; }
             content.querySelectorAll('.m-rte-youtube-wrapper').forEach(function (wrapper) {
+                // Ensure contenteditable=false is always present — it can be
+                // stripped by server-side HTML sanitizers when a post is saved
+                // and re-loaded for editing.
+                if (wrapper.getAttribute('contenteditable') !== 'false') {
+                    wrapper.setAttribute('contenteditable', 'false');
+                }
                 if (!wrapper.querySelector('.m-rte-yt-click-shield')) {
                     var shield = document.createElement('div');
                     shield.className = 'm-rte-yt-click-shield';
@@ -941,7 +947,22 @@
                     dismissImageSelection();
                 }
             }
-            if (e.key === 'Escape') { dismissImageSelection(); }
+            if (e.key === 'Escape') { dismissImageSelection(); dismissYtSelection(); }
+
+            // Delete or Backspace removes a selected YouTube wrapper
+            if (selectedYt && (e.key === 'Delete' || e.key === 'Backspace')) {
+                e.preventDefault();
+                var ytToRemove = selectedYt;
+                dismissYtSelection();
+                if (ytToRemove.parentNode) {
+                    ytToRemove.parentNode.removeChild(ytToRemove);
+                }
+                syncHidden();
+                updateCharCount();
+                utils.trigger(container, 'm:rte:change', { value: getValue() });
+                return;
+            }
+
             var isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
             var mod   = isMac ? e.metaKey : e.ctrlKey;
             if (!mod) { return; }
