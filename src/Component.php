@@ -20,6 +20,7 @@ abstract class Component
     private string $labelText = '';
     private bool $labelRequired = false;
     private string $labelHint = '';
+    private string $labelIcon = '';
 
     public function __construct(string $id, array $options = [])
     {
@@ -117,6 +118,16 @@ abstract class Component
         return $this;
     }
 
+    /**
+     * Prepend a Font Awesome icon to the label. Has no effect without label().
+     * Accepts the same icon strings as $m->icon(), e.g. 'fa-envelope', 'far fa-circle'.
+     */
+    public function labelIcon(string $icon): self
+    {
+        $this->labelIcon = $icon;
+        return $this;
+    }
+
     public function render(): string
     {
         if ($this->labelText === '') {
@@ -130,6 +141,9 @@ abstract class Component
         }
         if ($this->labelHint !== '') {
             $labelComp->hint($this->labelHint);
+        }
+        if ($this->labelIcon !== '') {
+            $labelComp->icon($this->labelIcon);
         }
         return (string)$labelComp . $this->renderHtml();
     }

@@ -21,6 +21,7 @@ final class Label extends Component
     private string $for = '';
     private bool $required = false;
     private string $hint = '';
+    private string $icon = '';
 
     public function __construct(string $id, string $text = '', array $options = [])
     {
@@ -64,6 +65,16 @@ final class Label extends Component
         return $this;
     }
 
+    /**
+     * Prepend a Font Awesome icon to the label text.
+     * Accepts the same icon strings as $m->icon(), e.g. 'fa-envelope', 'far fa-circle'.
+     */
+    public function icon(string $icon): self
+    {
+        $this->icon = $icon;
+        return $this;
+    }
+
     protected function getComponentType(): string
     {
         return 'label';
@@ -79,7 +90,10 @@ final class Label extends Component
             : '';
         $attrs     = $this->renderAdditionalAttributes(['id', 'class', 'for']) . $this->renderEventAttributes();
 
-        $inner = htmlspecialchars($this->text, ENT_QUOTES, 'UTF-8');
+        $inner = $this->icon !== ''
+            ? Icon::html($this->icon, ['ariaHidden' => true]) . ' '
+            : '';
+        $inner .= htmlspecialchars($this->text, ENT_QUOTES, 'UTF-8');
 
         if ($this->required) {
             $inner .= '<span class="m-label-required" aria-hidden="true">*</span>';

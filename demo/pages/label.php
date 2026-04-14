@@ -31,8 +31,33 @@
         <?= $m->textarea('demo-input-bio')->placeholder('Tell us about yourself…')->name('bio') ?>
     </div>
 
+    <h3>With Icon</h3>
+    <p class="m-demo-desc"><code>->icon()</code> prepends a Font Awesome icon to the label text. Accepts the same icon strings as <code>$m->icon()</code>.</p>
+    <div class="m-demo-row" style="flex-direction:column; align-items:flex-start; gap:0.25rem;">
+        <?= $m->label('demo-lbl-email2', 'Email Address')->for('demo-input-email2')->icon('fa-envelope') ?>
+        <?= $m->textbox('demo-input-email2')->placeholder('you@example.com')->name('email2') ?>
+    </div>
+    <div class="m-demo-row" style="flex-direction:column; align-items:flex-start; gap:0.25rem;">
+        <?= $m->label('demo-lbl-phone', 'Phone')->for('demo-input-phone')->icon('fa-phone')->required() ?>
+        <?= $m->textbox('demo-input-phone')->placeholder('+1 555 000 0000')->name('phone') ?>
+    </div>
+
+    <h3>Component <code>->label()</code> &amp; <code>->labelIcon()</code></h3>
+    <p class="m-demo-desc">Any Manhattan component supports <code>->label()</code> to render a label above itself, and <code>->labelIcon()</code> to include an icon in that label.</p>
+    <div class="m-demo-row" style="flex-direction:column; align-items:flex-start; gap:0.25rem;">
+        <?= $m->dropdown('demo-dd-notif')
+            ->label('Email Notifications')
+            ->labelIcon('fa-envelope')
+            ->dataSource([
+                ['value' => 'disabled',  'text' => 'Disabled'],
+                ['value' => 'immediate', 'text' => 'Immediately'],
+                ['value' => 'daily',     'text' => 'Daily digest'],
+            ])
+            ->placeholder('Select…') ?>
+    </div>
+
     <?= demoCodeTabs(
-        '// Basic label linked to an input
+'// Basic label linked to an input
 <?= $m->label(\'name-lbl\', \'Full Name\')->for(\'nameInput\') ?>
 <?= $m->textbox(\'nameInput\')->name(\'full_name\') ?>
 
@@ -44,10 +69,15 @@
 <?= $m->label(\'bio-lbl\', \'Bio\')->for(\'bioArea\')->hint(\'Optional\') ?>
 <?= $m->textarea(\'bioArea\')->name(\'bio\') ?>
 
-// Raw HTML
-<label id="my-lbl" class="m-label" for="myInput">
-    Username <span class="m-label-required" aria-hidden="true">*</span>
-</label>'
+// With icon
+<?= $m->label(\'email-lbl\', \'Email Address\')->for(\'emailInput\')->icon(\'fa-envelope\') ?>
+<?= $m->textbox(\'emailInput\')->name(\'email\') ?>
+
+// Inline label via any component (no separate label call needed)
+<?= $m->dropdown(\'notifDd\')
+    ->label(\'Email Notifications\')
+    ->labelIcon(\'fa-envelope\')
+    ->dataSource($options) ?>'
     ) ?>
 </div>
 
@@ -57,6 +87,14 @@
     ['->for($inputId)', 'self', 'Set the <code>for</code> attribute — ID of the associated input.'],
     ['->required()', 'self', 'Show a red asterisk to indicate a required field.'],
     ['->hint($text)', 'self', 'Add subdued helper text beside the label.'],
+    ['->icon($icon)', 'self', 'Prepend a Font Awesome icon. Same format as <code>$m->icon()</code>.'],
+]) ?>
+
+<?= apiTable('Component Fluent Methods (on any component)', 'php', [
+    ['->label($text)', 'self', 'Render a label above this component.'],
+    ['->labelIcon($icon)', 'self', 'Add an icon to the inline label. Has no effect without <code>->label()</code>.'],
+    ['->labelRequired()', 'self', 'Mark the inline label as required. Has no effect without <code>->label()</code>.'],
+    ['->labelHint($text)', 'self', 'Add hint text to the inline label. Has no effect without <code>->label()</code>.'],
 ]) ?>
 
 <?= apiTable('CSS Classes', 'php', [
