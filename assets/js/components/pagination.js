@@ -368,10 +368,9 @@
         // -----------------------------------------------------------------------
 
         if (sizeEl) {
-            sizeEl.addEventListener('change', function () {
-                // Skip when changed programmatically (e.g. via setPerPage)
+            // Shared handler — called from both native-change and m:dropdown:change paths.
+            function applyPerPageChange(newSize) {
                 if (sizeEl._pgUpdating) return;
-                var newSize = parseInt(sizeEl.value, 10);
                 if (isNaN(newSize) || newSize < 1) return;
 
                 if (mode === 'server' && urlTemplate) {
@@ -404,6 +403,22 @@
                 } else if (mode === 'ajax' && urlTemplate) {
                     fetchPage(1);
                 }
+            }
+
+            // Native <select> change — works for plain selects and bubbles up from
+            // the inner <select> when the size selector is a Manhattan Dropdown.
+            // Use e.target.value (the actual <select>) rather than sizeEl.value
+            // (which is undefined on a Dropdown wrapper <div>).
+            sizeEl.addEventListener('change', function (e) {
+                var val = (e && e.target && e.target.tagName === 'SELECT')
+                    ? e.target.value
+                    : sizeEl.value;
+                applyPerPageChange(parseInt(val, 10));
+            });
+
+            // Manhattan Dropdown fires m:dropdown:change with e.detail.value.
+            sizeEl.addEventListener('m:dropdown:change', function (e) {
+                applyPerPageChange(parseInt(e.detail && e.detail.value, 10));
             });
         }
 
@@ -508,6 +523,14 @@
                         sizeEl.value = String(state.perPage);
                     }
                 }
+                utils.trigger(navEl, 'm:pagination:change', {
+                    page:       1,
+                    perPage:    state.perPage,
+                    total:      state.total,
+                    totalPages: state.totalPages,
+                    offset:     0,
+                    limit:      state.perPage
+                });
                 renderControls();
                 renderInfo();
                 if (mode === 'client') applyClientPaging();
