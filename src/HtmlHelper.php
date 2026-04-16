@@ -251,6 +251,18 @@ class HtmlHelper
     }
 
     /**
+     * Create a Reorderable component (drag-to-sort list with optional server-side persistence)
+     *
+     * @param string $id Unique identifier for the reorderable
+     * @param array $options Configuration options
+     * @return Reorderable
+     */
+    public function reorderable(string $id, array $options = []): Reorderable
+    {
+        return new Reorderable($id, $options);
+    }
+
+    /**
      * Create a Toaster component (container for toast notifications)
      *
      * @param string $id Unique identifier for the toaster

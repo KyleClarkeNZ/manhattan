@@ -3,16 +3,37 @@ declare(strict_types=1);
 
 namespace Manhattan;
 
-final class MList extends Component
+final class Reorderable extends Component
 {
     /** @var array<int, array<string, mixed>> */
     private array $items = [];
 
+    private bool $updateModelOnReorder = false;
+    private ?string $updateUrl = null;
     private ?string $emptyMessage = null;
+    private string $loaderText = 'Saving...';
+
+    public function updateModelOnReorder(bool $enabled = true): self
+    {
+        $this->updateModelOnReorder = $enabled;
+        return $this;
+    }
+
+    public function updateUrl(?string $url): self
+    {
+        $this->updateUrl = $url;
+        return $this;
+    }
 
     public function emptyMessage(?string $message): self
     {
         $this->emptyMessage = $message;
+        return $this;
+    }
+
+    public function loaderText(string $text): self
+    {
+        $this->loaderText = $text;
         return $this;
     }
 
@@ -27,16 +48,21 @@ final class MList extends Component
 
     protected function getComponentType(): string
     {
-        return 'list';
+        return 'reorderable';
     }
 
     protected function renderHtml(): string
     {
-        $classes = array_merge(['m-list'], $this->getExtraClasses());
+        $classes = array_merge(['m-reorderable'], $this->getExtraClasses());
         $classAttr = htmlspecialchars(implode(' ', array_filter($classes)), ENT_QUOTES, 'UTF-8');
         $id = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8');
 
-        $this->data('component', 'list');
+        $this->data('component', 'reorderable');
+        $this->data('update-model-on-reorder', $this->updateModelOnReorder ? '1' : '0');
+        $this->data('loader-text', $this->loaderText);
+        if ($this->updateUrl !== null) {
+            $this->data('update-url', $this->updateUrl);
+        }
         if ($this->emptyMessage !== null) {
             $this->data('empty-message', $this->emptyMessage);
         }
@@ -49,12 +75,12 @@ final class MList extends Component
         foreach ($this->items as $item) {
             $itemId = isset($item['id']) ? (string)$item['id'] : '';
             $key = $item['key'] ?? $itemId;
-            $itemClass = 'm-list-item';
+            $itemClass = 'm-reorderable-item';
             if (!empty($item['class']) && is_string($item['class'])) {
                 $itemClass .= ' ' . trim($item['class']);
             }
 
-            $itemAttrs = '';
+            $itemAttrs = ' draggable="true"';
             if ($itemId !== '') {
                 $itemAttrs .= ' id="' . htmlspecialchars($itemId, ENT_QUOTES, 'UTF-8') . '"';
             }
@@ -75,8 +101,16 @@ final class MList extends Component
         }
 
         if ($this->emptyMessage !== null && empty($this->items)) {
-            $html .= '<div class="m-list-empty">' . htmlspecialchars($this->emptyMessage, ENT_QUOTES, 'UTF-8') . '</div>';
+            $html .= '<div class="m-reorderable-empty">' . htmlspecialchars($this->emptyMessage, ENT_QUOTES, 'UTF-8') . '</div>';
         }
+
+        $html .= (new Loader($this->id . '__loader'))
+            ->overlay(true)
+            ->hidden(true)
+            ->size('sm')
+            ->text($this->loaderText)
+            ->addClass('m-reorderable-loader')
+            ->render();
 
         $html .= '</div>';
 

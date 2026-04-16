@@ -448,19 +448,23 @@ body.theme-dark .m-list {
     background-color: transparent;
 }
 
-body.m-dark .m-list.m-list-reorderable .m-list-item,
-body.theme-dark .m-list.m-list-reorderable .m-list-item {
+
+/* ========================================
+   Reorderable
+   ======================================== */
+body.m-dark .m-reorderable-item,
+body.theme-dark .m-reorderable-item {
     background-color: #1e242b;
     border-color: rgba(255, 255, 255, 0.12);
 }
 
-body.m-dark .m-list.m-list-reorderable .m-list-item:hover,
-body.theme-dark .m-list.m-list-reorderable .m-list-item:hover {
+body.m-dark .m-reorderable-item:hover,
+body.theme-dark .m-reorderable-item:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
-body.m-dark .m-list.m-list-reorderable .m-list-item::before,
-body.theme-dark .m-list.m-list-reorderable .m-list-item::before {
+body.m-dark .m-reorderable-item::before,
+body.theme-dark .m-reorderable-item::before {
     background-color: rgba(255, 255, 255, 0.03);
     border-right-color: rgba(255, 255, 255, 0.08);
     background-image:
@@ -468,14 +472,14 @@ body.theme-dark .m-list.m-list-reorderable .m-list-item::before {
         radial-gradient(circle, rgba(255, 255, 255, 0.3) 1.5px, transparent 1.5px);
 }
 
-body.m-dark .m-list-item.m-list-drop-target,
-body.theme-dark .m-list-item.m-list-drop-target {
+body.m-dark .m-reorderable-item.m-reorderable-drop-target,
+body.theme-dark .m-reorderable-item.m-reorderable-drop-target {
     border-color: #64b5f6;
     box-shadow: inset 0 0 0 1px #64b5f6;
 }
 
-body.m-dark .m-list-item.m-list-dragging,
-body.theme-dark .m-list-item.m-list-dragging {
+body.m-dark .m-reorderable-item.m-reorderable-dragging,
+body.theme-dark .m-reorderable-item.m-reorderable-dragging {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 

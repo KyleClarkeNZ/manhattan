@@ -268,6 +268,7 @@ $demoNav = [
     // Data & Visualisation
     'datagrid'    => ['DataGrid',    'fa-table',              'Data & Visualisation'],
     'list'        => ['List',        'fa-list',               'Data & Visualisation'],
+    'reorderable' => ['Reorderable', 'fa-grip-vertical',      'Data & Visualisation'],
     'chart'       => ['Chart',       'fa-chart-bar',          'Data & Visualisation'],
     'progressbar' => ['ProgressBar', 'fa-tasks',              'Data & Visualisation'],
     'rating'      => ['Rating',      'fa-star',               'Data & Visualisation'],
