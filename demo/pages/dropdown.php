@@ -154,7 +154,8 @@ dd.clear();'
     ['m.dropdown(id, options)', 'string, ?object', 'Initialise or get a dropdown instance.'],
     ['value(val?)', '?string', 'Get or set the selected value.'],
     ['text()', '', 'Get the display text of the selected item.'],
-    ['dataSource(data?)', '?array', 'Get or set the data source array.'],
+    ['dataSource(data?)', '?array', 'Get or set the flat data source array. Clears any grouped data source.'],
+    ['groupedDataSource(data?)', '?array', 'Get or set the grouped data source: <code>[{group, items}, ...]</code>.'],
     ['reload()', '', 'Re-fetch data from the remote URL. Returns a Promise.'],
     ['enable()', '', 'Enable the dropdown.'],
     ['disable()', '', 'Disable and close the dropdown.'],
@@ -181,6 +182,13 @@ document.addEventListener('DOMContentLoaded', function() {
         events: {
             change: function(data) {
                 setOutput('dropdown-output', '<strong>Category:</strong> ' + data.text + ' (' + data.value + ')');
+            }
+        }
+    });
+    m.dropdown('dropdown-grouped', {
+        events: {
+            change: function(data) {
+                setOutput('dropdown-output', '<strong>Grouped:</strong> ' + data.text + ' (' + data.value + ')');
             }
         }
     });

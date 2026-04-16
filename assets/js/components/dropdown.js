@@ -35,7 +35,8 @@
             textField: 'text',
             valueField: 'value',
             dataSource: null,
-            placeholder: select.querySelector('option[value=""]')?.textContent || 'Select...',
+            groupedDataSource: null,
+            placeholder: select.querySelector('option[value=""]') ? select.querySelector('option[value=""]').textContent : 'Select...',
 
             // Remote loading
             remoteUrl: dataset.remoteUrl || null,
@@ -46,11 +47,42 @@
         }, options || {});
 
         // Get existing options as dataSource if not provided
-        if (!options.dataSource && select.options.length > 0) {
-            options.dataSource = Array.from(select.options).map(opt => ({
-                [options.valueField]: opt.value,
-                [options.textField]: opt.textContent
-            }));
+        if (!options.dataSource && !options.groupedDataSource) {
+            var optgroups = select.querySelectorAll('optgroup');
+            if (optgroups.length > 0) {
+                // Build grouped data source from <optgroup> elements
+                options.groupedDataSource = Array.from(optgroups).map(function(group) {
+                    return {
+                        group: group.label,
+                        items: Array.from(group.querySelectorAll('option')).map(function(opt) {
+                            var item = {};
+                            item[options.valueField] = opt.value;
+                            item[options.textField] = opt.textContent.trim();
+                            return item;
+                        })
+                    };
+                });
+                // Also capture any top-level (non-grouped) options
+                var topLevelOptions = Array.from(select.options).filter(function(opt) {
+                    return opt.parentElement.tagName.toLowerCase() !== 'optgroup'
+                        && opt.value !== '';
+                });
+                if (topLevelOptions.length > 0) {
+                    options.dataSource = topLevelOptions.map(function(opt) {
+                        var item = {};
+                        item[options.valueField] = opt.value;
+                        item[options.textField] = opt.textContent.trim();
+                        return item;
+                    });
+                }
+            } else if (select.options.length > 0) {
+                options.dataSource = Array.from(select.options).map(function(opt) {
+                    var item = {};
+                    item[options.valueField] = opt.value;
+                    item[options.textField] = opt.textContent.trim();
+                    return item;
+                });
+            }
         }
 
         // Create custom dropdown
@@ -86,7 +118,7 @@
                 // Shallow-merge into the existing options object so closures keep seeing updates.
                 options = utils.extend(options, nextOptions);
                 customDropdown._manhattan.options = options;
-                if (nextOptions.dataSource) {
+                if (nextOptions.dataSource || nextOptions.groupedDataSource) {
                     renderDropdownOptions(customDropdown, options);
                 }
                 return this;
@@ -110,6 +142,16 @@
                     return options.dataSource;
                 }
                 options.dataSource = data;
+                options.groupedDataSource = null;
+                renderDropdownOptions(customDropdown, options);
+                return this;
+            },
+
+            groupedDataSource: function(data) {
+                if (data === undefined) {
+                    return options.groupedDataSource;
+                }
+                options.groupedDataSource = data;
                 renderDropdownOptions(customDropdown, options);
                 return this;
             },
@@ -236,31 +278,55 @@
         return custom;
     }
 
+    function renderDropdownItem(dropdown, item, options) {
+        var value = typeof item === 'object' ? item[options.valueField] : item;
+        var text  = typeof item === 'object' ? item[options.textField]  : item;
+
+        var option = utils.createElement('div', 'm-dropdown-item');
+        option.setAttribute('data-value', value);
+        option.textContent = text;
+
+        var currentValue = dropdown.getAttribute('data-value');
+        if (String(value) === String(currentValue)) {
+            option.classList.add('m-selected');
+        }
+
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            setDropdownValue(dropdown, value, options);
+            closeDropdown(dropdown);
+        });
+
+        return option;
+    }
+
     function renderDropdownOptions(dropdown, options) {
-        const list = dropdown.querySelector('.m-dropdown-list');
+        var list = dropdown.querySelector('.m-dropdown-list');
         list.innerHTML = '';
-        
-        if (options.dataSource && options.dataSource.length > 0) {
-            options.dataSource.forEach(item => {
-                const value = typeof item === 'object' ? item[options.valueField] : item;
-                const text = typeof item === 'object' ? item[options.textField] : item;
-                
-                const option = utils.createElement('div', 'm-dropdown-item');
-                option.setAttribute('data-value', value);
-                option.textContent = text;
-                
-                const currentValue = dropdown.getAttribute('data-value');
-                if (String(value) === String(currentValue)) {
-                    option.classList.add('m-selected');
-                }
-                
-                option.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    setDropdownValue(dropdown, value, options);
-                    closeDropdown(dropdown);
+
+        if (options.groupedDataSource && options.groupedDataSource.length > 0) {
+            // Render any top-level ungrouped items first
+            if (options.dataSource && options.dataSource.length > 0) {
+                options.dataSource.forEach(function(item) {
+                    list.appendChild(renderDropdownItem(dropdown, item, options));
                 });
-                
-                list.appendChild(option);
+            }
+
+            // Render each group with a label header
+            options.groupedDataSource.forEach(function(group) {
+                var groupLabel = utils.createElement('div', 'm-dropdown-group-label');
+                groupLabel.textContent = group.group || '';
+                groupLabel.setAttribute('aria-hidden', 'true');
+                list.appendChild(groupLabel);
+
+                var items = Array.isArray(group.items) ? group.items : [];
+                items.forEach(function(item) {
+                    list.appendChild(renderDropdownItem(dropdown, item, options));
+                });
+            });
+        } else if (options.dataSource && options.dataSource.length > 0) {
+            options.dataSource.forEach(function(item) {
+                list.appendChild(renderDropdownItem(dropdown, item, options));
             });
         }
     }
@@ -455,23 +521,23 @@
     }
 
     function navigateOptions(dropdown, direction, options) {
-        const currentValue = dropdown.getAttribute('data-value');
-        const items = dropdown.querySelectorAll('.m-dropdown-item');
-        
+        var currentValue = dropdown.getAttribute('data-value');
+        var items = Array.from(dropdown.querySelectorAll('.m-dropdown-item'));
+
         if (items.length === 0) return;
-        
-        let currentIndex = -1;
-        items.forEach((item, index) => {
+
+        var currentIndex = -1;
+        items.forEach(function(item, index) {
             if (item.getAttribute('data-value') === currentValue) {
                 currentIndex = index;
             }
         });
-        
-        let newIndex = currentIndex + direction;
+
+        var newIndex = currentIndex + direction;
         if (newIndex < 0) newIndex = items.length - 1;
         if (newIndex >= items.length) newIndex = 0;
-        
-        const newValue = items[newIndex].getAttribute('data-value');
+
+        var newValue = items[newIndex].getAttribute('data-value');
         setDropdownValue(dropdown, newValue, options);
     }
 

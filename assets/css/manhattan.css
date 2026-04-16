@@ -2250,6 +2250,23 @@
     border-bottom-right-radius: 4px;
 }
 
+.m-dropdown-group-label {
+    padding: 8px 12px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #999;
+    cursor: default;
+    background: #fafafa;
+    border-top: 1px solid #f0f0f0;
+    user-select: none;
+}
+
+.m-dropdown-group-label:first-child {
+    border-top: none;
+}
+
 /* Custom Scrollbar for Dropdown */
 .m-dropdown-list::-webkit-scrollbar {
     width: 8px;

@@ -736,6 +736,13 @@ body.theme-dark .m-dropdown-item.m-selected {
     color: #fff;
 }
 
+body.m-dark .m-dropdown-group-label,
+body.theme-dark .m-dropdown-group-label {
+    color: #888;
+    background: rgba(255, 255, 255, 0.03);
+    border-top-color: rgba(255, 255, 255, 0.07);
+}
+
 body.m-dark .m-dropdown-custom.m-disabled .m-dropdown-header,
 body.theme-dark .m-dropdown-custom.m-disabled .m-dropdown-header {
     background-color: #1a1f24;
