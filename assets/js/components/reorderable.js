@@ -22,6 +22,7 @@
         }
 
         const dataset = element.dataset || {};
+        const showHandles = dataset.handles !== '0';
         options = utils.extend({
             updateModelOnReorder: dataset.updateModelOnReorder === '1',
             updateUrl: dataset.updateUrl || null,
@@ -70,6 +71,12 @@
             element.classList.toggle('m-is-loading', !!isLoading);
         }
 
+        function buildHandleHtml() {
+            return showHandles
+                ? '<span class="m-reorderable-handle" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>'
+                : '';
+        }
+
         function upsertItem(key, html, opts) {
             const stringKey = String(key);
             let item = element.querySelector('.m-reorderable-item[data-key="' + CSS.escape(stringKey) + '"]');
@@ -88,7 +95,7 @@
             if (opts && opts.id) {
                 item.id = opts.id;
             }
-            item.innerHTML = html;
+            item.innerHTML = buildHandleHtml() + html;
             ensureEmptyState();
             return item;
         }
@@ -119,6 +126,8 @@
         function onDragStart(e) {
             const target = e.target.closest('.m-reorderable-item');
             if (!target) return;
+            // When handles are enabled, only initiate drag from the handle element
+            if (showHandles && !e.target.closest('.m-reorderable-handle')) return;
             dragEl = target;
             target.classList.add('m-reorderable-dragging');
             e.dataTransfer.effectAllowed = 'move';

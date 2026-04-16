@@ -2,25 +2,25 @@
 
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-grip-vertical') ?> Reorderable</h2>
-    <p class="m-demo-desc">Drag-to-sort list with a grip-dot handle on each item. Supports optional server-side persistence — when <code>->updateModelOnReorder()</code> and <code>->updateUrl()</code> are set, the new order is automatically POSTed after each drag.</p>
+    <p class="m-demo-desc">Drag-to-sort list. By default each item shows a <code>fa-grip-vertical</code> handle on the left — drag from the handle to reorder. Handles can be hidden with <code>->handles(false)</code>, which restores the classic grip-dot gutter and makes the entire item draggable. Supports optional server-side persistence when <code>->updateModelOnReorder()</code> and <code>->updateUrl()</code> are set.</p>
 
-    <h3>Basic Reorderable</h3>
-    <p class="m-demo-desc">Drag any item to a new position — the output below reflects the updated key order.</p>
+    <h3>Basic Reorderable (with handles)</h3>
+    <p class="m-demo-desc">Drag the handle on any item to reorder. The output reflects the updated key order.</p>
     <div class="m-demo-row">
         <?= $m->reorderable('demo-reorder-basic')
             ->emptyMessage('No items — add some!')
             ->items([
-                ['key' => 'a', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>First task</strong><div style="font-size:0.8rem;color:#888;margin-top:2px">Drag to reorder</div></div>'],
-                ['key' => 'b', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Second task</strong><div style="font-size:0.8rem;color:#888;margin-top:2px">Drag to reorder</div></div>'],
-                ['key' => 'c', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Third task</strong><div style="font-size:0.8rem;color:#888;margin-top:2px">Drag to reorder</div></div>'],
-                ['key' => 'd', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Fourth task</strong><div style="font-size:0.8rem;color:#888;margin-top:2px">Drag to reorder</div></div>'],
+                ['key' => 'a', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>First task</strong><div style="font-size:0.8rem;color:#888;margin-top:2px">Drag handle to reorder</div></div>'],
+                ['key' => 'b', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Second task</strong><div style="font-size:0.8rem;color:#888;margin-top:2px">Drag handle to reorder</div></div>'],
+                ['key' => 'c', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Third task</strong><div style="font-size:0.8rem;color:#888;margin-top:2px">Drag handle to reorder</div></div>'],
+                ['key' => 'd', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Fourth task</strong><div style="font-size:0.8rem;color:#888;margin-top:2px">Drag handle to reorder</div></div>'],
             ]) ?>
     </div>
 
     <div class="m-demo-output" id="reorder-output">Reorder items to see output...</div>
 
     <?= demoCodeTabs(
-        '// Reorderable — grip handle appears on left of each item
+        '// Default — handle visible on left of each item
 <?= $m->reorderable(\'sortable\')
     ->emptyMessage(\'No items yet\')
     ->items([
@@ -53,18 +53,44 @@ var n = r.count();
 document.getElementById(\'sortable\')
     .addEventListener(\'m:reorderable:reorder\', function(e) {
         console.log(\'New order:\', e.detail.order);
-    });
-
-document.getElementById(\'sortable\')
-    .addEventListener(\'m:reorderable:saved\', function(e) {
-        console.log(\'Server confirmed:\', e.detail);
     });'
+    ) ?>
+</div>
+
+<div class="m-demo-section">
+    <h3>No handles (classic grip-dot gutter)</h3>
+    <p class="m-demo-desc">Use <code>->handles(false)</code> to hide the handle icon and revert to the classic grip-dot gutter — the entire item becomes draggable.</p>
+    <div class="m-demo-row">
+        <?= $m->reorderable('demo-reorder-nohandles')
+            ->handles(false)
+            ->items([
+                ['key' => 'x', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Alpha</strong></div>'],
+                ['key' => 'y', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Beta</strong></div>'],
+                ['key' => 'z', 'html' => '<div style="padding:0.6rem 0.85rem"><strong>Gamma</strong></div>'],
+            ]) ?>
+    </div>
+
+    <div class="m-demo-output" id="reorder-nohandles-output">Reorder items to see output...</div>
+
+    <?= demoCodeTabs(
+        '// No handles — entire item is the drag target
+<?= $m->reorderable(\'noHandlesList\')
+    ->handles(false)
+    ->items([
+        [\'key\' => \'x\', \'html\' => \'<div style="padding:.6rem .85rem">Alpha</div>\'],
+        [\'key\' => \'y\', \'html\' => \'<div style="padding:.6rem .85rem">Beta</div>\'],
+    ]) ?>',
+        '// Handles are configured server-side via ->handles(false).
+// The JS API is the same regardless of handle mode.
+var r = m.reorderable(\'noHandlesList\');
+console.log(r.getOrder());'
     ) ?>
 </div>
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->reorderable($id)', 'string', 'Create a reorderable component.'],
     ['->items($items)', 'array', 'Set items. Each: <code>{key, html, id?, class?, attrs?}</code>.'],
+    ['->handles($show)', 'bool', 'Show grip handle icon on each item. Default: <code>true</code>. Pass <code>false</code> to use the classic grip-dot gutter (whole item draggable).'],
     ['->updateModelOnReorder($enabled)', 'bool', 'Auto-POST new order to server after each drag. Default: <code>false</code>.'],
     ['->updateUrl($url)', '?string', 'URL to POST the reordered keys to.'],
     ['->emptyMessage($msg)', '?string', 'Message shown when there are no items.'],
@@ -74,8 +100,8 @@ document.getElementById(\'sortable\')
 <?= apiTable('JS Methods', 'js', [
     ['m.reorderable(id, opts)', 'string, ?object', 'Get or create reorderable instance.'],
     ['getOrder()', '', 'Returns array of item keys in current visual order.'],
-    ['addItem(key, html, opts)', 'string, string, ?object', 'Append a new item.'],
-    ['upsertItem(key, html, opts)', 'string, string, ?object', 'Update existing item or insert if not found.'],
+    ['addItem(key, html, opts)', 'string, string, ?object', 'Append a new item (handle injected automatically if enabled).'],
+    ['upsertItem(key, html, opts)', 'string, string, ?object', 'Update existing item or insert if not found (handle injected automatically if enabled).'],
     ['removeItem(key)', 'string', 'Remove an item by key.'],
     ['clear()', '', 'Remove all items.'],
     ['count()', '', 'Returns number of items.'],
@@ -94,6 +120,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (el) {
         el.addEventListener('m:reorderable:reorder', function(e) {
             setOutput('reorder-output', '<strong>New order:</strong> ' + JSON.stringify(e.detail.order));
+        });
+    }
+
+    var el2 = document.getElementById('demo-reorder-nohandles');
+    if (el2) {
+        el2.addEventListener('m:reorderable:reorder', function(e) {
+            setOutput('reorder-nohandles-output', '<strong>New order:</strong> ' + JSON.stringify(e.detail.order));
         });
     }
 });

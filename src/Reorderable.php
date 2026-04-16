@@ -12,6 +12,7 @@ final class Reorderable extends Component
     private ?string $updateUrl = null;
     private ?string $emptyMessage = null;
     private string $loaderText = 'Saving...';
+    private bool $showHandles = true;
 
     public function updateModelOnReorder(bool $enabled = true): self
     {
@@ -37,6 +38,12 @@ final class Reorderable extends Component
         return $this;
     }
 
+    public function handles(bool $show = true): self
+    {
+        $this->showHandles = $show;
+        return $this;
+    }
+
     /**
      * @param array<int, array{key?: string|int, id?: string, class?: string, html: string, attrs?: array<string, string|int|float>}> $items
      */
@@ -59,6 +66,7 @@ final class Reorderable extends Component
 
         $this->data('component', 'reorderable');
         $this->data('update-model-on-reorder', $this->updateModelOnReorder ? '1' : '0');
+        $this->data('handles', $this->showHandles ? '1' : '0');
         $this->data('loader-text', $this->loaderText);
         if ($this->updateUrl !== null) {
             $this->data('update-url', $this->updateUrl);
@@ -97,7 +105,10 @@ final class Reorderable extends Component
             }
 
             $itemHtml = (string)$item['html'];
-            $html .= '<div class="' . htmlspecialchars($itemClass, ENT_QUOTES, 'UTF-8') . '"' . $itemAttrs . '>' . $itemHtml . '</div>';
+            $handleHtml = $this->showHandles
+                ? '<span class="m-reorderable-handle" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>'
+                : '';
+            $html .= '<div class="' . htmlspecialchars($itemClass, ENT_QUOTES, 'UTF-8') . '"' . $itemAttrs . '>' . $handleHtml . $itemHtml . '</div>';
         }
 
         if ($this->emptyMessage !== null && empty($this->items)) {

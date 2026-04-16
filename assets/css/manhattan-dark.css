@@ -463,8 +463,16 @@ body.theme-dark .m-reorderable-item:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
-body.m-dark .m-reorderable-item::before,
-body.theme-dark .m-reorderable-item::before {
+body.m-dark .m-reorderable-handle,
+body.theme-dark .m-reorderable-handle {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-right-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* No-handles dark mode — restore grip-dot gutter */
+body.m-dark .m-reorderable[data-handles="0"] .m-reorderable-item::before,
+body.theme-dark .m-reorderable[data-handles="0"] .m-reorderable-item::before {
     background-color: rgba(255, 255, 255, 0.03);
     border-right-color: rgba(255, 255, 255, 0.08);
     background-image:
