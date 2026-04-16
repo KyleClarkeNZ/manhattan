@@ -122,12 +122,24 @@
 
         // --- Drag/drop reordering ---
         var dragEl = null;
+        var lastDragFromHandle = !showHandles; // if no handles, whole item is always valid
+
+        element.addEventListener('mousedown', function(e) {
+            if (showHandles) {
+                lastDragFromHandle = !!e.target.closest('.m-reorderable-handle');
+            }
+        });
 
         function onDragStart(e) {
             const target = e.target.closest('.m-reorderable-item');
             if (!target) return;
-            // When handles are enabled, only initiate drag from the handle element
-            if (showHandles && !e.target.closest('.m-reorderable-handle')) return;
+            // When handles are enabled, only allow drags that originated from the handle.
+            // We can't rely on e.target here — in the DnD API e.target is always the
+            // draggable element itself, not the child under the pointer.
+            if (showHandles && !lastDragFromHandle) {
+                e.preventDefault();
+                return;
+            }
             dragEl = target;
             target.classList.add('m-reorderable-dragging');
             e.dataTransfer.effectAllowed = 'move';
