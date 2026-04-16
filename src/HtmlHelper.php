@@ -635,6 +635,7 @@ class HtmlHelper
 <script src="{$js}/components/toggleswitch.js" defer></script>
 <script src="{$js}/components/chart.js" defer></script>
 <script src="{$js}/components/list.js" defer></script>
+<script src="{$js}/components/reorderable.js" defer></script>
 <script src="{$js}/components/window.js" defer></script>
 <script src="{$js}/components/dialog.js" defer></script>
 <script src="{$js}/components/toaster.js" defer></script>
