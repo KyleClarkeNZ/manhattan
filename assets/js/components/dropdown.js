@@ -396,7 +396,7 @@
 
     function openDropdown(dropdown) {
         // Close any other open dropdowns so only one can be open at a time.
-        document.querySelectorAll('.m-dropdown-custom.m-open').forEach(other => {
+        document.querySelectorAll('.m-dropdown-custom.m-open').forEach(function(other) {
             if (other !== dropdown) {
                 closeDropdown(other);
             }
@@ -404,33 +404,90 @@
 
         dropdown.classList.add('m-open');
         dropdown._manhattan.isOpen = true;
-        
-        // Position the dropdown list
-        const list = dropdown.querySelector('.m-dropdown-list');
+
+        var list = dropdown.querySelector('.m-dropdown-list');
         if (!list) return;
 
-        // Measure and choose direction (down vs up) within nearest scroll container / viewport
+        // Reset any leftover fixed-position styles before measuring
+        list.style.position = '';
+        list.style.width = '';
+        list.style.left = '';
+        list.style.right = '';
+        list.style.top = '';
+        list.style.bottom = '';
+        list.style.zIndex = '';
+
         dropdown.classList.remove('m-open-up');
         dropdown.classList.remove('m-align-right');
         list.style.display = 'block';
 
-        const triggerRect = dropdown.getBoundingClientRect();
-        const listRect = list.getBoundingClientRect();
-        const boundary = getBoundaryRect(dropdown);
+        var header   = dropdown.querySelector('.m-dropdown-header');
+        var headerRect = header.getBoundingClientRect();
+        var listRect   = list.getBoundingClientRect();
+        var vw = window.innerWidth  || document.documentElement.clientWidth;
+        var vh = window.innerHeight || document.documentElement.clientHeight;
 
-        // Vertical positioning (up vs down)
-        const spaceBelow = boundary.bottom - triggerRect.bottom;
-        const spaceAbove = triggerRect.top - boundary.top;
-        const needed = listRect.height;
+        // Determine the effective boundary for space calculations
+        var boundary = getBoundaryRect(dropdown);
+
+        // Vertical positioning (down vs up)
+        var spaceBelow = boundary.bottom - headerRect.bottom;
+        var spaceAbove = headerRect.top   - boundary.top;
+        var needed     = listRect.height;
 
         if (spaceBelow < needed && spaceAbove > spaceBelow) {
             dropdown.classList.add('m-open-up');
         }
 
-        // Horizontal positioning (check right edge)
-        const spaceRight = boundary.right - triggerRect.left;
+        // Horizontal positioning (right-align when near right edge)
+        var spaceRight = boundary.right - headerRect.left;
         if (spaceRight < listRect.width) {
             dropdown.classList.add('m-align-right');
+        }
+
+        // If the dropdown is inside an overflow-clipping ancestor (e.g. a modal
+        // window or a scrollable panel), the absolutely-positioned list will be
+        // clipped.  Switch to fixed positioning so the list escapes the container.
+        var clippingParent = getClippingParent(dropdown);
+        if (clippingParent) {
+            applyFixedListPosition(dropdown, list, headerRect, vw, vh);
+
+            // Close if the clipping container scrolls (position would be stale)
+            if (!dropdown._manhattan._scrollHandler) {
+                dropdown._manhattan._scrollHandler = function() {
+                    closeDropdown(dropdown);
+                };
+                clippingParent.addEventListener('scroll', dropdown._manhattan._scrollHandler, { passive: true });
+                dropdown._manhattan._clippingParent = clippingParent;
+            }
+        }
+    }
+
+    /**
+     * Position the dropdown list using fixed coordinates derived from the
+     * header's bounding rect, so it escapes any overflow-clipping ancestor.
+     */
+    function applyFixedListPosition(dropdown, list, headerRect, vw, vh) {
+        list.style.position = 'fixed';
+        list.style.width    = headerRect.width + 'px';
+        list.style.zIndex   = '99999';
+
+        // Vertical: open down by default, up if .m-open-up was set
+        if (dropdown.classList.contains('m-open-up')) {
+            list.style.top    = 'auto';
+            list.style.bottom = (vh - headerRect.top) + 'px';
+        } else {
+            list.style.top    = headerRect.bottom + 'px';
+            list.style.bottom = 'auto';
+        }
+
+        // Horizontal: left-align by default, right-align if .m-align-right was set
+        if (dropdown.classList.contains('m-align-right')) {
+            list.style.left  = 'auto';
+            list.style.right = (vw - headerRect.right) + 'px';
+        } else {
+            list.style.left  = headerRect.left + 'px';
+            list.style.right = 'auto';
         }
     }
 
@@ -438,24 +495,67 @@
         dropdown.classList.remove('m-open');
         dropdown.classList.remove('m-open-up');
         dropdown.classList.remove('m-align-right');
+
         if (dropdown._manhattan) {
             dropdown._manhattan.isOpen = false;
+
+            // Remove scroll-to-close handler if one was attached
+            if (dropdown._manhattan._scrollHandler && dropdown._manhattan._clippingParent) {
+                dropdown._manhattan._clippingParent.removeEventListener('scroll', dropdown._manhattan._scrollHandler);
+                dropdown._manhattan._scrollHandler = null;
+                dropdown._manhattan._clippingParent = null;
+            }
         }
-        
-        const list = dropdown.querySelector('.m-dropdown-list');
-        if (list) list.style.display = 'none';
+
+        var list = dropdown.querySelector('.m-dropdown-list');
+        if (list) {
+            list.style.display = 'none';
+            // Reset any fixed-position overrides
+            list.style.position = '';
+            list.style.width    = '';
+            list.style.left     = '';
+            list.style.right    = '';
+            list.style.top      = '';
+            list.style.bottom   = '';
+            list.style.zIndex   = '';
+        }
+    }
+
+    /**
+     * Walk up the DOM and return the first ancestor that clips overflow AND is
+     * smaller than the viewport (meaning the list can genuinely be clipped).
+     * Returns null when none is found (list is safe to use absolute positioning).
+     */
+    function getClippingParent(el) {
+        var vw = window.innerWidth  || document.documentElement.clientWidth;
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        var p  = el.parentElement;
+
+        while (p && p !== document.body && p !== document.documentElement) {
+            var style    = window.getComputedStyle(p);
+            var overflow = (style.overflow || '') + ' ' + (style.overflowY || '') + ' ' + (style.overflowX || '');
+
+            if (/(auto|scroll|hidden)/.test(overflow)) {
+                var rect = p.getBoundingClientRect();
+                // Only treat as clipping if the element is actually smaller than
+                // the viewport on at least one axis
+                if (rect.height < vh || rect.width < vw) {
+                    return p;
+                }
+            }
+            p = p.parentElement;
+        }
+        return null;
     }
 
     function getBoundaryRect(el) {
-        const vh = window.innerHeight || document.documentElement.clientHeight;
-        const vw = window.innerWidth || document.documentElement.clientWidth;
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        var vw = window.innerWidth  || document.documentElement.clientWidth;
 
-        let p = el.parentElement;
+        var p = el.parentElement;
         while (p && p !== document.body) {
-            const style = window.getComputedStyle(p);
-            const overflowY = style.overflowY;
-            const overflowX = style.overflowX;
-            const overflow = (overflowY || '') + ' ' + (overflowX || '');
+            var style    = window.getComputedStyle(p);
+            var overflow = (style.overflowY || '') + ' ' + (style.overflowX || '');
 
             if (/(auto|scroll|hidden)/.test(overflow)) {
                 return p.getBoundingClientRect();
