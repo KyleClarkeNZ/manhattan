@@ -4045,6 +4045,12 @@ body::-webkit-scrollbar-thumb:hover {
     cursor: pointer;
 }
 
+/* noReturn steps look like done steps but cannot be clicked */
+.m-wizard-step-no-return {
+    cursor: default;
+    pointer-events: none;
+}
+
 .m-wizard-step-done:hover .m-wizard-step-circle {
     box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.22);
     transform: scale(1.06);
@@ -4080,6 +4086,99 @@ body::-webkit-scrollbar-thumb:hover {
 
 .m-wizard-step-skipped .m-wizard-step-label {
     color: #E65100;
+}
+
+/* ── Compressed / overflow mode ──────────────────────────────
+   Applied by JS (via ResizeObserver) when there is not enough horizontal
+   space to show all step indicators at full size without overlapping.
+   Non-active steps shrink and overlap; the active step stays prominent.
+   ─────────────────────────────────────────────────────────── */
+
+.m-wizard-steps.m-wizard-compressed {
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* All step items in compressed mode: shrink circles, hide labels */
+.m-wizard-steps.m-wizard-compressed .m-wizard-step {
+    min-width: 0;
+    max-width: none;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 1;
+    transition: margin 0.2s;
+}
+
+.m-wizard-steps.m-wizard-compressed .m-wizard-step .m-wizard-step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+}
+
+.m-wizard-steps.m-wizard-compressed .m-wizard-step .m-wizard-step-circle .m-wizard-step-default-icon,
+.m-wizard-steps.m-wizard-compressed .m-wizard-step .m-wizard-step-circle .m-wizard-step-num {
+    font-size: 0.75rem;
+}
+
+.m-wizard-steps.m-wizard-compressed .m-wizard-step .m-wizard-step-circle .m-wizard-step-check-icon {
+    font-size: 0.7rem;
+}
+
+.m-wizard-steps.m-wizard-compressed .m-wizard-step .m-wizard-step-label {
+    display: none;
+}
+
+/* Steps BEFORE the active step bunch up to the left */
+.m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-before-active {
+    margin-right: -16px;
+}
+
+/* Steps AFTER the active step bunch up to the right */
+.m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-after-active {
+    margin-left: -16px;
+}
+
+/* Active step in compressed mode: full-size circle, visible label, raised */
+.m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active {
+    z-index: 3;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active .m-wizard-step-circle {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+}
+
+.m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active .m-wizard-step-circle .m-wizard-step-default-icon,
+.m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active .m-wizard-step-circle .m-wizard-step-num {
+    font-size: 0.9375rem;
+}
+
+.m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active .m-wizard-step-label {
+    display: block;
+}
+
+/* Connectors shrink aggressively in compressed mode */
+.m-wizard-steps.m-wizard-compressed .m-wizard-connector {
+    flex: 0 0 4px;
+    min-width: 4px;
+    max-width: 4px;
+}
+
+/* Connector alignment for compressed circles */
+.m-wizard-steps.m-wizard-compressed .m-wizard-connector {
+    margin-top: 15px;
+}
+
+/* Connector before/after active step: restore margin for the full-size circle */
+.m-wizard-steps.m-wizard-compressed .m-wizard-connector.m-wizard-connector-before-active,
+.m-wizard-steps.m-wizard-compressed .m-wizard-connector.m-wizard-connector-after-active {
+    margin-top: 21px;
+    flex: 0 0 8px;
+    min-width: 8px;
+    max-width: 8px;
 }
 
 /* Connector line between steps */
@@ -4209,6 +4308,27 @@ textarea.m-wizard-field-error {
     color: #64748b;
     font-weight: 500;
     white-space: nowrap;
+}
+
+/* Skip — text-only link, no button chrome */
+.m-wizard-btn-skip {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #64748b;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s;
+    line-height: 1;
+}
+
+.m-wizard-btn-skip:hover,
+.m-wizard-btn-skip:focus-visible {
+    color: #2196F3;
+    outline: none;
 }
 
 /* ── Responsive ──────────────────────────────────────────── */

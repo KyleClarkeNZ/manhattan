@@ -37,6 +37,13 @@ class WizardStep
     public bool $skippable = false;
 
     /**
+     * When true, the user cannot navigate back to this step once it has been
+     * passed.  Useful for steps that should be treated as already complete at
+     * wizard start (e.g. a step pre-completed before the wizard opens).
+     */
+    public bool $noReturn = false;
+
+    /**
      * List of HTML element IDs (or name attributes) whose values must be
      * non-empty before the user can advance past this step.
      *

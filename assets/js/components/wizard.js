@@ -71,7 +71,7 @@
             showStepCounter: true,
             nextText:        'Next',
             prevText:        'Back',
-            skipText:        'Skip Step',
+            skipText:        'Skip',
             submitText:      'Submit'
         }, rawConfig, options || {});
 
@@ -386,9 +386,16 @@
             var isFirst = (index === 0);
             var isLast  = (index === totalSteps - 1);
 
-            // Back button
+            // Back button — also disabled when the closest step behind us is noReturn.
             if (prevBtn) {
-                prevBtn.disabled = isFirst;
+                var prevBlocked = isFirst;
+                if (!prevBlocked) {
+                    var prevStepCfg = getStepConfig(index - 1);
+                    if (prevStepCfg && prevStepCfg.noReturn) {
+                        prevBlocked = true;
+                    }
+                }
+                prevBtn.disabled = prevBlocked;
                 prevBtn.classList.toggle('m-wizard-btn-hidden', false);
             }
 
@@ -491,7 +498,16 @@
 
         function prev() {
             clearErrors();
-            return goTo(currentIndex - 1, 'prev');
+            // Walk backward, skipping over noReturn steps, to the first
+            // step we are actually allowed to return to.
+            var target = currentIndex - 1;
+            while (target >= 0) {
+                var tCfg = getStepConfig(target);
+                if (!tCfg || !tCfg.noReturn) break;
+                target--;
+            }
+            if (target < 0) return false;
+            return goTo(target, 'prev');
         }
 
         function skip() {
@@ -652,16 +668,21 @@
         if (submitBtn) submitBtn.addEventListener('click', function () { submit(); });
 
         // Wire step indicator clicks for backward navigation.
-        // Clicking a completed or skipped step navigates back to it.
+        // Clicking a completed or skipped step navigates back to it,
+        // unless it is marked noReturn.
         steps.forEach(function (stepEl, i) {
             stepEl.addEventListener('click', function () {
                 if (i < currentIndex) {
+                    var targetCfg = getStepConfig(i);
+                    if (targetCfg && targetCfg.noReturn) return;
                     clearErrors();
                     goTo(i, 'prev');
                 }
             });
             stepEl.addEventListener('keydown', function (e) {
                 if ((e.key === 'Enter' || e.key === ' ') && i < currentIndex) {
+                    var targetCfg2 = getStepConfig(i);
+                    if (targetCfg2 && targetCfg2.noReturn) return;
                     e.preventDefault();
                     clearErrors();
                     goTo(i, 'prev');
@@ -672,6 +693,90 @@
         // =========================================================================
         // Init
         // =========================================================================
+
+        // ── Compressed step strip ──────────────────────────────────────────
+        // When there is not enough horizontal space to show all steps at their
+        // natural size, the step strip switches to a compact "overlap" mode.
+        // Steps before and after the active one bunch up with negative margins;
+        // only the active step remains fully visible with its label shown.
+
+        var stepsEl = el.querySelector('.m-wizard-steps');
+
+        /**
+         * Each step at minimum needs its circle (44px) and a connector (16px)
+         * after it (except the last).  We estimate needed width as:
+         *   steps * 80px  +  (steps - 1) * 16px
+         * where 80px is the min-width of a step item.
+         */
+        var MIN_STEP_WIDTH  = 80;
+        var MIN_CONN_WIDTH  = 16;
+        var STEP_MIN_NEEDED = totalSteps * MIN_STEP_WIDTH + (totalSteps - 1) * MIN_CONN_WIDTH;
+
+        /**
+         * Apply or remove m-wizard-step-before-active / m-wizard-step-after-active
+         * classes to step and connector elements based on the current active index.
+         */
+        function updateCompressedClasses(activeIdx) {
+            steps.forEach(function (stepEl, i) {
+                stepEl.classList.remove('m-wizard-step-before-active', 'm-wizard-step-after-active');
+                if (i < activeIdx) {
+                    stepEl.classList.add('m-wizard-step-before-active');
+                } else if (i > activeIdx) {
+                    stepEl.classList.add('m-wizard-step-after-active');
+                }
+            });
+            // connector[i] sits between step[i] and step[i+1]
+            connectors.forEach(function (connector, i) {
+                connector.classList.remove('m-wizard-connector-before-active', 'm-wizard-connector-after-active');
+                // connector just before the active step (between step[activeIdx-1] and step[activeIdx])
+                if (i === activeIdx - 1) {
+                    connector.classList.add('m-wizard-connector-before-active');
+                // connector just after the active step (between step[activeIdx] and step[activeIdx+1])
+                } else if (i === activeIdx) {
+                    connector.classList.add('m-wizard-connector-after-active');
+                }
+            });
+        }
+
+        function checkCompressed() {
+            if (!stepsEl) return;
+            var available = stepsEl.offsetWidth;
+            if (available > 0 && available < STEP_MIN_NEEDED) {
+                if (!stepsEl.classList.contains('m-wizard-compressed')) {
+                    stepsEl.classList.add('m-wizard-compressed');
+                }
+                updateCompressedClasses(currentIndex);
+            } else {
+                stepsEl.classList.remove('m-wizard-compressed');
+                steps.forEach(function (s) {
+                    s.classList.remove('m-wizard-step-before-active', 'm-wizard-step-after-active');
+                });
+                connectors.forEach(function (c) {
+                    c.classList.remove('m-wizard-connector-before-active', 'm-wizard-connector-after-active');
+                });
+            }
+        }
+
+        if (stepsEl) {
+            if (typeof ResizeObserver !== 'undefined') {
+                var _ro = new ResizeObserver(function () { checkCompressed(); });
+                _ro.observe(stepsEl);
+            } else {
+                // Fallback for older browsers
+                window.addEventListener('resize', function () { checkCompressed(); });
+            }
+        }
+
+        // Keep compressed classes in sync whenever the active step changes.
+        // We patch goTo to also call updateCompressedClasses after navigation.
+        var _origGoTo = goTo;
+        goTo = function (toIndex, direction) {
+            var result = _origGoTo(toIndex, direction);
+            if (result && stepsEl && stepsEl.classList.contains('m-wizard-compressed')) {
+                updateCompressedClasses(currentIndex);
+            }
+            return result;
+        };
 
         // Set initial UI state
         updateNavButtons(0);

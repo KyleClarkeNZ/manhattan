@@ -305,7 +305,8 @@ function orderWizardComplete(response) {
     ['->step($key, $title)', 'string, string', 'Add a new step. All following step-scoped calls apply to this step until the next <code>->step()</code>.'],
     ['->icon($icon)', 'string', 'Font Awesome icon for the step circle, e.g. <code>fa-user</code> or <code>fas fa-user</code>. When omitted the step number is shown.'],
     ['->content($html)', 'string', 'HTML content rendered inside this step\'s panel. Place Manhattan form components here.'],
-    ['->skippable()', 'bool?', 'Mark the step as skippable. A "Skip Step" button appears in the footer. Default: <code>false</code>.'],
+    ['->skippable()', 'bool?', 'Mark the step as skippable. A "Skip" link appears in the footer. Default: <code>false</code>.'],
+    ['->noReturn()', 'bool?', 'Mark the step as non-returnable. Once the wizard advances past this step the user cannot navigate back to it — the Back button and step indicator click are blocked. Default: <code>false</code>.'],
     ['->validateFields($ids)', 'string[]', 'Bespoke validation: array of element IDs or <code>name</code> attributes that must be non-empty before advancing. Used when <em>not</em> using a Form + Validator.'],
     ['->useValidator($formId)', 'string', 'Delegate this step\'s validation to a Manhattan Validator attached to the <code>&lt;form&gt;</code> with the given ID. Takes precedence over <code>->validateFields()</code>. The Form component\'s inline field errors are used; the wizard banner shows the summary message.'],
     ['->validationMessage($msg)', 'string', 'Override the inline error message shown when required fields are empty.'],
@@ -317,7 +318,7 @@ function orderWizardComplete(response) {
     ['->onStepChange($fn)', 'string', 'Name of a JS function called before each step change. Return <code>false</code> to cancel navigation.'],
     ['->nextText($text)', 'string', 'Label for the Next button. Default: <code>Next</code>.'],
     ['->prevText($text)', 'string', 'Label for the Back button. Default: <code>Back</code>.'],
-    ['->skipText($text)', 'string', 'Label for the Skip button. Default: <code>Skip Step</code>.'],
+    ['->skipText($text)', 'string', 'Label for the Skip link. Default: <code>Skip</code>.'],
     ['->submitText($text)', 'string', 'Label for the Submit button. Default: <code>Submit</code>.'],
     ['->showStepCounter()', 'bool?', 'Show/hide the "Step X of Y" counter. Default: <code>true</code>.'],
 ]) ?>
@@ -330,7 +331,7 @@ function orderWizardComplete(response) {
     ['goTo(index)', 'number', 'Jump to a specific step by zero-based index. Does NOT validate. Completed-step circles are also clickable to navigate back.'],
     ['submit()', '', 'Validate the current step then submit the collected payload.'],
     ['reset()', '', 'Return to step 0 and clear all collected data.'],
-    ['getCurrentStep()', '', 'Returns the config object for the active step: <code>{index, key, title, skippable, validateFields}</code>.'],
+    ['getCurrentStep()', '', 'Returns the config object for the active step: <code>{index, key, title, skippable, noReturn, validateFields}</code>.'],
     ['getData()', '', 'Returns the full payload that would be sent on submission, including the <code>_wizard</code> meta-block.'],
     ['setFieldValue(fieldId, value)', 'string, any', 'Programmatically set a field value (supports Manhattan component wrappers).'],
 ]) ?>

@@ -80,7 +80,7 @@ class Wizard extends Component
     /** Text labels for navigation buttons */
     private string $nextText   = 'Next';
     private string $prevText   = 'Back';
-    private string $skipText   = 'Skip Step';
+    private string $skipText   = 'Skip';
     private string $submitText = 'Submit';
 
     /** Whether to render the "Step X of Y" counter in the footer */
@@ -144,7 +144,7 @@ class Wizard extends Component
 
     /**
      * Mark the current step as skippable.
-     * A "Skip Step" button is shown in the footer when the active step is
+     * A "Skip" link is shown in the footer when the active step is
      * skippable; skipped steps are recorded in the submission payload.
      */
     public function skippable(bool $skip = true): self
@@ -154,6 +154,26 @@ class Wizard extends Component
         }
         return $this;
     }
+
+    /**
+     * Mark the current step as non-returnable.
+     *
+     * Once the wizard has moved past this step, the user cannot navigate back
+     * to it — the Back button will skip over it (or be disabled when on the
+     * step immediately after it).  The step indicator will show as done but
+     * will not be clickable.
+     *
+     * Typical use-case: start a wizard at step 2 with step 1 pre-completed,
+     * and prevent the user from going back to re-enter step 1 data.
+     */
+    public function noReturn(bool $enabled = true): self
+    {
+        if ($this->currentStep !== null) {
+            $this->currentStep->noReturn = $enabled;
+        }
+        return $this;
+    }
+
 
     /**
      * Specify field IDs or name-attribute values that MUST be non-empty
@@ -387,6 +407,7 @@ class Wizard extends Component
                 'key'               => $step->key,
                 'title'             => $step->title,
                 'skippable'         => $step->skippable,
+                'noReturn'          => $step->noReturn,
                 'validateFields'    => $step->validateFields,
                 'validationMessage' => $step->validationMessage,
                 'validatorFormId'   => $step->validatorFormId,
@@ -439,7 +460,9 @@ class Wizard extends Component
 
             $html .= '<div class="m-wizard-step'
                    . ($isActive ? ' m-wizard-step-active' : '')
+                   . ($step->noReturn ? ' m-wizard-step-no-return' : '')
                    . '" data-step-index="' . $i . '" data-step-key="' . $stepKey . '"'
+                   . ($step->noReturn ? ' data-no-return="1"' : '')
                    . ' role="tab" aria-selected="' . ($isActive ? 'true' : 'false') . '"'
                    . ' tabindex="' . ($isActive ? '0' : '-1') . '">';
 
@@ -525,11 +548,10 @@ class Wizard extends Component
         // Right: Skip, Next, Submit
         $html .= '<div class="m-wizard-footer-right">';
 
-        $html .= '<button type="button" class="m-button m-wizard-btn-skip"'
+        $html .= '<button type="button" class="m-wizard-btn-skip"'
                . ' id="' . $eid . '-skip" style="display:none"'
                . ' aria-label="Skip this step">'
                . $skipText
-               . ' <i class="fas fa-forward" aria-hidden="true"></i>'
                . '</button>';
 
         $html .= '<button type="button" class="m-button m-button-primary m-wizard-btn-next"'
