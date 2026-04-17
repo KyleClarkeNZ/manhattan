@@ -1741,7 +1741,9 @@ body.theme-dark .m-rte-dropdown-item {
 }
 
 body.m-dark .m-rte-dropdown-item:hover,
-body.theme-dark .m-rte-dropdown-item:hover {
+body.theme-dark .m-rte-dropdown-item:hover,
+body.m-dark .m-rte-dropdown-item.m-rte-dropdown-item-focused,
+body.theme-dark .m-rte-dropdown-item.m-rte-dropdown-item-focused {
     background: #1a2a3c;
 }
 

@@ -562,7 +562,7 @@ HTML;
         ];
 
         $html  = '<div class="m-rte-dropdown" data-rte-dropdown="fontSize">';
-        $html .= '<button type="button" class="m-rte-dropdown-trigger" tabindex="-1"'
+        $html .= '<button type="button" class="m-rte-dropdown-trigger" tabindex="0"'
                . ' aria-haspopup="true" aria-expanded="false"'
                . ' aria-label="Font size" data-m-tooltip="Font size">';
         $html .= '<span class="m-rte-dropdown-label">Size</span>';
@@ -595,23 +595,27 @@ HTML;
             ['value' => 'h4', 'label' => 'Heading 4'],
         ];
 
-        $html  = '<div class="m-rte-dropdown" data-rte-dropdown="heading">';
-        $html .= '<button type="button" class="m-rte-dropdown-trigger" tabindex="-1"'
+        $html  = '<div class="m-rte-dropdown m-rte-dropdown-heading" data-rte-dropdown="heading">';
+        $html .= '<button type="button" class="m-rte-dropdown-trigger" tabindex="0"'
                . ' aria-haspopup="true" aria-expanded="false"'
                . ' aria-label="Text format" data-m-tooltip="Text format">';
         $html .= '<span class="m-rte-dropdown-label">Normal</span>';
         $html .= '<i class="fas fa-chevron-down m-rte-dropdown-caret" aria-hidden="true"></i>';
         $html .= '</button>';
-        $html .= '<div class="m-rte-dropdown-panel" hidden role="listbox" aria-label="Text format">';
+        $html .= '<div class="m-rte-dropdown-panel m-rte-heading-panel" hidden role="listbox" aria-label="Text format">';
         foreach ($headings as $h) {
             $val   = htmlspecialchars($h['value'], ENT_QUOTES, 'UTF-8');
             $label = htmlspecialchars($h['label'], ENT_QUOTES, 'UTF-8');
-            $html .= '<button type="button" class="m-rte-dropdown-item"'
+            // Wrap label in the actual element for a live style preview
+            $preview = ($val === 'p')
+                ? '<span class="m-rte-heading-preview m-rte-heading-preview-p">' . $label . '</span>'
+                : '<' . $val . ' class="m-rte-heading-preview m-rte-heading-preview-' . $val . '">' . $label . '</' . $val . '>';
+            $html .= '<button type="button" class="m-rte-dropdown-item m-rte-heading-item"'
                    . ' data-rte-command="heading"'
                    . ' data-rte-value="' . $val . '"'
                    . ' role="option"'
                    . ' tabindex="-1">'
-                   . $label
+                   . $preview
                    . '</button>';
         }
         $html .= '</div>';

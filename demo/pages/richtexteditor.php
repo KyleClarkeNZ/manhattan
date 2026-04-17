@@ -13,6 +13,13 @@
         (numbered → lettered, bullets → open circles). <kbd>Shift+Tab</kbd> promotes a sub-item back up.
         Outside of a list, <kbd>Tab</kbd> inserts a visual indent (4 non-breaking spaces).
     </p>
+    <p class="m-demo-desc">
+        <strong>Toolbar dropdown keyboard navigation:</strong> Toolbar dropdowns (e.g. Text Format, Font Size)
+        can be opened with <kbd>Enter</kbd> or <kbd>Space</kbd> when the trigger is focused, or
+        <kbd>↓</kbd> opens and jumps straight to the first item. Use <kbd>↑</kbd>/<kbd>↓</kbd> to move
+        between options, <kbd>Enter</kbd>/<kbd>Space</kbd> to select, and <kbd>Esc</kbd> to close without
+        selecting. The <strong>Text Format</strong> dropdown shows a live style preview of each heading level.
+    </p>
 
     <!-- ============================================================ -->
     <h3>Default Toolbar</h3>

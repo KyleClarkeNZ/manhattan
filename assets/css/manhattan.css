@@ -4634,7 +4634,8 @@ textarea.m-wizard-field-error {
     outline: none;
 }
 
-.m-rte-dropdown-item:hover {
+.m-rte-dropdown-item:hover,
+.m-rte-dropdown-item.m-rte-dropdown-item-focused {
     background: var(--m-hover-bg, #f0f4f8);
 }
 
@@ -4642,6 +4643,65 @@ textarea.m-wizard-field-error {
     background: rgba(33, 150, 243, 0.1);
     color: var(--m-primary, #2196F3);
     font-weight: 600;
+}
+
+/* --- Heading style picker --- */
+.m-rte-heading-panel {
+    min-width: 200px;
+    padding: 6px;
+}
+
+.m-rte-heading-item {
+    padding: 4px 10px;
+    height: auto;
+    line-height: 1.2;
+}
+
+/* Reset inherited colours so preview elements show naturally */
+.m-rte-heading-item .m-rte-heading-preview {
+    display: block;
+    color: inherit;
+    font-weight: inherit;
+    line-height: 1.2;
+    pointer-events: none;
+}
+
+.m-rte-heading-item .m-rte-heading-preview-p {
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+
+.m-rte-heading-item .m-rte-heading-preview-h1,
+.m-rte-heading-item h1.m-rte-heading-preview {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.m-rte-heading-item .m-rte-heading-preview-h2,
+.m-rte-heading-item h2.m-rte-heading-preview {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.m-rte-heading-item .m-rte-heading-preview-h3,
+.m-rte-heading-item h3.m-rte-heading-preview {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.m-rte-heading-item .m-rte-heading-preview-h4,
+.m-rte-heading-item h4.m-rte-heading-preview {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Active heading item — inherit the preview colour from the primary accent */
+.m-rte-heading-item.m-rte-dropdown-item-active .m-rte-heading-preview {
+    color: var(--m-primary, #2196F3);
 }
 
 /* --- Text colour picker --- */
