@@ -20,6 +20,13 @@
             return null;
         }
 
+        // Return the cached instance if already initialised.
+        // This prevents duplicate event listeners when m.window() is called
+        // more than once on the same element (e.g. auto-init + manual call).
+        if (windowEl._mWindowInstance) {
+            return windowEl._mWindowInstance;
+        }
+
         // Read configuration from data attributes (set by PHP)
         const isModal = windowEl.getAttribute('data-modal') === 'true';
         const isDraggable = windowEl.getAttribute('data-draggable') === 'true';
@@ -197,7 +204,7 @@
             + '<div class="partial-error__body"><p class="partial-error__message">Failed to load content.</p></div>'
             + '</div>';
 
-        return {
+        const api = {
             open,
             close,
             element: windowEl,
@@ -255,6 +262,10 @@
                     });
             }
         };
+
+        // Cache instance on the element to prevent duplicate initialisation
+        windowEl._mWindowInstance = api;
+        return api;
     };
 
     /**

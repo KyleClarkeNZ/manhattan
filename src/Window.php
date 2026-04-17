@@ -42,6 +42,9 @@ class Window extends Component
     /**
      * Set the window title
      */
+    /** Whether pressing Escape closes the window. True by default. */
+    protected bool $closeOnEsc = true;
+
     public function title(string $title): self
     {
         $this->title = $title;
@@ -93,6 +96,16 @@ class Window extends Component
     public function scrollable(bool $scrollable = true): self
     {
         $this->scrollable = $scrollable;
+        return $this;
+    }
+
+    /**
+     * Control whether pressing the Escape key closes the window.
+     * Defaults to true. Set to false to prevent Esc from closing.
+     */
+    public function closeOnEsc(bool $enabled = true): self
+    {
+        $this->closeOnEsc = $enabled;
         return $this;
     }
 
@@ -230,6 +243,7 @@ class Window extends Component
         // Data attributes for JS initialization
         $dataAttrs = ' data-modal="' . ($this->isModal ? 'true' : 'false') . '"';
         $dataAttrs .= ' data-draggable="' . ($effectiveDraggable ? 'true' : 'false') . '"';
+        $dataAttrs .= ' data-close-on-esc="' . ($this->closeOnEsc ? 'true' : 'false') . '"';
         
         $html = '<div id="' . htmlspecialchars($this->id) . '" class="' . implode(' ', $classes) . '"' . $dataAttrs . '>';
         

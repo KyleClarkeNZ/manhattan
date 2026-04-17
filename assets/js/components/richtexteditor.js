@@ -13,6 +13,9 @@
  *   Ctrl/Cmd + Z  — Undo
  *   Ctrl/Cmd + Shift + Z  — Redo
  *   Ctrl + Y (Windows/Linux)  — Redo
+ *   Tab (in list)  — Indent list item (create sub-list)
+ *   Shift+Tab (in list)  — Outdent list item (promote back up)
+ *   Tab (outside list)  — Insert visual indent (4 non-breaking spaces)
  *
  * Events:
  *   m:rte:change       — fired on the container when content changes
@@ -956,6 +959,38 @@
                 dismissYtSelection();
                 if (ytToRemove.parentNode) {
                     ytToRemove.parentNode.removeChild(ytToRemove);
+                }
+                syncHidden();
+                updateCharCount();
+                utils.trigger(container, 'm:rte:change', { value: getValue() });
+                return;
+            }
+
+            // ---- Tab / Shift+Tab ----
+            // In a list item: indent (Tab) / outdent (Shift+Tab) to create/remove sub-lists.
+            // Outside a list: Tab inserts a visual indent; Shift+Tab does nothing.
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                var sel = window.getSelection();
+                var liNode = null;
+                if (sel && sel.rangeCount > 0) {
+                    var anchorNode = sel.anchorNode;
+                    var cur = anchorNode && anchorNode.nodeType === 3 ? anchorNode.parentNode : anchorNode;
+                    while (cur && cur !== content) {
+                        if (cur.nodeName === 'LI') { liNode = cur; break; }
+                        cur = cur.parentNode;
+                    }
+                }
+                if (liNode) {
+                    // Inside a list item: indent or outdent the list
+                    if (e.shiftKey) {
+                        document.execCommand('outdent', false, null);
+                    } else {
+                        document.execCommand('indent', false, null);
+                    }
+                } else if (!e.shiftKey) {
+                    // Outside a list, Tab only: insert a visual indent (4 non-breaking spaces)
+                    document.execCommand('insertHTML', false, '\u00a0\u00a0\u00a0\u00a0');
                 }
                 syncHidden();
                 updateCharCount();

@@ -4795,6 +4795,16 @@ textarea.m-wizard-field-error {
     clear: both;
 }
 
+/* Base list styles for the editable area */
+.m-rte-content ul,
+.m-rte-content ol {
+    margin: 0 0 0.75em;
+    padding-left: 1.75em;
+}
+.m-rte-content ul { list-style-type: disc; }
+.m-rte-content ol { list-style-type: decimal; }
+.m-rte-content li { margin-bottom: 0.2em; }
+
 .m-rte-content[data-placeholder]:not(:focus) > p:only-child > br:only-child ~ *,
 .m-rte-content[data-placeholder]:not(:focus) > p:only-child:only-child::before {
     /* no-op rule to aid specificity */
@@ -5603,6 +5613,33 @@ textarea.m-wizard-field-error {
 
 .m-richtext ul { list-style-type: disc; }
 .m-richtext ol { list-style-type: decimal; }
+
+/* Nested list styles — applied in both the editor and rendered content */
+.m-richtext ul ul,
+.m-rte-content ul ul { list-style-type: circle; }
+.m-richtext ul ul ul,
+.m-rte-content ul ul ul { list-style-type: square; }
+.m-richtext ol ol,
+.m-rte-content ol ol { list-style-type: lower-alpha; }
+.m-richtext ol ol ol,
+.m-rte-content ol ol ol { list-style-type: lower-roman; }
+.m-richtext ol ul,
+.m-rte-content ol ul { list-style-type: circle; }
+.m-richtext ul ol,
+.m-rte-content ul ol { list-style-type: lower-alpha; }
+
+/* Ensure nested lists have consistent indentation */
+.m-richtext ul ul,
+.m-richtext ul ol,
+.m-richtext ol ul,
+.m-richtext ol ol,
+.m-rte-content ul ul,
+.m-rte-content ul ol,
+.m-rte-content ol ul,
+.m-rte-content ol ol {
+    margin: 0.2em 0 0.2em;
+    padding-left: 1.75em;
+}
 
 .m-richtext li {
     margin-bottom: 0.2em;

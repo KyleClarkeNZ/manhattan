@@ -8,6 +8,11 @@
         Toolbar tools are grouped automatically using Manhattan <strong>ButtonGroup</strong> styling.
         Keyboard shortcuts work on both Windows/Linux (<kbd>Ctrl</kbd>) and macOS (<kbd>Cmd</kbd>).
     </p>
+    <p class="m-demo-desc">
+        <strong>Tab key behaviour:</strong> Pressing <kbd>Tab</kbd> inside a list item creates a sub-list
+        (numbered → lettered, bullets → open circles). <kbd>Shift+Tab</kbd> promotes a sub-item back up.
+        Outside of a list, <kbd>Tab</kbd> inserts a visual indent (4 non-breaking spaces).
+    </p>
 
     <!-- ============================================================ -->
     <h3>Default Toolbar</h3>
@@ -27,6 +32,38 @@
     ->placeholder(\'Start writing…\')
     ->minHeight(180) ?>',
         null
+    ) ?>
+
+    <!-- ============================================================ -->
+    <h3>List Indentation (Tab / Shift+Tab)</h3>
+    <p class="m-demo-desc">
+        Inside a list item, pressing <kbd>Tab</kbd> creates a nested sub-list.
+        <kbd>Shift+Tab</kbd> promotes an item back to the parent level.<br>
+        Sub-list styling is automatic: <strong>ordered lists</strong> use lettered sub-items
+        (a, b, c…), and <strong>unordered lists</strong> use open-circle bullets.
+        Outside a list, <kbd>Tab</kbd> inserts a visual indent.
+    </p>
+
+    <?= $m->richTextEditor('rteListIndent')
+        ->name('content_list_indent')
+        ->toolbar(['bulletList', 'orderedList', 'separator', 'bold', 'italic'])
+        ->value('<ol><li>First item</li><li>Second item</li><li>Third item</li></ol><ul><li>Apples</li><li>Bananas</li><li>Cherries</li></ul>')
+        ->minHeight(160) ?>
+
+    <?= demoCodeTabs(
+        '// Tab / Shift+Tab work automatically — no configuration needed
+<?= $m->richTextEditor(\'listEditor\')
+    ->name(\'content\')
+    ->toolbar([\'bulletList\', \'orderedList\', \'separator\', \'bold\', \'italic\'])
+    ->minHeight(160) ?>',
+        '// Tab key behaviour is built in:
+// – Inside a list item:  Tab   → indent (create sub-list)
+//                        Shift+Tab → outdent (promote back up)
+// – Outside a list:      Tab   → insert 4 non-breaking spaces
+// – Sub-list types cycle automatically via CSS:
+//     ol > ol  → lower-alpha (a, b, c…)
+//     ul > ul  → circle bullets
+//     ol > ol > ol → lower-roman (i, ii, iii…)'
     ) ?>
 
     <!-- ============================================================ -->
@@ -461,13 +498,13 @@ console.log(rte.getValue());
 ]) ?>
 
 <?= apiTable('Toolbar Tools', 'php', [
-    ['\'bold\'', '', 'Bold (Ctrl/Cmd+B).'],
-    ['\'italic\'', '', 'Italic (Ctrl/Cmd+I).'],
-    ['\'underline\'', '', 'Underline (Ctrl/Cmd+U).'],
+    ['\'bold\'', '', 'Bold (<kbd>Ctrl/Cmd+B</kbd>).'],
+    ['\'italic\'', '', 'Italic (<kbd>Ctrl/Cmd+I</kbd>).'],
+    ['\'underline\'', '', 'Underline (<kbd>Ctrl/Cmd+U</kbd>).'],
     ['\'strikethrough\'', '', 'Strikethrough.'],
     ['\'align\'', '', 'Alignment group: left, centre, right, justify.'],
-    ['\'orderedList\'', '', 'Numbered list.'],
-    ['\'bulletList\'', '', 'Bullet list.'],
+    ['\'orderedList\'', '', 'Numbered list. Use <kbd>Tab</kbd>/<kbd>Shift+Tab</kbd> to indent/promote items.'],
+    ['\'bulletList\'', '', 'Bullet list. Use <kbd>Tab</kbd>/<kbd>Shift+Tab</kbd> to indent/promote items.'],
     ['\'heading\'', '', 'Block format dropdown: Normal / H1–H4.'],
     ['\'fontSize\'', '', 'Font size dropdown: Tiny → Huge.'],
     ['\'foreColor\'', '', 'Text colour picker (presets + custom).'],
