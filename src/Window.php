@@ -36,6 +36,7 @@ class Window extends Component
     protected ?string $minWidth = null;
     protected ?string $minHeight = null;
     protected array $buttons = [];
+    protected string $footerHtml = '';
     protected bool $visible = false;
     
     /**
@@ -131,6 +132,17 @@ class Window extends Component
         return $this;
     }
     
+    /**
+     * Set raw HTML content for the window footer area.
+     * Renders inside .m-window-actions (flex row, border-top, padded).
+     * Use this instead of addButton() when you need full control over footer elements.
+     */
+    public function footer(string $html): self
+    {
+        $this->footerHtml = $html;
+        return $this;
+    }
+
     /**
      * Add a button to the window footer
      */
@@ -243,7 +255,7 @@ class Window extends Component
         $html .= $this->content;
         $html .= '</div>';
         
-        // Buttons footer
+        // Buttons footer (addButton API)
         if (!empty($this->buttons)) {
             $html .= '<div class="m-window-actions">';
             foreach ($this->buttons as $btnIdx => $button) {
@@ -261,6 +273,11 @@ class Window extends Component
                 $html .= (string)$btnComponent;
             }
             $html .= '</div>';
+        }
+
+        // Raw footer HTML (footer() API)
+        if ($this->footerHtml !== '') {
+            $html .= '<div class="m-window-actions">' . $this->footerHtml . '</div>';
         }
         
         $html .= '</div>'; // .m-window-wrapper
