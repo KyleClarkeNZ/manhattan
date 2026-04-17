@@ -1090,7 +1090,9 @@
                 colorBtn.addEventListener('mousedown', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    colorPanel.hidden = !colorPanel.hidden;
+                    var wasColorOpen = !colorPanel.hidden;
+                    closeAllDropdowns(); // closes regular dropdowns AND color panel
+                    if (!wasColorOpen) { colorPanel.hidden = false; }
                 });
 
                 // After applying a preset, update the swatch indicator and close
@@ -1185,25 +1187,29 @@
                     }
                     if (triggerEl) { triggerEl.setAttribute('aria-expanded', 'false'); }
                 });
+                // Also close the colour picker panel if present
+                if (colorPanel) { colorPanel.hidden = true; }
                 activeDropdown = null;
             }
 
-            // Keyboard navigation for open dropdowns
-            toolbar.addEventListener('keydown', function (e) {
-                // If a dropdown trigger is focused and no dropdown is open yet,
-                // ArrowDown opens it (Enter/Space fire click natively on <button>)
+            // Keyboard navigation for open dropdowns.
+            // Attached to document (not toolbar) because mousedown on toolbar
+            // calls e.preventDefault(), keeping focus in the content area.
+            // Key events therefore bubble through content → document, not toolbar.
+            document.addEventListener('keydown', function (e) {
+                if (!toolbar) { return; }
+
+                // ArrowDown on a focused trigger that belongs to THIS toolbar — open dropdown
                 if (!activeDropdown && e.key === 'ArrowDown') {
-                    var focusedTrigger = document.activeElement && document.activeElement.classList.contains('m-rte-dropdown-trigger')
-                        ? document.activeElement : null;
-                    if (focusedTrigger && toolbar.contains(focusedTrigger)) {
+                    var focused = document.activeElement;
+                    if (focused && focused.classList.contains('m-rte-dropdown-trigger') && toolbar.contains(focused)) {
                         e.preventDefault();
-                        var dd = focusedTrigger.closest('.m-rte-dropdown');
+                        var dd = focused.closest('.m-rte-dropdown');
                         if (dd) {
                             closeAllDropdowns();
                             openDropdown(dd);
-                            // Focus first item
-                            var items = getDropdownItems(dd);
-                            if (items.length) { setFocusedItem(dd, 0); }
+                            var firstItems = getDropdownItems(dd);
+                            if (firstItems.length) { setFocusedItem(dd, 0); }
                         }
                         return;
                     }
@@ -1229,7 +1235,7 @@
                         if (iCmd) { execCmd(iCmd, iVal); }
                         closeAllDropdowns();
                     }
-                } else if (e.key === 'Escape' || e.key === 'Tab') {
+                } else if (e.key === 'Escape') {
                     e.preventDefault();
                     closeAllDropdowns();
                     content.focus();
