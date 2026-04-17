@@ -122,9 +122,10 @@
             });
         }
 
-        // Escape key to close
+        // Escape key to close (can be disabled via data-close-on-esc="false")
+        var closeOnEsc = windowEl.getAttribute('data-close-on-esc') !== 'false';
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && windowEl.classList.contains('m-visible')) {
+            if (closeOnEsc && e.key === 'Escape' && windowEl.classList.contains('m-visible')) {
                 close();
             }
         });

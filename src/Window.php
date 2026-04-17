@@ -45,6 +45,18 @@ class Window extends Component
     /** Whether pressing Escape closes the window. True by default. */
     protected bool $closeOnEsc = true;
 
+    /**
+     * Allow or prevent Escape key from closing the window.
+     * Default: true (Escape closes the window).
+     * Pass false to disable, e.g. for windows that contain their own
+     * components (like an RTE) that use Escape internally.
+     */
+    public function closeOnEsc(bool $closeOnEsc = true): self
+    {
+        $this->closeOnEsc = $closeOnEsc;
+        return $this;
+    }
+
     public function title(string $title): self
     {
         $this->title = $title;
