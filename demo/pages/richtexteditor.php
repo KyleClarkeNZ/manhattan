@@ -484,6 +484,42 @@ console.log(rte.getValue());
 // <div class="m-richtext"><?= $savedHtml ?></div>'
     ) ?>
 
+    <h3>Scrollable Input Area</h3>
+    <p class="m-demo-desc">
+        By default the editor auto-extends its height to fit all content, which can push the rest of the
+        page down. Calling <code>->scrollable()</code> (optionally combined with <code>->maxHeight()</code>)
+        constrains the editing area and scrolls the content <em>within</em> it using Apple-style thin overlay
+        scrollbars — the same style used by the image viewer thumbstrip. The editor still auto-grows up to the
+        specified max-height and then scrolls; the toolbar and footer stay visible at all times.
+    </p>
+    <?= $m->richTextEditor('rteScrollable')
+        ->name('scroll_content')
+        ->minHeight(150)
+        ->maxHeight(280)
+        ->scrollable()
+        ->value('<p>This editor is capped at 280 px and scrolls internally once the content grows past that limit. Try typing several paragraphs to see the thin overlay scrollbar appear on hover.</p><p>The toolbar and character counter (if enabled) remain fixed outside the scrollable region, so they are always accessible.</p>') ?>
+
+    <?= demoCodeTabs(
+        '// Constrain the editor to 280 px and enable Apple-style thin scrollbar
+<?= $m->richTextEditor(\'body\')
+    ->name(\'body\')
+    ->minHeight(150)
+    ->maxHeight(280)
+    ->scrollable() ?>
+
+// scrollable() can also be used without maxHeight() — the thin scrollbar
+// is applied regardless and will appear whenever the parent clips the editor:
+<?= $m->richTextEditor(\'body\')
+    ->name(\'body\')
+    ->scrollable() ?>',
+        '// No extra JS is required — scrollable() is purely a CSS enhancement.
+// The scrollbar fades in on hover and disappears when idle.
+
+// You can still read/set the value normally:
+var rte = m.richTextEditor(\'body\');
+console.log(rte.getValue());'
+    ) ?>
+
 </div>
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
@@ -497,7 +533,8 @@ console.log(rte.getValue());
     ['->customColor($show)', 'bool', 'Show the custom colour input in the colour picker. Default: <code>true</code>.'],
     ['->toolbar($tools)', 'string[]', 'Define which tools appear in the toolbar (see available tools below). Default: full toolbar.'],
     ['->minHeight($px)', 'int', 'Minimum height of the editing area in pixels. Default: <code>200</code>.'],
-    ['->maxHeight($px)', 'int', 'Maximum height (enables scroll). Default: none.'],
+    ['->maxHeight($px)', 'int', 'Maximum height of the editing area in pixels. When exceeded, the body scrolls. Default: none.'],
+    ['->scrollable()', '', 'Enable Apple-style thin overlay scrollbars on the editing area. Best combined with <code>->maxHeight()</code> to constrain the editor height; the scrollbar fades in on hover and disappears when idle. Default: <code>false</code>.'],
     ['->readOnly()', '', 'Disable editing and dim the toolbar. Default: <code>false</code>.'],
     ['->uploader($url, $stem)', 'string, string?', 'Configure the image upload endpoint. The POST endpoint must return <code>{ "url": "…" }</code>. Optional <code>$stem</code> is sent as a <code>stem</code> field to suggest a filename prefix.'],
     ['->allowPasteImages()', '', 'Allow pasted raw images (screenshots etc.) to be auto-uploaded via the uploader. Requires <code>->uploader()</code>. Default: <code>false</code>.'],

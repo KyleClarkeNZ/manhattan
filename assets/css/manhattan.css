@@ -6118,35 +6118,51 @@ textarea.m-wizard-field-error {
 }
 
 /* ── Apple-style thin overlay scrollbars ─────────────────────────────────── */
+/*    Utility class .m-thin-scroll can be applied to any scrollable element.   */
+/*    Also used by the image viewer thumbstrip and the RTE scrollable body.     */
 
-.m-imageviewer-thumbstrip {
+.m-thin-scroll,
+.m-imageviewer-thumbstrip,
+.m-rte-body.m-rte-scrollable {
     /* Firefox */
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0) transparent;
     transition: scrollbar-color 0.2s;
 }
 
-.m-imageviewer-thumbstrip:hover {
+.m-thin-scroll:hover,
+.m-imageviewer-thumbstrip:hover,
+.m-rte-body.m-rte-scrollable:hover {
     scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
 }
 
 /* WebKit / Blink */
-.m-imageviewer-thumbstrip::-webkit-scrollbar {
+.m-thin-scroll::-webkit-scrollbar,
+.m-imageviewer-thumbstrip::-webkit-scrollbar,
+.m-rte-body.m-rte-scrollable::-webkit-scrollbar {
     width: 4px;
     height: 4px;
 }
-.m-imageviewer-thumbstrip::-webkit-scrollbar-track {
+.m-thin-scroll::-webkit-scrollbar-track,
+.m-imageviewer-thumbstrip::-webkit-scrollbar-track,
+.m-rte-body.m-rte-scrollable::-webkit-scrollbar-track {
     background: transparent;
 }
-.m-imageviewer-thumbstrip::-webkit-scrollbar-thumb {
+.m-thin-scroll::-webkit-scrollbar-thumb,
+.m-imageviewer-thumbstrip::-webkit-scrollbar-thumb,
+.m-rte-body.m-rte-scrollable::-webkit-scrollbar-thumb {
     background: transparent;
     border-radius: 2px;
     transition: background 0.2s;
 }
-.m-imageviewer-thumbstrip:hover::-webkit-scrollbar-thumb {
+.m-thin-scroll:hover::-webkit-scrollbar-thumb,
+.m-imageviewer-thumbstrip:hover::-webkit-scrollbar-thumb,
+.m-rte-body.m-rte-scrollable:hover::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.22);
 }
-.m-imageviewer-thumbstrip::-webkit-scrollbar-thumb:hover {
+.m-thin-scroll::-webkit-scrollbar-thumb:hover,
+.m-imageviewer-thumbstrip::-webkit-scrollbar-thumb:hover,
+.m-rte-body.m-rte-scrollable::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.42);
 }
 

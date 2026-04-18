@@ -52,6 +52,7 @@ class RichTextEditor extends Component
     private ?string $uploaderUrl = null;
     private ?string $uploaderStem = null;
     private bool $allowImageResize = false;
+    private bool $scrollable = false;
 
     /** @var string[] */
     private array $toolbar = [
@@ -114,6 +115,9 @@ class RichTextEditor extends Component
         }
         if (isset($options['allowImageResize'])) {
             $this->allowImageResize = (bool)$options['allowImageResize'];
+        }
+        if (isset($options['scrollable'])) {
+            $this->scrollable = (bool)$options['scrollable'];
         }
     }
 
@@ -253,6 +257,26 @@ class RichTextEditor extends Component
     }
 
     /**
+     * Constrain the editing area to its set height and scroll the content within
+     * it using Apple-style thin overlay scrollbars, rather than letting the editor
+     * grow to push the rest of the page down.
+     *
+     * When used without maxHeight() the editor still auto-grows freely, but the
+     * thin scrollbar is applied so it renders consistently should the parent ever
+     * clip the height.  For the most common use case — a fixed-height scrollable
+     * editor — combine with maxHeight():
+     *
+     *   ->maxHeight(300)->scrollable()
+     *
+     * Default: false (auto-extends, no scrollbar).
+     */
+    public function scrollable(bool $scrollable = true): self
+    {
+        $this->scrollable = $scrollable;
+        return $this;
+    }
+
+    /**
      * Minimum number of characters required (enables char counter automatically).
      */
     public function minChars(int $n): self
@@ -356,10 +380,14 @@ class RichTextEditor extends Component
             $dataAttrs .= ' data-allow-image-resize="true"';
         }
 
-        // Body style
+        // Body style + class
         $bodyStyle = 'min-height:' . $this->minHeight . 'px;';
         if ($this->maxHeight !== null) {
-            $bodyStyle .= 'max-height:' . $this->maxHeight . 'px;overflow-y:auto;';
+            $bodyStyle .= 'max-height:' . $this->maxHeight . 'px;';
+        }
+        $bodyClass = 'm-rte-body';
+        if ($this->scrollable) {
+            $bodyClass .= ' m-rte-scrollable';
         }
 
         // Placeholder on the content div
@@ -413,7 +441,7 @@ class RichTextEditor extends Component
         return <<<HTML
 <div id="{$id}" class="{$classAttr}" data-component="richtexteditor"{$dataAttrs}{$extraAttrs}>
     <div class="m-rte-toolbar">{$toolbarHtml}</div>
-    <div class="m-rte-body" style="{$bodyStyle}">
+    <div class="{$bodyClass}" style="{$bodyStyle}">
         <div class="m-rte-content m-richtext" contenteditable="{$editableAttr}"{$placeholderAttr}>{$contentHtml}</div>
     </div>
     {$charCountHtml}{$hiddenField}{$linkDialogHtml}{$imageDialogHtml}{$youtubeDialogHtml}

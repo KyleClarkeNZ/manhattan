@@ -2230,11 +2230,48 @@ body.theme-dark .m-imageviewer-thumbstrip {
     scrollbar-color: rgba(255, 255, 255, 0) transparent;
 }
 
+/* Thin-scroll utility + RTE scrollable body — dark mode */
+body.m-dark .m-thin-scroll,
+body.theme-dark .m-thin-scroll,
+body.m-dark .m-rte-body.m-rte-scrollable,
+body.theme-dark .m-rte-body.m-rte-scrollable {
+    scrollbar-color: rgba(255, 255, 255, 0) transparent;
+}
+
+body.m-dark .m-thin-scroll:hover,
+body.theme-dark .m-thin-scroll:hover,
+body.m-dark .m-rte-body.m-rte-scrollable:hover,
+body.theme-dark .m-rte-body.m-rte-scrollable:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+body.m-dark .m-thin-scroll::-webkit-scrollbar-thumb,
+body.theme-dark .m-thin-scroll::-webkit-scrollbar-thumb,
+body.m-dark .m-rte-body.m-rte-scrollable::-webkit-scrollbar-thumb,
+body.theme-dark .m-rte-body.m-rte-scrollable::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+body.m-dark .m-thin-scroll:hover::-webkit-scrollbar-thumb,
+body.theme-dark .m-thin-scroll:hover::-webkit-scrollbar-thumb,
+body.m-dark .m-rte-body.m-rte-scrollable:hover::-webkit-scrollbar-thumb,
+body.theme-dark .m-rte-body.m-rte-scrollable:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+body.m-dark .m-thin-scroll::-webkit-scrollbar-thumb:hover,
+body.theme-dark .m-thin-scroll::-webkit-scrollbar-thumb:hover,
+body.m-dark .m-rte-body.m-rte-scrollable::-webkit-scrollbar-thumb:hover,
+body.theme-dark .m-rte-body.m-rte-scrollable::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
 body.m-dark .m-imageviewer-thumbstrip:hover,
 body.theme-dark .m-imageviewer-thumbstrip:hover {
     scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
+/* Merge thumbstrip webkit rules with the shared thin-scroll rules above */
 body.m-dark .m-imageviewer-thumbstrip::-webkit-scrollbar-thumb,
 body.theme-dark .m-imageviewer-thumbstrip::-webkit-scrollbar-thumb {
     background: transparent;
