@@ -60,10 +60,11 @@
         var placeholder      = content.getAttribute('data-placeholder') || '';
         var minChars         = parseInt(container.getAttribute('data-min-chars'), 10) || 0;
         var maxChars         = parseInt(container.getAttribute('data-max-chars'), 10) || 0;
-        var uploaderUrl      = container.getAttribute('data-uploader-url') || '';
-        var uploaderStem     = container.getAttribute('data-uploader-stem') || '';
-        var allowPasteImages = container.getAttribute('data-allow-paste-images') === 'true';
-        var allowImageResize = container.getAttribute('data-allow-image-resize') === 'true';
+        var uploaderUrl            = container.getAttribute('data-uploader-url') || '';
+        var uploaderStem           = container.getAttribute('data-uploader-stem') || '';
+        var allowPasteImages       = container.getAttribute('data-allow-paste-images') === 'true';
+        var refetchExternalImages  = container.getAttribute('data-refetch-external-images') === 'true';
+        var allowImageResize       = container.getAttribute('data-allow-image-resize') === 'true';
 
         // --- Paragraph separator ---
         try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) { /* ignore */ }
@@ -1881,6 +1882,10 @@
                 if (allowPasteImages && uploaderUrl) {
                     uploadDataImages();
                 }
+                // Re-upload any external https:// images via the server-side proxy
+                if (refetchExternalImages && allowPasteImages && uploaderUrl) {
+                    uploadProxiedImages();
+                }
             } else if (text) {
                 // Convert plain text — each line becomes a <p>
                 var lines     = text.split(/\r?\n/);
@@ -1939,11 +1944,20 @@
             tmp.querySelectorAll('img').forEach(function (el) {
                 var src = el.getAttribute('src') || '';
                 if (/^https?:\/\//i.test(src)) {
-                    // Keep external image — preserve only src and alt
-                    var keepAlt = el.getAttribute('alt') || '';
-                    while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
-                    el.setAttribute('src', src);
-                    if (keepAlt) { el.setAttribute('alt', keepAlt); }
+                    if (refetchExternalImages && allowPasteImages && uploaderUrl) {
+                        // Re-upload external image through the server-side proxy endpoint
+                        var keepAlt = el.getAttribute('alt') || '';
+                        while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
+                        el.setAttribute('src', '');
+                        el.setAttribute('data-rte-proxy-url', src);
+                        if (keepAlt) { el.setAttribute('alt', keepAlt); }
+                    } else {
+                        // Keep external image — preserve only src and alt
+                        var keepAlt = el.getAttribute('alt') || '';
+                        while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
+                        el.setAttribute('src', src);
+                        if (keepAlt) { el.setAttribute('alt', keepAlt); }
+                    }
                 } else if (/^data:image\//i.test(src) && allowPasteImages && uploaderUrl) {
                     // Embedded base64 image — mark for async upload after insert
                     while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
@@ -2017,6 +2031,94 @@
                     }, null);
                 }(img));
             });
+        }
+
+        /**
+         * After inserting pasted HTML, find any img[data-rte-proxy-url] elements
+         * (external https:// images that should be re-hosted) and upload each one
+         * via a server-side proxy fetch to the uploader endpoint.
+         */
+        function uploadProxiedImages() {
+            var imgs = content.querySelectorAll('img[data-rte-proxy-url]');
+            imgs.forEach(function (img) {
+                var externalUrl = img.getAttribute('data-rte-proxy-url') || '';
+                if (!externalUrl) {
+                    img.removeAttribute('data-rte-proxy-url');
+                    return;
+                }
+
+                showUploadOverlay(img);
+
+                (function (targetImg) {
+                    fetchExternalImage(externalUrl, function (err, url) {
+                        if (targetImg.parentNode) {
+                            if (err) {
+                                targetImg.parentNode.removeChild(targetImg);
+                            } else {
+                                targetImg.src = url;
+                                targetImg.removeAttribute('data-rte-proxy-url');
+                            }
+                        }
+                        hideUploadOverlay();
+                        if (err) {
+                            showRteError('Image re-upload failed: ' + err);
+                        } else {
+                            syncHidden();
+                            updateCharCount();
+                            utils.trigger(container, 'm:rte:change', { value: getValue() });
+                        }
+                    });
+                }(img));
+            });
+        }
+
+        /**
+         * Ask the server to proxy-download an external image URL and return a local URL.
+         * POSTs to uploaderUrl with `fetch_url` and `stem` fields (multipart).
+         */
+        function fetchExternalImage(externalUrl, callback) {
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            var csrf     = csrfMeta ? (csrfMeta.getAttribute('content') || '') : '';
+
+            var formData = new FormData();
+            formData.append('fetch_url', externalUrl);
+            if (uploaderStem) {
+                formData.append('stem', uploaderStem);
+            }
+
+            utils.trigger(container, 'm:rte:upload:start', {});
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', uploaderUrl, true);
+            if (csrf) { xhr.setRequestHeader('X-CSRF-Token', csrf); }
+
+            xhr.onload = function () {
+                utils.trigger(container, 'm:rte:upload:end', {});
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        var result = JSON.parse(xhr.responseText);
+                        if (result && result.url) {
+                            callback(null, result.url);
+                        } else {
+                            callback(result.message || 'No URL returned.');
+                        }
+                    } catch (ex) {
+                        callback('Invalid server response.');
+                    }
+                } else {
+                    var msg = 'Server error ' + xhr.status;
+                    try {
+                        var errData = JSON.parse(xhr.responseText);
+                        if (errData && errData.message) { msg = errData.message; }
+                    } catch (ex) { /* ignore */ }
+                    callback(msg);
+                }
+            };
+            xhr.onerror = function () {
+                utils.trigger(container, 'm:rte:upload:end', {});
+                callback('Network error.');
+            };
+            xhr.send(formData);
         }
 
         /** Convert a base64 data URL to a Blob suitable for upload. */

@@ -48,6 +48,7 @@ class RichTextEditor extends Component
     private ?int $maxChars = null;
     private bool $customColor = true;
     private bool $allowPasteImages = false;
+    private bool $refetchExternalImages = false;
     private ?string $uploaderUrl = null;
     private ?string $uploaderStem = null;
     private bool $allowImageResize = false;
@@ -223,6 +224,22 @@ class RichTextEditor extends Component
     }
 
     /**
+     * When allowPasteImages() is enabled, also re-upload any external http(s)://
+     * images found in pasted HTML through the configured uploader endpoint, so that
+     * all images end up hosted locally rather than pointing to 3rd-party origins.
+     *
+     * The uploader endpoint must additionally accept a `fetch_url` text field (instead
+     * of an `image` file) and perform a server-side proxy download.
+     * Requires uploader() and allowPasteImages() to be set.
+     * Default: false.
+     */
+    public function refetchExternalImages(bool $allow = true): self
+    {
+        $this->refetchExternalImages = $allow;
+        return $this;
+    }
+
+    /**
      * Enable interactive resize handles on images within the editor.
      * When enabled, clicking an image shows draggable handles to resize it.
      * The image's original natural dimensions are stored as data attributes
@@ -331,6 +348,9 @@ class RichTextEditor extends Component
         }
         if ($this->allowPasteImages) {
             $dataAttrs .= ' data-allow-paste-images="true"';
+        }
+        if ($this->refetchExternalImages) {
+            $dataAttrs .= ' data-refetch-external-images="true"';
         }
         if ($this->allowImageResize) {
             $dataAttrs .= ' data-allow-image-resize="true"';
