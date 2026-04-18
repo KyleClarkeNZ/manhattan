@@ -1903,6 +1903,25 @@
             var tmp = document.createElement('div');
             tmp.innerHTML = html;
 
+            // Strip all HTML comment nodes — this removes Microsoft Word / Office
+            // conditional comments (<!--[if gte mso 9]>...<![endif]-->) and clipboard
+            // fragment markers (<!--StartFragment--> / <!--EndFragment-->) which survive
+            // innerHTML assignment as comment nodes and are invisible to querySelectorAll.
+            // If left in, they can contain stray </div> strings that break page layout
+            // when the content is later rendered server-side.
+            (function removeComments(node) {
+                var i = node.childNodes.length - 1;
+                while (i >= 0) {
+                    var child = node.childNodes[i];
+                    if (child.nodeType === 8) { // Node.COMMENT_NODE
+                        node.removeChild(child);
+                    } else if (child.childNodes && child.childNodes.length > 0) {
+                        removeComments(child);
+                    }
+                    i--;
+                }
+            })(tmp);
+
             // Remove unsafe or noisy elements
             tmp.querySelectorAll(
                 'script, style, meta, link, head, ' +

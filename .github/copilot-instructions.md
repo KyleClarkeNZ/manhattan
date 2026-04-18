@@ -248,6 +248,39 @@ The `auto-tag.yml` GitHub Actions workflow **automatically creates and pushes a 
 
 ## Common Tasks
 
+### RTE Paste Sanitization — Known Pitfall
+**HTML comment nodes survive `tmp.innerHTML` assignment and are invisible to `querySelectorAll`.**
+
+When `cleanPastedHtml` sets `tmp.innerHTML = html`, the browser parses the clipboard HTML string into a DOM. Microsoft Word / Office clipboard HTML includes MSO conditional comments:
+```html
+<!--[if gte mso 9]><xml><w:WordDocument>...</w:WordDocument></xml><![endif]-->
+<!--StartFragment-->...<!--EndFragment-->
+```
+These become `Node.COMMENT_NODE` (nodeType 8) children in the DOM. `querySelectorAll()` only traverses element nodes — comment nodes are invisible to it and survive to be serialized back via `tmp.innerHTML`. When the resulting HTML is later stored and rendered, these comment blocks may contain literal `</div>` strings that browsers mis-parse as real closing tags, breaking surrounding layout elements.
+
+**The fix in `cleanPastedHtml`** (already applied): Walk the full child node tree and remove all comment nodes before any other processing:
+```javascript
+(function removeComments(node) {
+    var i = node.childNodes.length - 1;
+    while (i >= 0) {
+        var child = node.childNodes[i];
+        if (child.nodeType === 8) { // Node.COMMENT_NODE
+            node.removeChild(child);
+        } else if (child.childNodes && child.childNodes.length > 0) {
+            removeComments(child);
+        }
+        i--;
+    }
+})(tmp);
+```
+
+**Server-side defence-in-depth** (apply in any app using the RTE): Any PHP sanitizer that processes RTE output should also strip comments before DOMDocument or `strip_tags` processing, because `strip_tags()` does NOT strip HTML comments:
+```php
+$html = preg_replace('/<!--\[if[^\]]*\]>.*?<!\[endif\]-->/is', '', $html); // MSO conditional blocks
+$html = preg_replace('/<!--(?:Start|End)Fragment-->/i', '', $html);          // clipboard markers
+$html = preg_replace('/<!--.*?-->/s', '', $html);                            // all remaining comments
+```
+
 ### Adding a New Component
 1. Create PHP class in `src/ComponentName.php` extending `Component`
 2. Create JS module in `assets/js/components/componentname.js`

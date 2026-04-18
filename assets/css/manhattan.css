@@ -3,6 +3,16 @@
  * Modern, fully custom component styling
  */
 
+/* === Base: Icon reset ===
+ * Font Awesome icons should never be selectable as text or show a text cursor.
+ * pointer-events:none passes clicks through to the parent button/link. */
+.fas, .far, .fab, .fal, .fad, .fa {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: inherit;
+    pointer-events: none;
+}
+
 /* === Badge Component === */
 .m-badge {
     display: inline-flex;
