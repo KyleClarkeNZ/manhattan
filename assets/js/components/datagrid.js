@@ -1048,11 +1048,12 @@
                 b.addEventListener('click', function () {
                     self._page = page;
                     if (self.config.remote) {
-                        self.refresh();
+                        self.refresh().then(function () { self._scrollToTop(); });
                     } else {
                         self._processLocal();
                         self._renderBody();
                         self._renderPager();
+                        self._scrollToTop();
                     }
                 });
             }
@@ -1121,11 +1122,12 @@
             cfg.pageable.pageSize = parseInt(this.value, 10);
             self._page = 1;
             if (self.config.remote) {
-                self.refresh();
+                self.refresh().then(function () { self._scrollToTop(); });
             } else {
                 self._processLocal();
                 self._renderBody();
                 self._renderPager();
+                self._scrollToTop();
             }
         });
         sizeWrap.appendChild(sizeSelect);
@@ -1140,6 +1142,13 @@
     };
 
     // ─── Callbacks ────────────────────────────────────────────────────────────
+
+    /** Scroll the grid element into view if scrollOnPage is enabled. */
+    DataGrid.prototype._scrollToTop = function () {
+        if (this.config.scrollOnPage !== false) {
+            this.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
 
     DataGrid.prototype._fireCallback = function (name, args) {
         var cbs = this.config.callbacks || {};
@@ -1220,7 +1229,13 @@
      */
     DataGrid.prototype.goToPage = function (page) {
         this._page = Math.max(1, page);
-        this.refresh();
+        var self = this;
+        if (this.config.remote) {
+            this.refresh().then(function () { self._scrollToTop(); });
+        } else {
+            this.refresh();
+            this._scrollToTop();
+        }
     };
 
     /**

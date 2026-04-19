@@ -273,6 +273,7 @@ $demoNav = [
     'progressbar' => ['ProgressBar', 'fa-tasks',              'Data & Visualisation'],
     'rating'      => ['Rating',      'fa-star',               'Data & Visualisation'],
     'pagination'  => ['Pagination',  'fa-ellipsis-h',         'Data & Visualisation'],
+    'filterbar'   => ['FilterBar',   'fa-filter',             'Data & Visualisation'],
     // Overlays & Feedback
     'window'      => ['Window',      'fa-window-maximize',    'Overlays & Feedback'],
     'dialog'      => ['Dialog',      'fa-comment-dots',       'Overlays & Feedback'],

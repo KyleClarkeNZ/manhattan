@@ -549,6 +549,25 @@ class HtmlHelper
     }
 
     /**
+     * Create a FilterBar component.
+     *
+     * A reusable filter toolbar combining search, sort, and group/view controls.
+     * Fires `m:filterbar:change` whenever any control changes. When linked to a
+     * Pagination instance via ->pager(), the pager resets to page 1 automatically.
+     *
+     * The JS instance exposes `groupSlice()` for group-aware pagination that
+     * never splits a group across page boundaries.
+     *
+     * @param string $id      Unique identifier for the filter bar
+     * @param array  $options Additional configuration options
+     * @return FilterBar
+     */
+    public function filterBar(string $id, array $options = []): FilterBar
+    {
+        return new FilterBar($id, $options);
+    }
+
+    /**
      * Create an IconPicker component.
      *
      * Renders a dropdown-style picker with a configurable grid of Font Awesome icons.
@@ -651,6 +670,7 @@ class HtmlHelper
 <script src="{$js}/components/richtexteditor.js" defer></script>
 <script src="{$js}/components/popover.js" defer></script>
 <script src="{$js}/components/pagination.js" defer></script>
+<script src="{$js}/components/filterbar.js" defer></script>
 <script src="{$js}/components/iconpicker.js" defer></script>
 <script src="{$js}/components/splitpane.js" defer></script>
 <script src="{$js}/components/lightbox.js" defer></script>

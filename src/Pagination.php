@@ -54,6 +54,7 @@ final class Pagination extends Component
     private string $size = '';        // '' | 'compact' | 'large'
     private bool $autoLoad = false;
     private string $labelPosition = ''; // '' | 'left' | 'right' | 'above' | 'below' | 'none'
+    private bool $scrollOnPage = true;
 
     /**
      * Total number of items across all pages.
@@ -185,6 +186,16 @@ final class Pagination extends Component
     }
 
     /**
+     * Scroll the pagination element into view when the page changes.
+     * Default: true.  Pass false to disable.
+     */
+    public function scrollOnPage(bool $scroll = true): self
+    {
+        $this->scrollOnPage = $scroll;
+        return $this;
+    }
+
+    /**
      * In ajax mode: automatically fetch page 1 on JS init.
      * Useful when the target container starts empty and content is loaded on demand.
      * Default: false.
@@ -254,7 +265,8 @@ final class Pagination extends Component
         $data .= ' data-total-pages="'  . $totalPages . '"';
         $data .= ' data-max-buttons="'  . $this->maxButtons . '"';
         $data .= ' data-show-first-last="' . ($this->showFirstLast ? 'true' : 'false') . '"';
-        $data .= ' data-auto-load="'    . ($this->autoLoad ? 'true' : 'false') . '"';
+        $data .= ' data-auto-load="'       . ($this->autoLoad     ? 'true' : 'false') . '"';
+        $data .= ' data-scroll-on-page="'  . ($this->scrollOnPage ? 'true' : 'false') . '"';
 
         if ($this->target !== null) {
             $data .= ' data-target="' . htmlspecialchars($this->target, ENT_QUOTES, 'UTF-8') . '"';

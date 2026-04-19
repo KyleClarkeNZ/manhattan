@@ -1673,6 +1673,26 @@ body.theme-dark .m-button-group-sep {
     background: #3a3a5a;
 }
 
+/* === FilterBar Component (dark) === */
+
+body.m-dark .m-filter-bar-search,
+body.theme-dark .m-filter-bar-search {
+    background: #1c2840;
+    border-color: #2a3448;
+    color: #d0d9e8;
+}
+
+body.m-dark .m-filter-bar-search:focus,
+body.theme-dark .m-filter-bar-search:focus {
+    border-color: #42a5f5;
+    box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.15);
+}
+
+body.m-dark .m-filter-bar-search-icon,
+body.theme-dark .m-filter-bar-search-icon {
+    color: #5a6a85;
+}
+
 /* === RichTextEditor Component (dark) === */
 body.m-dark .m-richtexteditor,
 body.theme-dark .m-richtexteditor {

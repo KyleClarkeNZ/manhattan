@@ -202,6 +202,12 @@
                 if (el.id) m.richTextEditor(el.id);
             });
         }
+
+        if (typeof m.filterBar === 'function') {
+            document.querySelectorAll('.m-filter-bar').forEach(el => {
+                if (el.id) m.filterBar(el.id);
+            });
+        }
     });
 
 })(window);

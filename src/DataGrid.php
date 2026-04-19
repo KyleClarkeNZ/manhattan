@@ -348,7 +348,12 @@ final class DataGrid extends Component
         $this->onRowExpand = $callback;
         return $this;
     }
-
+    /** When paginating, scroll the grid into view on every page change. Default: true. */
+    public function scrollOnPage(bool $scroll = true): self
+    {
+        $this->scrollOnPage = $scroll;
+        return $this;
+    }
     // ─────────────────────────────────────────────────────────────────────────
     // Rendering
     // ─────────────────────────────────────────────────────────────────────────
@@ -427,6 +432,7 @@ HTML;
                 'title'   => $this->emptyTitle,
                 'message' => $this->emptyMessage,
             ],
+            'scrollOnPage' => $this->scrollOnPage,
             'callbacks'   => array_filter([
                 'onDataBound' => $this->onDataBound,
                 'onRowClick'  => $this->onRowClick,

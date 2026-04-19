@@ -4517,6 +4517,63 @@ textarea.m-wizard-field-error {
     flex-wrap: wrap;
 }
 
+/* === FilterBar Component === */
+
+.m-filter-bar {
+    margin-bottom: 1rem;
+}
+
+/* Search input with inset icon */
+.m-filter-bar-search-wrap {
+    position: relative;
+    flex: 1 1 180px;
+    min-width: 0;
+    max-width: 320px;
+}
+
+.m-filter-bar-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--m-text-muted, #8896a9);
+    pointer-events: none;
+    font-size: 0.85rem;
+}
+
+.m-filter-bar-search {
+    display: block;
+    width: 100%;
+    padding: 6px 10px 6px 32px;
+    border: 1px solid var(--m-border, #dde3ec);
+    border-radius: 6px;
+    background: var(--m-input-bg, #fff);
+    color: var(--m-text, #1a202c);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.m-filter-bar-search:focus {
+    outline: none;
+    border-color: var(--m-primary, #118AB2);
+    box-shadow: 0 0 0 3px rgba(17, 138, 178, 0.12);
+}
+
+.m-filter-bar-search::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M7 5.586L11.293 1.293l1.414 1.414L8.414 7l4.293 4.293-1.414 1.414L7 8.414 2.707 12.707 1.293 11.293 5.586 7 1.293 2.707 2.707 1.293z' fill='%238896a9'/%3E%3C/svg%3E") center/contain no-repeat;
+    cursor: pointer;
+    opacity: 0.7;
+    margin-left: 4px;
+}
+
 /* === RichTextEditor Component === */
 .m-richtexteditor {
     display: flex;

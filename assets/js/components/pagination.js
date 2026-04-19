@@ -113,6 +113,7 @@
         var maxButtons    = parseInt(navEl.getAttribute('data-max-buttons')    || '7',  10);
         var showFirstLast = navEl.getAttribute('data-show-first-last') === 'true';
         var autoLoad      = navEl.getAttribute('data-auto-load')    === 'true';
+        var scrollOnPage  = navEl.getAttribute('data-scroll-on-page') !== 'false'; // default true
         var pageSizes     = (navEl.getAttribute('data-page-sizes')  || '')
                                 .split(',').map(Number).filter(Boolean);
 
@@ -356,6 +357,10 @@
             renderControls();
             renderInfo();
 
+            if (scrollOnPage) {
+                navEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
             if (mode === 'client') {
                 applyClientPaging();
             } else if (mode === 'ajax' && urlTemplate) {
@@ -397,6 +402,10 @@
 
                 renderControls();
                 renderInfo();
+
+                if (scrollOnPage) {
+                    navEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
 
                 if (mode === 'client') {
                     applyClientPaging();
@@ -495,6 +504,74 @@
             setTotal: function (total) {
                 state.total      = Math.max(0, total);
                 state.totalPages = Math.ceil(state.total / state.perPage) || 1;
+                navEl.setAttribute('data-total',       String(state.total));
+                navEl.setAttribute('data-total-pages', String(state.totalPages));
+                if (state.page > state.totalPages) {
+                    state.page = state.totalPages;
+                    navEl.setAttribute('data-current-page', String(state.page));
+                }
+                renderControls();
+                renderInfo();
+            },
+
+            /**
+             * Override the total page count independently of the item total.
+             *
+             * Use this with group-aware pagination where the number of pages does
+             * not equal ceil(total/perPage) — e.g. when using FilterBar.groupSlice().
+             * Call this AFTER setTotal() so it is not recalculated from the item count.
+             *
+             * @param {number} totalPages  The exact number of pages to show
+             */
+            setTotalPages: function (totalPages) {
+                state.totalPages = Math.max(1, totalPages);
+                navEl.setAttribute('data-total-pages', String(state.totalPages));
+                if (state.page > state.totalPages) {
+                    state.page = state.totalPages;
+                    navEl.setAttribute('data-current-page', String(state.page));
+                }
+                renderControls();
+                renderInfo();
+            },
+
+            /**
+             * Atomically update both the total item count and the total page count,
+             * then re-render controls once.
+             *
+             * Use this instead of calling setTotal() + setTotalPages() separately when
+             * using group-aware pagination — it avoids a flash of incorrectly-calculated
+             * page buttons between the two calls.
+             *
+             * @param {number} total       Total filtered item count (used for info text)
+             * @param {number} totalPages  Exact page count (group-aware or otherwise)
+             */
+            setTotalAndPages: function (total, totalPages) {
+                state.total      = Math.max(0, total);
+                state.totalPages = Math.max(1, totalPages);
+                navEl.setAttribute('data-total',       String(state.total));
+                navEl.setAttribute('data-total-pages', String(state.totalPages));
+                if (state.page > state.totalPages) {
+                    state.page = state.totalPages;
+                    navEl.setAttribute('data-current-page', String(state.page));
+                }
+                renderControls();
+                renderInfo();
+            },
+
+            /**
+             * Atomically update both the total item count and the total page count,
+             * then re-render controls once.
+             *
+             * Use this instead of calling setTotal() + setTotalPages() separately when
+             * using group-aware pagination — it avoids a flash of incorrectly-calculated
+             * page buttons between the two calls.
+             *
+             * @param {number} total       Total filtered item count (used for info text)
+             * @param {number} totalPages  Exact page count (group-aware or otherwise)
+             */
+            setTotalAndPages: function (total, totalPages) {
+                state.total      = Math.max(0, total);
+                state.totalPages = Math.max(1, totalPages);
                 navEl.setAttribute('data-total',       String(state.total));
                 navEl.setAttribute('data-total-pages', String(state.totalPages));
                 if (state.page > state.totalPages) {
