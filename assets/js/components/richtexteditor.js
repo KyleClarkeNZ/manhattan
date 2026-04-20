@@ -167,6 +167,10 @@
         var uploadOverlayEl  = null;
         var uploadProgressEl = null;
         var uploadingImg     = null;
+        // True while an image that originated inside this editor is being dragged.
+        // Used to suppress the file-upload path in the drop handler so that the
+        // browser can perform a native move without re-uploading the image.
+        var isDraggingInternalImage = false;
 
         // YouTube wrapper selection & resize
         var selectedYt   = null;
@@ -1738,6 +1742,21 @@
         // dropped image as a huge inline base64 data URI into the
         // contenteditable area.  We intercept image files and route them
         // through the same uploadImage() path used by the paste handler.
+        //
+        // However, when the user is merely repositioning an <img> that already
+        // lives inside this editor (drag to reorder), some browsers (Chrome) still
+        // expose the image data as a file item in dataTransfer.files.  In that case
+        // we must NOT re-upload the image — we just let the browser perform its
+        // native move so the existing src (and any key material in it) is preserved.
+
+        content.addEventListener('dragstart', function (e) {
+            // Track whether the drag originates from an <img> inside this editor.
+            isDraggingInternalImage = !!(e.target && e.target.nodeName === 'IMG' && content.contains(e.target));
+        });
+
+        content.addEventListener('dragend', function () {
+            isDraggingInternalImage = false;
+        });
 
         content.addEventListener('dragover', function (e) {
             // Allow drop so that the 'drop' event fires
@@ -1745,6 +1764,13 @@
         });
 
         content.addEventListener('drop', function (e) {
+            // If the user is repositioning an image already in this editor, let
+            // the browser perform the native move without triggering a re-upload.
+            if (isDraggingInternalImage) {
+                isDraggingInternalImage = false;
+                return;
+            }
+
             var files = e.dataTransfer && e.dataTransfer.files;
             if (!files || !files.length) { return; } // let browser handle text/url drops
 
@@ -1938,21 +1964,30 @@
             });
 
             // Sanitise images:
-            //   http(s) src  — safe external URL; keep src + alt only
-            //   data: src    — embedded base64; keep for async upload if uploader configured, else strip
+            //   same-origin src  — already hosted locally; keep src + alt only, never re-fetch
+            //   http(s) external — re-host via proxy if refetchExternalImages is on, else keep as-is
+            //   data: src        — embedded base64; keep for async upload if uploader configured, else strip
             //   everything else (blob:, file:, etc.) — strip
             tmp.querySelectorAll('img').forEach(function (el) {
                 var src = el.getAttribute('src') || '';
                 if (/^https?:\/\//i.test(src)) {
-                    if (refetchExternalImages && allowPasteImages && uploaderUrl) {
-                        // Re-upload external image through the server-side proxy endpoint
+                    // Determine whether the URL resolves to this origin.  Same-origin
+                    // images are already hosted here (uploaded or served by this app) and
+                    // must NEVER be re-uploaded — doing so would create a duplicate file
+                    // and, in the case of encrypted message images, would break the key
+                    // association stored in the URL query string.
+                    var isSameOrigin = false;
+                    try { isSameOrigin = (new URL(src)).origin === window.location.origin; } catch (ex) {}
+
+                    if (!isSameOrigin && refetchExternalImages && allowPasteImages && uploaderUrl) {
+                        // Re-upload truly external image through the server-side proxy endpoint
                         var keepAlt = el.getAttribute('alt') || '';
                         while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
                         el.setAttribute('src', '');
                         el.setAttribute('data-rte-proxy-url', src);
                         if (keepAlt) { el.setAttribute('alt', keepAlt); }
                     } else {
-                        // Keep external image — preserve only src and alt
+                        // Keep as-is — either same-origin (already local) or refetch not enabled
                         var keepAlt = el.getAttribute('alt') || '';
                         while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
                         el.setAttribute('src', src);
