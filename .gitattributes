@@ -9,3 +9,5 @@
 /index.php export-ignore
 /.htaccess export-ignore
 /dist export-ignore
+/CHANGELOG.md export-ignore
+/VERSIONING.md export-ignore
