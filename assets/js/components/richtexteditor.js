@@ -1758,6 +1758,12 @@
             isDraggingInternalImage = false;
         });
 
+        // Safety net: if dragend doesn't fire on the content element (e.g. the drag
+        // was released outside the viewport), reset the flag on document dragend.
+        document.addEventListener('dragend', function () {
+            isDraggingInternalImage = false;
+        });
+
         content.addEventListener('dragover', function (e) {
             // Allow drop so that the 'drop' event fires
             e.preventDefault();
@@ -1770,6 +1776,8 @@
                 isDraggingInternalImage = false;
                 return;
             }
+            // Always clear the flag on drop regardless of the path taken below.
+            isDraggingInternalImage = false;
 
             var files = e.dataTransfer && e.dataTransfer.files;
             if (!files || !files.length) { return; } // let browser handle text/url drops
@@ -1970,6 +1978,7 @@
             //   everything else (blob:, file:, etc.) — strip
             tmp.querySelectorAll('img').forEach(function (el) {
                 var src = el.getAttribute('src') || '';
+                var keepAlt = el.getAttribute('alt') || '';
                 if (/^https?:\/\//i.test(src)) {
                     // Determine whether the URL resolves to this origin.  Same-origin
                     // images are already hosted here (uploaded or served by this app) and
@@ -1981,14 +1990,12 @@
 
                     if (!isSameOrigin && refetchExternalImages && allowPasteImages && uploaderUrl) {
                         // Re-upload truly external image through the server-side proxy endpoint
-                        var keepAlt = el.getAttribute('alt') || '';
                         while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
                         el.setAttribute('src', '');
                         el.setAttribute('data-rte-proxy-url', src);
                         if (keepAlt) { el.setAttribute('alt', keepAlt); }
                     } else {
                         // Keep as-is — either same-origin (already local) or refetch not enabled
-                        var keepAlt = el.getAttribute('alt') || '';
                         while (el.attributes.length > 0) { el.removeAttribute(el.attributes[0].name); }
                         el.setAttribute('src', src);
                         if (keepAlt) { el.setAttribute('alt', keepAlt); }
@@ -2128,17 +2135,21 @@
             if (csrf) { xhr.setRequestHeader('X-CSRF-Token', csrf); }
 
             xhr.onload = function () {
-                utils.trigger(container, 'm:rte:upload:end', {});
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
                         var result = JSON.parse(xhr.responseText);
                         if (result && result.url) {
+                            utils.trigger(container, 'm:rte:upload:end', { success: true, url: result.url, error: null, response: result });
                             callback(null, result.url);
                         } else {
-                            callback(result.message || 'No URL returned.');
+                            var noUrlMsg = (result && result.message) ? result.message : 'No URL returned.';
+                            utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: noUrlMsg });
+                            callback(noUrlMsg);
                         }
                     } catch (ex) {
-                        callback('Invalid server response.');
+                        var parseErr = 'Invalid server response.';
+                        utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: parseErr });
+                        callback(parseErr);
                     }
                 } else {
                     var msg = 'Server error ' + xhr.status;
@@ -2146,12 +2157,14 @@
                         var errData = JSON.parse(xhr.responseText);
                         if (errData && errData.message) { msg = errData.message; }
                     } catch (ex) { /* ignore */ }
+                    utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: msg });
                     callback(msg);
                 }
             };
             xhr.onerror = function () {
-                utils.trigger(container, 'm:rte:upload:end', {});
-                callback('Network error.');
+                var netErr = 'Network error.';
+                utils.trigger(container, 'm:rte:upload:end', { success: false, url: null, error: netErr });
+                callback(netErr);
             };
             xhr.send(formData);
         }
