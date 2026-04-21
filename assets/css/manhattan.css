@@ -5667,6 +5667,45 @@ textarea.m-wizard-field-error {
     user-select: none;
 }
 
+/* ── Mobile: larger resize handles, corners only, bigger toolbar ───────── */
+@media (max-width: 768px) {
+    /* Grow handles to 22×22 px — large enough for a thumb */
+    .m-rte-resize-handle {
+        width: 22px;
+        height: 22px;
+    }
+
+    /* Reposition corners (offset = -11px to centre the larger handle on the edge) */
+    .m-rte-resize-handle[data-handle="nw"] { top: -11px; left: -11px; }
+    .m-rte-resize-handle[data-handle="ne"] { top: -11px; right: -11px; }
+    .m-rte-resize-handle[data-handle="se"] { bottom: -11px; right: -11px; }
+    .m-rte-resize-handle[data-handle="sw"] { bottom: -11px; left: -11px; }
+
+    /* Hide mid-edge handles — corners are sufficient and less crowded on touch */
+    .m-rte-resize-handle[data-handle="n"],
+    .m-rte-resize-handle[data-handle="s"],
+    .m-rte-resize-handle[data-handle="e"],
+    .m-rte-resize-handle[data-handle="w"] {
+        display: none;
+    }
+
+    /* Larger toolbar buttons and alt input for touch targets */
+    .m-rte-imgbar-btn {
+        width: 36px;
+        height: 34px;
+        font-size: 0.9rem;
+    }
+    .m-rte-imgbar-alt {
+        height: 34px;
+        font-size: 0.85rem;
+        width: 100px;
+    }
+    .m-rte-image-resizer-bar {
+        gap: 4px;
+        padding: 4px 6px;
+    }
+}
+
 /* =========================================================
    .m-richtext — consistent content display
    Apply to any wrapper that displays saved rich-text HTML,

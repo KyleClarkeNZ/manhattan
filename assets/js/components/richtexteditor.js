@@ -489,6 +489,24 @@
             }
         });
 
+        // Touch tap — select image / YouTube wrapper on mobile
+        content.addEventListener('touchend', function (e) {
+            if (e.changedTouches.length !== 1) { return; }
+            var touch  = e.changedTouches[0];
+            var target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (!target) { return; }
+            var img       = target.nodeName === 'IMG' ? target : null;
+            var isShield  = target.classList.contains('m-rte-yt-click-shield');
+            var ytWrapper = isShield ? target.parentNode : null;
+            if (img && content.contains(img)) {
+                dismissYtSelection();
+                selectImage(img);
+            } else if (ytWrapper && content.contains(ytWrapper)) {
+                dismissImageSelection();
+                selectYtWrapper(ytWrapper);
+            }
+        });
+
         // Alignment mini-toolbar clicks
         resizerBarEl.addEventListener('mousedown', function (e) {
             // Allow normal interaction with the alt text input
@@ -514,6 +532,34 @@
                 // Defer resizer repositioning until after the browser has reflowed
                 // the new alignment (e.g. float removed, display:block applied).
                 // Without this the resizer snaps to the pre-reflow position.
+                var imgForReposition = selectedImg;
+                requestAnimationFrame(function () {
+                    if (imgForReposition) { positionResizer(imgForReposition); }
+                });
+            }
+        });
+
+        // Touch tap on alignment toolbar (mirrors mousedown above)
+        resizerBarEl.addEventListener('touchend', function (e) {
+            if (e.target.closest('.m-rte-imgbar-alt')) { return; }
+            var btn = e.target.closest('.m-rte-imgbar-btn');
+            if (!btn || !selectedImg) { return; }
+            e.preventDefault();
+
+            if (btn.getAttribute('data-img-remove')) {
+                if (selectedImg.parentNode) {
+                    selectedImg.parentNode.removeChild(selectedImg);
+                }
+                dismissImageSelection();
+                syncHidden();
+                updateCharCount();
+                utils.trigger(container, 'm:rte:change', { value: getValue() });
+                return;
+            }
+
+            var align = btn.getAttribute('data-img-align');
+            if (align) {
+                applyImageAlign(selectedImg, align);
                 var imgForReposition = selectedImg;
                 requestAnimationFrame(function () {
                     if (imgForReposition) { positionResizer(imgForReposition); }
@@ -591,6 +637,117 @@
             document.addEventListener('mouseup', function () {
                 if (!dragState) { return; }
                 dragState = null;
+                if (selectedImg) {
+                    syncHidden();
+                    utils.trigger(container, 'm:rte:change', { value: getValue() });
+                }
+            });
+
+            // ---- Touch drag + pinch-to-resize ----
+            var touchDragState = null;
+            var pinchState     = null;
+
+            function distanceBetweenTouches(t1, t2) {
+                var dx = t1.clientX - t2.clientX;
+                var dy = t1.clientY - t2.clientY;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            resizerEl.addEventListener('touchstart', function (e) {
+                // Two-finger pinch on the resizer overlay
+                if (e.touches.length === 2 && selectedImg) {
+                    e.preventDefault();
+                    touchDragState = null;
+                    pinchState = {
+                        startDist: distanceBetweenTouches(e.touches[0], e.touches[1]),
+                        startW:    selectedImg.offsetWidth || selectedImg.naturalWidth || 100,
+                        aspect:    selectedImg.offsetHeight > 0
+                                       ? selectedImg.offsetWidth / selectedImg.offsetHeight : 1
+                    };
+                    return;
+                }
+                // Single-finger handle drag
+                var handle = e.target.closest('.m-rte-resize-handle');
+                if (!handle || !selectedImg) { return; }
+                e.preventDefault();
+                var touch = e.touches[0];
+                if (!selectedImg.getAttribute('data-original-width') && selectedImg.naturalWidth) {
+                    selectedImg.setAttribute('data-original-width',  selectedImg.naturalWidth);
+                    selectedImg.setAttribute('data-original-height', selectedImg.naturalHeight);
+                }
+                var startW = selectedImg.offsetWidth  || selectedImg.naturalWidth  || 100;
+                var startH = selectedImg.offsetHeight || selectedImg.naturalHeight || 100;
+                var pos    = handle.getAttribute('data-handle');
+                var aspect = startH > 0 ? startW / startH : 1;
+                touchDragState = {
+                    startX: touch.clientX, startY: touch.clientY,
+                    startW: startW, startH: startH,
+                    pos: pos, aspect: aspect
+                };
+            }, { passive: false });
+
+            // Also allow two-finger pinch starting on the selected image itself
+            content.addEventListener('touchstart', function (e) {
+                if (e.touches.length !== 2 || !selectedImg) { return; }
+                var t1 = e.touches[0];
+                var t2 = e.touches[1];
+                var el1 = document.elementFromPoint(t1.clientX, t1.clientY);
+                var el2 = document.elementFromPoint(t2.clientX, t2.clientY);
+                if (el1 !== selectedImg && el2 !== selectedImg) { return; }
+                e.preventDefault();
+                touchDragState = null;
+                pinchState = {
+                    startDist: distanceBetweenTouches(t1, t2),
+                    startW:    selectedImg.offsetWidth || selectedImg.naturalWidth || 100,
+                    aspect:    selectedImg.offsetHeight > 0
+                                   ? selectedImg.offsetWidth / selectedImg.offsetHeight : 1
+                };
+            }, { passive: false });
+
+            document.addEventListener('touchmove', function (e) {
+                // Pinch resize
+                if (pinchState && selectedImg && e.touches.length === 2) {
+                    e.preventDefault();
+                    var dist  = distanceBetweenTouches(e.touches[0], e.touches[1]);
+                    var scale = pinchState.startDist > 0 ? dist / pinchState.startDist : 1;
+                    var newW  = Math.max(20, Math.round(pinchState.startW * scale));
+                    selectedImg.style.width  = newW + 'px';
+                    selectedImg.style.height = '';
+                    positionResizer(selectedImg);
+                    return;
+                }
+                // Handle drag
+                if (!touchDragState || !selectedImg) { return; }
+                e.preventDefault();
+                var touch = e.touches[0];
+                var dx    = touch.clientX - touchDragState.startX;
+                var dy    = touch.clientY - touchDragState.startY;
+                var pos   = touchDragState.pos;
+                var newW  = touchDragState.startW;
+                var newH  = touchDragState.startH;
+                if (pos === 'e' || pos === 'ne' || pos === 'se') {
+                    newW = Math.max(20, touchDragState.startW + dx);
+                } else if (pos === 'w' || pos === 'nw' || pos === 'sw') {
+                    newW = Math.max(20, touchDragState.startW - dx);
+                } else if (pos === 's') {
+                    newH = Math.max(20, touchDragState.startH + dy);
+                    newW = Math.round(newH * touchDragState.aspect);
+                } else if (pos === 'n') {
+                    newH = Math.max(20, touchDragState.startH - dy);
+                    newW = Math.round(newH * touchDragState.aspect);
+                }
+                if (pos === 'nw' || pos === 'ne' || pos === 'se' || pos === 'sw') {
+                    newH = Math.round(newW / touchDragState.aspect);
+                }
+                selectedImg.style.width  = newW + 'px';
+                selectedImg.style.height = '';
+                positionResizer(selectedImg);
+            }, { passive: false });
+
+            document.addEventListener('touchend', function () {
+                if (!pinchState && !touchDragState) { return; }
+                pinchState     = null;
+                touchDragState = null;
                 if (selectedImg) {
                     syncHidden();
                     utils.trigger(container, 'm:rte:change', { value: getValue() });
