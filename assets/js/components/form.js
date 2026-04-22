@@ -21,6 +21,13 @@
             return null;
         }
 
+        // Return cached instance — ensures all callers share the same closure
+        // (same isDirty state, same event listeners). Without this, calling
+        // m.form(id) a second time (e.g. in a save-success callback) creates a
+        // fresh instance with isDirty=false, leaving the original auto-init
+        // instance's isDirty=true and the dirty warning still firing on navigation.
+        if (form._mForm) { return form._mForm; }
+
         const isAjax = form.getAttribute('data-m-ajax') === 'true';
         const hasDirtyProtection = form.getAttribute('data-m-dirty-protection') === 'true';
         let isSubmitting = false;
@@ -422,7 +429,7 @@
         }
 
         // Public API
-        return {
+        const api = {
             serialize: serialize,
             populate: populate,
             reset: reset,
@@ -433,6 +440,8 @@
             isDirty: function() { return isDirty; },
             clearDirty: clearDirty
         };
+        form._mForm = api;
+        return api;
     };
 
     // Auto-initialize all AJAX forms and dirty-protection forms
