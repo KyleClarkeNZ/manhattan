@@ -114,6 +114,7 @@
         var showFirstLast = navEl.getAttribute('data-show-first-last') === 'true';
         var autoLoad      = navEl.getAttribute('data-auto-load')    === 'true';
         var scrollOnPage  = navEl.getAttribute('data-scroll-on-page') !== 'false'; // default true
+        var hideIfSingle  = navEl.getAttribute('data-hide-if-single')  === 'true';
         var pageSizes     = (navEl.getAttribute('data-page-sizes')  || '')
                                 .split(',').map(Number).filter(Boolean);
 
@@ -471,6 +472,11 @@
 
         renderInfo();
         scanExternalTriggers();
+
+        // Hide the pagination element when there is only 1 page (after item discovery).
+        if (hideIfSingle && state.totalPages <= 1) {
+            navEl.style.display = 'none';
+        }
 
         if (mode === 'ajax' && autoLoad && urlTemplate) {
             fetchPage(state.page);

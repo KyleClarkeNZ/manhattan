@@ -55,6 +55,7 @@ final class Pagination extends Component
     private bool $autoLoad = false;
     private string $labelPosition = ''; // '' | 'left' | 'right' | 'above' | 'below' | 'none'
     private bool $scrollOnPage = true;
+    private bool $hideIfSingle = false;
 
     /**
      * Total number of items across all pages.
@@ -196,6 +197,17 @@ final class Pagination extends Component
     }
 
     /**
+     * Automatically hide the pagination control when there is only 1 page.
+     * In client mode, JS re-evaluates after discovering items in the DOM.
+     * Default: false.
+     */
+    public function hideIfSingle(bool $hide = true): self
+    {
+        $this->hideIfSingle = $hide;
+        return $this;
+    }
+
+    /**
      * In ajax mode: automatically fetch page 1 on JS init.
      * Useful when the target container starts empty and content is loaded on demand.
      * Default: false.
@@ -266,7 +278,8 @@ final class Pagination extends Component
         $data .= ' data-max-buttons="'  . $this->maxButtons . '"';
         $data .= ' data-show-first-last="' . ($this->showFirstLast ? 'true' : 'false') . '"';
         $data .= ' data-auto-load="'       . ($this->autoLoad     ? 'true' : 'false') . '"';
-        $data .= ' data-scroll-on-page="'  . ($this->scrollOnPage ? 'true' : 'false') . '"';
+        $data .= ' data-scroll-on-page="'  . ($this->scrollOnPage  ? 'true' : 'false') . '"';
+        $data .= ' data-hide-if-single="'   . ($this->hideIfSingle  ? 'true' : 'false') . '"';
 
         if ($this->target !== null) {
             $data .= ' data-target="' . htmlspecialchars($this->target, ENT_QUOTES, 'UTF-8') . '"';
