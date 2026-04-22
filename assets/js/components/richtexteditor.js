@@ -2169,12 +2169,37 @@
                 }
             });
 
-            // Strip class/id attributes; sanitise inline styles
+            // Strip class/id attributes; sanitise inline styles; remove unsafe attrs.
             tmp.querySelectorAll('*').forEach(function (el) {
                 el.removeAttribute('class');
                 el.removeAttribute('id');
                 el.removeAttribute('lang');
                 el.removeAttribute('dir');
+
+                // Strip event handlers (on*), non-RTE data-* attrs, and aria-* attrs.
+                // These are common in social-media pasted content (Facebook, Twitter, etc.)
+                // and trigger server-side WAF / ModSecurity XSS rules when submitted in forms.
+                var attrsToRemove = [];
+                for (var i = 0; i < el.attributes.length; i++) {
+                    var attrName = el.attributes[i].name;
+                    if (/^on/i.test(attrName)) {
+                        attrsToRemove.push(attrName);
+                    } else if (/^data-/i.test(attrName) && !/^data-rte-/i.test(attrName)) {
+                        attrsToRemove.push(attrName);
+                    } else if (/^aria-/i.test(attrName)) {
+                        attrsToRemove.push(attrName);
+                    }
+                }
+                attrsToRemove.forEach(function (n) { el.removeAttribute(n); });
+
+                // Strip javascript: protocol from href — appears in Facebook "See more" links
+                // and other social-media markup. WAF rules flag javascript: in POST bodies.
+                if (el.tagName && el.tagName.toLowerCase() === 'a') {
+                    var href = el.getAttribute('href');
+                    if (href && /^\s*javascript:/i.test(href)) {
+                        el.removeAttribute('href');
+                    }
+                }
 
                 var style = el.getAttribute('style');
                 if (style) {
