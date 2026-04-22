@@ -2366,3 +2366,107 @@ body.m-dark .m-carousel-dot,
 body.theme-dark .m-carousel-dot {
     background: rgba(255, 255, 255, 0.2);
 }
+
+/* ========================================
+   TimePicker
+   ======================================== */
+
+body.m-dark .m-timepicker-input,
+body.theme-dark .m-timepicker-input {
+    background-color: #161b22;
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #e6e6e6;
+}
+
+body.m-dark .m-timepicker-input:hover,
+body.theme-dark .m-timepicker-input:hover {
+    border-color: #64b5f6;
+}
+
+body.m-dark .m-timepicker-input:focus,
+body.theme-dark .m-timepicker-input:focus {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.18);
+}
+
+body.m-dark .m-timepicker-input.m-disabled,
+body.theme-dark .m-timepicker-input.m-disabled {
+    background-color: #1a1f24;
+}
+
+body.m-dark .m-timepicker-value,
+body.theme-dark .m-timepicker-value {
+    color: rgba(230, 230, 230, 0.55);
+}
+
+body.m-dark .m-timepicker-value.m-has-value,
+body.theme-dark .m-timepicker-value.m-has-value {
+    color: #e6e6e6;
+}
+
+body.m-dark .m-timepicker-icon,
+body.theme-dark .m-timepicker-icon {
+    color: #a7b0bb;
+}
+
+body.m-dark .m-timepicker-input:hover .m-timepicker-icon,
+body.theme-dark .m-timepicker-input:hover .m-timepicker-icon {
+    color: #64b5f6;
+}
+
+body.m-dark .m-timepicker-panel,
+body.theme-dark .m-timepicker-panel {
+    background: #1e242b;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.m-dark .m-tp-sep,
+body.theme-dark .m-tp-sep {
+    color: #a7b0bb;
+}
+
+body.m-dark .m-tp-item,
+body.theme-dark .m-tp-item {
+    color: #e6e6e6;
+}
+
+body.m-dark .m-tp-item:hover,
+body.theme-dark .m-tp-item:hover {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #64b5f6;
+}
+
+body.m-dark .m-tp-item.m-tp-selected,
+body.theme-dark .m-tp-item.m-tp-selected {
+    background-color: #2196F3;
+    color: #fff;
+}
+
+body.m-dark .m-tp-footer,
+body.theme-dark .m-tp-footer {
+    border-top-color: rgba(255, 255, 255, 0.10);
+}
+
+body.m-dark .m-tp-now-btn,
+body.m-dark .m-tp-clear-btn,
+body.theme-dark .m-tp-now-btn,
+body.theme-dark .m-tp-clear-btn {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #a7b0bb;
+}
+
+body.m-dark .m-tp-now-btn:hover,
+body.theme-dark .m-tp-now-btn:hover {
+    background: rgba(33, 150, 243, 0.15);
+    border-color: #64b5f6;
+    color: #64b5f6;
+}
+
+body.m-dark .m-tp-clear-btn:hover,
+body.theme-dark .m-tp-clear-btn:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}

@@ -2134,6 +2134,221 @@
     font-size: 12px;
 }
 
+/* === TimePicker Component === */
+
+.m-timepicker-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 200px;
+}
+
+/* Hide the original input — JS replaces it with the custom trigger */
+.m-timepicker {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+}
+
+/* Trigger button — mirrors .m-datepicker-input */
+.m-timepicker-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 35px 10px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.m-timepicker-input:hover {
+    border-color: #2196F3;
+}
+
+.m-timepicker-input:focus {
+    border-color: #2196F3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.m-timepicker-input.m-disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.m-timepicker-value {
+    flex: 1;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.m-timepicker-value.m-has-value {
+    color: #333;
+    font-weight: 500;
+}
+
+.m-timepicker-icon {
+    position: absolute;
+    right: 10px;
+    color: #666;
+    pointer-events: none;
+    font-size: 14px;
+}
+
+.m-timepicker-input:hover .m-timepicker-icon {
+    color: #2196F3;
+}
+
+/* Dropdown panel */
+.m-timepicker-panel {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    animation: slideDown 0.2s ease;
+    overflow: hidden;
+    min-width: 140px;
+}
+
+.m-timepicker-wrapper.m-open-up .m-timepicker-panel {
+    top: auto;
+    bottom: calc(100% + 5px);
+    animation: slideUp 0.2s ease;
+}
+
+.m-timepicker-wrapper.m-align-right .m-timepicker-panel {
+    left: auto;
+    right: 0;
+}
+
+/* Two-column layout: hours | separator | minutes [| AM/PM] */
+.m-tp-columns {
+    display: flex;
+    align-items: flex-start;
+    padding: 4px 0;
+}
+
+.m-tp-col {
+    flex: 1;
+    max-height: 192px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #ddd transparent;
+    padding: 2px 0;
+}
+
+.m-tp-col::-webkit-scrollbar {
+    width: 4px;
+}
+
+.m-tp-col::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.m-tp-col::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 2px;
+}
+
+/* AM/PM column is narrower */
+.m-tp-ampm {
+    flex: 0 0 auto;
+    min-width: 48px;
+    overflow: visible;
+}
+
+.m-tp-sep {
+    padding: 10px 3px 10px 3px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #555;
+    align-self: flex-start;
+    margin-top: 2px;
+    line-height: 1.5;
+    flex-shrink: 0;
+}
+
+.m-tp-item {
+    padding: 7px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+    text-align: center;
+    transition: background 0.12s ease, color 0.12s ease;
+    border-radius: 4px;
+    margin: 1px 4px;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.m-tp-item:hover {
+    background-color: #e3f2fd;
+    color: #2196F3;
+}
+
+.m-tp-item.m-tp-selected {
+    background-color: #2196F3;
+    color: #fff;
+    font-weight: 700;
+}
+
+.m-tp-ampm-item {
+    min-width: 36px;
+}
+
+/* Footer: Now / Clear buttons */
+.m-tp-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 6px 10px 8px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.m-tp-now-btn,
+.m-tp-clear-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.15s ease;
+    line-height: 1.5;
+}
+
+.m-tp-now-btn:hover {
+    background: #e3f2fd;
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
+.m-tp-clear-btn:hover {
+    background: #ffeee6;
+    border-color: #e57373;
+    color: #e57373;
+}
+
 /* === Custom Dropdown Component === */
 .m-dropdown-wrapper {
     position: relative;
@@ -2329,6 +2544,7 @@
 /* === Responsive adjustments === */
 @media (max-width: 768px) {
     .m-datepicker-wrapper,
+    .m-timepicker-wrapper,
     .m-dropdown-wrapper {
         max-width: 100%;
     }
@@ -2397,6 +2613,7 @@ p::after {
 }
 
 .form-group .m-datepicker-wrapper,
+.form-group .m-timepicker-wrapper,
 .form-group .m-dropdown-wrapper {
     max-width: 100%;
 }

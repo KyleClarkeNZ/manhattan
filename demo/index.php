@@ -258,6 +258,7 @@ $demoNav = [
     'checkbox'    => ['Checkbox',    'fa-check-square',       'Editors & Forms'],
     'radio'       => ['Radio',       'fa-dot-circle',         'Editors & Forms'],
     'datepicker'  => ['DatePicker',  'fa-calendar-alt',       'Editors & Forms'],
+    'timepicker'  => ['TimePicker',  'fa-clock',              'Editors & Forms'],
     'address'     => ['Address',     'fa-map-marker-alt',     'Editors & Forms'],
     'iconpicker'  => ['IconPicker',  'fa-icons',              'Editors & Forms'],
     'richtexteditor' => ['RichTextEditor', 'fa-pen-to-square',  'Editors & Forms'],

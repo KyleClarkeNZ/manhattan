@@ -154,6 +154,12 @@
             });
         }
 
+        if (typeof m.timepicker === 'function') {
+            document.querySelectorAll('.m-timepicker').forEach(el => {
+                if (el.id) m.timepicker(el.id, {});
+            });
+        }
+
         if (typeof m.dropdown === 'function') {
             document.querySelectorAll('.m-dropdown').forEach(el => {
                 m.dropdown(el.id || el, {});

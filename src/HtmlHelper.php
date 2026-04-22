@@ -103,6 +103,22 @@ class HtmlHelper
     }
 
     /**
+     * Create a TimePicker component — custom time selection control.
+     *
+     * The rendered hidden input is replaced at runtime by a styled trigger
+     * button and a scrollable hour/minute dropdown panel. The internal value
+     * is always in 24-hour HH:MM format.
+     *
+     * @param string $id      Unique identifier for the time picker
+     * @param array  $options Configuration options (value, name, placeholder, step, disabled, showNowButton, use24Hour)
+     * @return TimePicker
+     */
+    public function timepicker(string $id, array $options = []): TimePicker
+    {
+        return new TimePicker($id, $options);
+    }
+
+    /**
      * Create a Dropdown component
      * 
      * @param string $id Unique identifier for the dropdown
@@ -646,6 +662,7 @@ class HtmlHelper
 <script src="{$js}/components/button.js" defer></script>
 <script src="{$js}/components/tooltip.js" defer></script>
 <script src="{$js}/components/datepicker.js" defer></script>
+<script src="{$js}/components/timepicker.js" defer></script>
 <script src="{$js}/components/dropdown.js" defer></script>
 <script src="{$js}/components/textbox.js" defer></script>
 <script src="{$js}/components/address.js" defer></script>
