@@ -7,14 +7,28 @@ namespace Manhattan;
  * TimePicker component — custom time selection control.
  *
  * Renders a hidden text input which is replaced at runtime by a styled
- * trigger button + scrollable hour/minute dropdown panel. The internal
- * value is always stored and returned in 24-hour HH:MM format.
+ * trigger button + scrollable hour/minute dropdown panel.
+ *
+ * By default the picker stores and submits times as 24-hour HH:MM.  Use
+ * ->format() to change the submitted value format and ->ampm() (or
+ * ->use24Hour(false)) to switch the dropdown UI to 12-hour AM/PM mode.
+ *
+ * Format tokens (PHP date-style):
+ *   H  24-hour hours with leading zero (00–23)
+ *   G  24-hour hours without leading zero (0–23)
+ *   h  12-hour hours with leading zero (01–12)
+ *   g  12-hour hours without leading zero (1–12)
+ *   i  minutes with leading zero (00–59)
+ *   A  uppercase AM/PM
+ *   a  lowercase am/pm
  *
  * Usage:
  *   echo $m->timepicker('meetingTime')
  *       ->name('meeting_time')
  *       ->value('14:30')
  *       ->step(15)
+ *       ->ampm()              // 12-hour UI
+ *       ->format('H:i')      // submit as 24-hour HH:MM (MySQL TIME)
  *       ->showNowButton()
  *       ->label('Time')
  *       ->labelHint('Optional');
@@ -28,6 +42,7 @@ class TimePicker extends Component
     private bool $disabled = false;
     private bool $showNowButton = false;
     private bool $use24Hour = true;
+    private ?string $outputFormat = null;
 
     public function __construct(string $id, array $options = [])
     {
@@ -53,6 +68,9 @@ class TimePicker extends Component
         }
         if (isset($options['use24Hour'])) {
             $this->use24Hour = (bool)$options['use24Hour'];
+        }
+        if (isset($options['outputFormat'])) {
+            $this->outputFormat = (string)$options['outputFormat'];
         }
     }
 
@@ -121,6 +139,40 @@ class TimePicker extends Component
         return $this;
     }
 
+    /**
+     * Switch the picker UI to 12-hour AM/PM mode.
+     * Equivalent to ->use24Hour(false).
+     * Pass false to revert to 24-hour mode.
+     */
+    public function ampm(bool $use = true): self
+    {
+        $this->use24Hour = !$use;
+        return $this;
+    }
+
+    /**
+     * Set the format of the value written to the input (and submitted to
+     * the server).  Uses PHP date-style tokens:
+     *
+     *   H  24-hour hours with leading zero (00–23)
+     *   G  24-hour hours without leading zero (0–23)
+     *   h  12-hour hours with leading zero (01–12)
+     *   g  12-hour hours without leading zero (1–12)
+     *   i  minutes with leading zero (00–59)
+     *   A  uppercase AM/PM
+     *   a  lowercase am/pm
+     *
+     * Default: 'H:i'  (24-hour HH:MM — compatible with MySQL TIME).
+     *
+     * Example: ->format('g:i A')  stores '2:30 PM'
+     *          ->format('H:i')    stores '14:30'
+     */
+    public function format(string $fmt): self
+    {
+        $this->outputFormat = $fmt;
+        return $this;
+    }
+
     protected function getComponentType(): string
     {
         return 'timepicker';
@@ -155,6 +207,9 @@ class TimePicker extends Component
         }
         if (!$this->use24Hour) {
             $attrs['data-12h'] = 'true';
+        }
+        if ($this->outputFormat !== null) {
+            $attrs['data-format'] = htmlspecialchars($this->outputFormat, ENT_QUOTES, 'UTF-8');
         }
 
         $attrString = '';

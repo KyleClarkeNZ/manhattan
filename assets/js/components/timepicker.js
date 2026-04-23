@@ -5,18 +5,30 @@
  * trigger + dropdown panel with scrollable hour and minute columns.
  *
  * PHP renders:
- *   <input type="text" id="{id}" class="m-timepicker" name="..." value="HH:MM"
- *          data-step="15" [data-show-now="true"] [data-12h="true"] [disabled]>
+ *   <input type="text" id="{id}" class="m-timepicker" name="..." value="..."
+ *          data-step="15" [data-show-now="true"] [data-12h="true"]
+ *          [data-format="H:i"] [disabled]>
+ *
+ * Format tokens (data-format, PHP date-style):
+ *   H  24-hour hours with leading zero (00-23)
+ *   G  24-hour hours without leading zero (0-23)
+ *   h  12-hour hours with leading zero (01-12)
+ *   g  12-hour hours without leading zero (1-12)
+ *   i  minutes with leading zero (00-59)
+ *   A  uppercase AM/PM
+ *   a  lowercase am/pm
+ *   Default: 'H:i'
  *
  * JS API:
  *   var tp = m.timepicker('myId');
- *   tp.value();          // getter — returns 'HH:MM' or ''
- *   tp.value('14:30');   // setter
+ *   tp.value();          // getter — returns value in the configured format, or ''
+ *   tp.value('14:30');   // setter — accepts HH:MM or a formatted string
  *   tp.enable(); tp.disable();
  *   tp.clear();
  *
  * Events:
- *   input element fires 'm:timepicker:change' with { detail: { value: 'HH:MM' } }
+ *   input element fires 'm:timepicker:change' with { detail: { value: '...' } }
+ *   value is in the configured output format (default 'H:i' = HH:MM).
  */
 
 (function(window) {
@@ -46,8 +58,7 @@
 
         var step        = parseInt(input.getAttribute('data-step'), 10) || 15;
         var showNow     = input.getAttribute('data-show-now') === 'true';
-        var use12h      = input.getAttribute('data-12h') === 'true';
-        var placeholder = input.getAttribute('placeholder') || 'Select time\u2026';
+        var use12h      = input.getAttribute('data-12h') === 'true';        var format      = input.getAttribute('data-format') || 'H:i';        var placeholder = input.getAttribute('placeholder') || 'Select time\u2026';
 
         // ---------------------------------------------------------------
         // DOM construction
@@ -98,15 +109,61 @@
             return n < 10 ? '0' + n : String(n);
         }
 
+        /**
+         * Apply the configured format tokens to a resolved 24-hour h/m pair.
+         * Tokens: H G h g i A a  (PHP date-style)
+         */
+        function applyFormat(h24, min) {
+            var h12  = h24 % 12 || 12;
+            var ampm = h24 < 12 ? 'AM' : 'PM';
+            return format.replace(/H|G|h|g|i|A|a/g, function(token) {
+                switch (token) {
+                    case 'H': return pad(h24);
+                    case 'G': return String(h24);
+                    case 'h': return pad(h12);
+                    case 'g': return String(h12);
+                    case 'i': return pad(min);
+                    case 'A': return ampm;
+                    case 'a': return ampm.toLowerCase();
+                }
+                return token;
+            });
+        }
+
         function parseTime(str) {
             if (!str) { return null; }
-            var parts = str.split(':');
-            if (parts.length < 2) { return null; }
-            var h   = parseInt(parts[0], 10);
-            var min = parseInt(parts[1], 10);
-            if (isNaN(h) || isNaN(min)) { return null; }
-            if (h < 0 || h > 23 || min < 0 || min > 59) { return null; }
-            return { h: h, m: min };
+            str = str.trim();
+
+            // HH:MM or HH:MM:SS (24-hour, from DB or default format)
+            var m24 = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+            if (m24) {
+                var h   = parseInt(m24[1], 10);
+                var min = parseInt(m24[2], 10);
+                if (h >= 0 && h <= 23 && min >= 0 && min <= 59) {
+                    return { h: h, m: min };
+                }
+                return null;
+            }
+
+            // 12-hour with AM/PM: e.g. '2:30 PM', '02:30 pm', '2:30PM'
+            var m12 = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+            if (m12) {
+                var h12  = parseInt(m12[1], 10);
+                var min2 = parseInt(m12[2], 10);
+                var period = m12[3].toUpperCase();
+                if (h12 >= 1 && h12 <= 12 && min2 >= 0 && min2 <= 59) {
+                    var h24;
+                    if (period === 'AM') {
+                        h24 = (h12 === 12) ? 0 : h12;
+                    } else {
+                        h24 = (h12 === 12) ? 12 : h12 + 12;
+                    }
+                    return { h: h24, m: min2 };
+                }
+                return null;
+            }
+
+            return null;
         }
 
         function formatDisplay(h, m) {
@@ -254,7 +311,7 @@
                 }
             }
 
-            setValue(pad(h24) + ':' + pad(min));
+            setValue(applyFormat(h24, min));
         }
 
         function bindPanelEvents() {
@@ -286,7 +343,7 @@
                     var now     = new Date();
                     var h       = now.getHours();
                     var snapped = snapMinute(now.getMinutes());
-                    setValue(pad(h) + ':' + pad(snapped));
+                    setValue(applyFormat(h, snapped));
                     closePanel();
                 });
             }
@@ -387,8 +444,8 @@
         var api = {
             /**
              * Get or set the value.
-             * @param {string} [val] - 24-hour HH:MM string, or '' to clear.
-             * @returns {string|api} Value string (getter) or api (setter, chainable).
+             * @param {string} [val] - Value string in any supported format, or '' to clear.
+             * @returns {string|api} Current formatted value (getter) or api (setter, chainable).
              */
             value: function(val) {
                 if (val === undefined) {
