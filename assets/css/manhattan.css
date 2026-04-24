@@ -1819,6 +1819,42 @@
     color: #7f8c8d;
 }
 
+/* ============================================================
+   Map Component
+   ============================================================ */
+
+.m-map {
+    position: relative;
+    width: 100%;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #e8e8e8;
+    border: 1px solid #ddd;
+}
+
+.m-map-loading,
+.m-map-error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+    background: #f0f0f0;
+}
+
+.m-map-error {
+    color: #c0392b;
+    background: #fdf2f2;
+}
+
+.m-map-loading i,
+.m-map-error i {
+    font-size: 1.4rem;
+}
+
 .m-textarea {
     width: 100%;
     padding: 10px 12px;
@@ -4404,12 +4440,12 @@ body::-webkit-scrollbar-thumb:hover {
 
 /* Steps BEFORE the active step bunch up to the left */
 .m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-before-active {
-    margin-right: -16px;
+    margin-right: -10px;
 }
 
 /* Steps AFTER the active step bunch up to the right */
 .m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-after-active {
-    margin-left: -16px;
+    margin-left: -10px;
 }
 
 /* Active step in compressed mode: full-size circle, visible label, raised */
@@ -4618,15 +4654,28 @@ textarea.m-wizard-field-error {
 
     .m-wizard-footer {
         padding: 1rem;
-        flex-direction: column;
-        align-items: stretch;
+        flex-wrap: wrap;
+        row-gap: 0.5rem;
+        column-gap: 0.5rem;
     }
 
-    .m-wizard-footer-left,
-    .m-wizard-footer-right,
+    /* Back button (left) and Next button (right) stay on the same row */
+    .m-wizard-footer-left {
+        flex: 0 0 auto;
+        order: 1;
+    }
+
+    .m-wizard-footer-right {
+        flex: 0 0 auto;
+        order: 2;
+        margin-left: auto;
+    }
+
+    /* Step counter drops to its own full-width row below */
     .m-wizard-footer-center {
+        order: 3;
+        flex: 1 1 100%;
         justify-content: center;
-        width: 100%;
     }
 
     .m-wizard-step-label {
@@ -4646,6 +4695,43 @@ textarea.m-wizard-field-error {
 
     .m-wizard-error-banner {
         margin: 0 1rem 0.75rem;
+    }
+
+    /* Compressed mode on mobile: spread steps evenly, stable alignment */
+
+    /* Force all circles to the same 36px size so the row height never shifts
+       as the active step changes (base compressed active rule sets 44px). */
+    .m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active .m-wizard-step-circle {
+        width: 36px;
+        height: 36px;
+        font-size: 0.875rem;
+    }
+    .m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active .m-wizard-step-circle .m-wizard-step-default-icon,
+    .m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active .m-wizard-step-circle .m-wizard-step-num {
+        font-size: 0.8125rem;
+    }
+
+    .m-wizard-steps.m-wizard-compressed {
+        width: 100%;
+    }
+
+    /* Remove bunching margins — connectors handle spacing instead */
+    .m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-before-active,
+    .m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-after-active,
+    .m-wizard-steps.m-wizard-compressed .m-wizard-step.m-wizard-step-active {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Connectors: grow to fill space when few steps, shrink gracefully when many.
+       margin-top: 17px centres the 2px fill on the uniform 36px circles (18px - 1px). */
+    .m-wizard-steps.m-wizard-compressed .m-wizard-connector,
+    .m-wizard-steps.m-wizard-compressed .m-wizard-connector.m-wizard-connector-before-active,
+    .m-wizard-steps.m-wizard-compressed .m-wizard-connector.m-wizard-connector-after-active {
+        flex: 1 1 0;
+        min-width: 6px;
+        max-width: none;
+        margin-top: 17px;
     }
 }
 
@@ -5027,6 +5113,12 @@ textarea.m-wizard-field-error {
     flex-shrink: 0;
 }
 
+/* Auto swatch — shown when "Automatic" is the active colour */
+.m-rte-color-swatch.m-rte-color-swatch-auto {
+    background: linear-gradient(135deg, #000 50%, #fff 50%) !important;
+    border-color: rgba(0, 0, 0, 0.25);
+}
+
 .m-rte-color-panel {
     position: absolute;
     top: calc(100% + 4px);
@@ -5070,6 +5162,33 @@ textarea.m-wizard-field-error {
 }
 
 .m-rte-color-swatch-btn:focus-visible {
+    outline: 2px solid var(--m-primary, #2196F3);
+    outline-offset: 1px;
+}
+
+/* "Automatic" colour button — full-width row at top of panel */
+.m-rte-color-auto-btn {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid var(--m-border, #dde3ec);
+    border-radius: 5px;
+    background: var(--m-bg, #fff);
+    color: var(--m-text, #444);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+    outline: none;
+    margin-bottom: 4px;
+}
+.m-rte-color-auto-btn:hover {
+    background: var(--m-hover-bg, #f0f4f8);
+    border-color: var(--m-primary, #2196F3);
+    color: var(--m-primary, #2196F3);
+}
+.m-rte-color-auto-btn:focus-visible {
     outline: 2px solid var(--m-primary, #2196F3);
     outline-offset: 1px;
 }

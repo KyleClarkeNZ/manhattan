@@ -794,6 +794,16 @@ HTML;
         $html .= '</button>';
         $html .= '<div class="m-rte-color-panel" hidden aria-label="Text color palette">';
 
+        // Automatic (remove colour) button — spans all columns
+        $html .= '<button type="button" class="m-rte-color-auto-btn"'
+            . ' data-rte-command="foreColor"'
+            . ' data-rte-value="auto"'
+            . ' aria-label="Automatic (remove colour)"'
+            . ' tabindex="-1">'
+            . '<i class="fas fa-font" aria-hidden="true"></i>'
+            . ' Automatic'
+            . '</button>';
+
         foreach ($presets as $color) {
             $safeColor = htmlspecialchars($color, ENT_QUOTES, 'UTF-8');
             $html .= '<button type="button" class="m-rte-color-swatch-btn"'

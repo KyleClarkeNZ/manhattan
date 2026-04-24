@@ -235,6 +235,8 @@
             setHidden(root, 'suburb', data.suburb || data.Suburb || '');
             setHidden(root, 'city', data.city || data.City || data.town || data.Town || '');
             setHidden(root, 'postcode', data.postcode || data.Postcode || data.PostCode || data.zip || data.Zip || '');
+            setHidden(root, 'lat', data.lat || data.Lat || data.latitude || data.Latitude || '');
+            setHidden(root, 'lng', data.lng || data.Lng || data.longitude || data.Longitude || data.lon || data.Lon || '');
 
             try {
                 setHidden(root, 'raw', JSON.stringify(data));
@@ -363,6 +365,19 @@
                 clearSelection();
                 if (results) hideResults(results);
                 return this;
+            },
+            getCoordinates: function() {
+                var latEl = root.querySelector('.m-address-nz-hidden[data-field="lat"]');
+                var lngEl = root.querySelector('.m-address-nz-hidden[data-field="lng"]');
+                if (!latEl || !lngEl || latEl.value === '' || lngEl.value === '') {
+                    return null;
+                }
+                var lat = parseFloat(latEl.value);
+                var lng = parseFloat(lngEl.value);
+                if (isNaN(lat) || isNaN(lng)) {
+                    return null;
+                }
+                return { lat: lat, lng: lng };
             }
         };
 

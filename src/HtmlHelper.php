@@ -350,6 +350,18 @@ class HtmlHelper
     }
 
     /**
+     * Create a Map component (Google Maps embed)
+     *
+     * @param string $id Unique identifier for the map container
+     * @param array $options Configuration options
+     * @return Map
+     */
+    public function map(string $id, array $options = []): Map
+    {
+        return new Map($id, $options);
+    }
+
+    /**
      * Create a Tabs component
      *
      * @param string $id Unique identifier for the tabs
@@ -666,6 +678,7 @@ class HtmlHelper
 <script src="{$js}/components/dropdown.js" defer></script>
 <script src="{$js}/components/textbox.js" defer></script>
 <script src="{$js}/components/address.js" defer></script>
+<script src="{$js}/components/map.js" defer></script>
 <script src="{$js}/components/textarea.js" defer></script>
 <script src="{$js}/components/codearea.js" defer></script>
 <script src="{$js}/components/toggleswitch.js" defer></script>

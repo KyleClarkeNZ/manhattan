@@ -81,6 +81,29 @@ This applies to:
 
 ### Component Behavior Patterns
 
+#### String values passed to components — CRITICAL: never pre-encode with htmlspecialchars()
+
+All Manhattan component `renderHtml()` methods call `htmlspecialchars()` on any user-visible
+string they render. If downstream code (e.g. a view file) pre-encodes the string before passing
+it in, the output is **double-encoded** — `O'Brien` appears as `O&#039;Brien` on screen.
+
+```php
+// ❌ WRONG — double-encoded output
+$title = htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8');
+echo $m->pageHeader('ph')->title($title);
+
+// ✅ CORRECT — pass raw strings; renderHtml() encodes once
+$title = (string)$row['title'];
+echo $m->pageHeader('ph')->title($title);
+```
+
+This applies to every text-accepting fluent method across all components:
+`->title()`, `->subtitle()`, `->placeholder()`, `->label()`, `->item()`, `->current()`,
+dropdown `text` keys, etc.
+
+**When authoring a new component:** always call `htmlspecialchars()` inside `renderHtml()`,
+never in the fluent setter. The setter stores the raw value; the renderer escapes it.
+
 #### Windows
 - **Non-modal (default)**: No overlay, draggable by default, z-index stacking on click
 - **Modal (`->modal()`)**: Overlay, blocks interaction, NOT draggable (unless `->draggable()` is explicitly called)

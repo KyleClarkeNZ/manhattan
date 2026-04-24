@@ -93,9 +93,7 @@
                 captionEl.style.display = item.caption ? '' : 'none';
             }
             if (counterEl) {
-                counterEl.textContent = imageList.length > 1
-                    ? (currentIdx + 1) + ' / ' + imageList.length
-                    : '';
+                counterEl.textContent = (currentIdx + 1) + ' / ' + imageList.length;
             }
 
             var hasMult = imageList.length > 1;

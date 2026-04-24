@@ -90,6 +90,8 @@ final class Address extends Component
             'suburb' => '',
             'city' => '',
             'postcode' => '',
+            'lat' => '',
+            'lng' => '',
             'raw' => '',
         ];
 

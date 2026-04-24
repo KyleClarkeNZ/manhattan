@@ -1040,6 +1040,28 @@ body.theme-dark .m-address-help {
 }
 
 /* ========================================
+   Map Component — dark theme
+   ======================================== */
+
+body.m-dark .m-map,
+body.theme-dark .m-map {
+    border-color: #444;
+    background: #2a2a2a;
+}
+
+body.m-dark .m-map-loading,
+body.theme-dark .m-map-loading {
+    color: #a7b0bb;
+    background: #2a2a2a;
+}
+
+body.m-dark .m-map-error,
+body.theme-dark .m-map-error {
+    color: #e8786e;
+    background: #3a1e1e;
+}
+
+/* ========================================
    Dark scrollbars
    ======================================== */
 body.m-dark .m-window-content,
@@ -1641,20 +1663,20 @@ body.theme-dark input.m-wizard-field-error {
 /* === Button Group Component (dark) === */
 body.m-dark .m-button-group,
 body.theme-dark .m-button-group {
-    border-color: #3a3a5a;
+    border-color: #2a3448;
 }
 
 body.m-dark .m-button-group-btn,
 body.theme-dark .m-button-group-btn {
-    background: #1a1a35;
-    color: #9090b0;
-    border-right-color: #3a3a5a;
+    background: #14202e;
+    color: #8899aa;
+    border-right-color: #2a3448;
 }
 
 body.m-dark .m-button-group-btn:hover,
 body.theme-dark .m-button-group-btn:hover {
-    background: #252545;
-    color: #60a0c8;
+    background: #1a2a3c;
+    color: #cdd6e0;
 }
 
 body.m-dark .m-button-group-btn.m-button-group-active,
@@ -1670,7 +1692,7 @@ body.theme-dark .m-button-group-btn.m-button-group-active:hover {
 
 body.m-dark .m-button-group-sep,
 body.theme-dark .m-button-group-sep {
-    background: #3a3a5a;
+    background: #2a3448;
 }
 
 /* === FilterBar Component (dark) === */
@@ -1797,6 +1819,19 @@ body.theme-dark .m-rte-color-panel {
 body.m-dark .m-rte-color-custom,
 body.theme-dark .m-rte-color-custom {
     border-color: #2a3448;
+}
+
+body.m-dark .m-rte-color-auto-btn,
+body.theme-dark .m-rte-color-auto-btn {
+    background: #14202e;
+    border-color: #2a3448;
+    color: #8899aa;
+}
+body.m-dark .m-rte-color-auto-btn:hover,
+body.theme-dark .m-rte-color-auto-btn:hover {
+    background: #1a2a3c;
+    border-color: #42a5f5;
+    color: #42a5f5;
 }
 
 body.m-dark .m-rte-content,

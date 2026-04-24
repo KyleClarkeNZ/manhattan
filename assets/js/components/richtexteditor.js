@@ -1010,6 +1010,42 @@
         }
 
         // =========================================================
+        // Remove text colour from the current selection
+        // =========================================================
+
+        function removeTextColor() {
+            var sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) { return; }
+            var range = sel.getRangeAt(0);
+            if (range.collapsed) { return; }
+
+            // Collect all element nodes within the editor that intersect the selection
+            var walker = document.createTreeWalker(content, NodeFilter.SHOW_ELEMENT, null, false);
+            var toProcess = [];
+            var node;
+            while ((node = walker.nextNode())) {
+                if (range.intersectsNode(node)) { toProcess.push(node); }
+            }
+
+            // Process bottom-up (leaves first) to safely unwrap empty wrappers
+            toProcess.reverse().forEach(function (el) {
+                if (el.style && el.style.color) {
+                    el.style.removeProperty('color');
+                    if (el.getAttribute('style') === '') { el.removeAttribute('style'); }
+                }
+                if (el.tagName === 'FONT' && el.hasAttribute('color')) {
+                    el.removeAttribute('color');
+                }
+                // Unwrap now-empty font/span wrappers
+                if ((el.tagName === 'FONT' || el.tagName === 'SPAN') && !el.hasAttributes() && el.parentNode) {
+                    var parent = el.parentNode;
+                    while (el.firstChild) { parent.insertBefore(el.firstChild, el); }
+                    parent.removeChild(el);
+                }
+            });
+        }
+
+        // =========================================================
         // Execute a toolbar command
         // =========================================================
 
@@ -1062,7 +1098,11 @@
                     break;
 
                 case 'foreColor':
-                    if (value) { document.execCommand('foreColor', false, value); }
+                    if (value === 'auto') {
+                        removeTextColor();
+                    } else if (value) {
+                        document.execCommand('foreColor', false, value);
+                    }
                     break;
 
                 case 'link': {
@@ -1257,13 +1297,25 @@
                     if (!wasColorOpen) { colorPanel.hidden = false; }
                 });
 
-                // After applying a preset, update the swatch indicator and close
+                // After applying a preset or auto, update the swatch indicator and close
                 colorPanel.addEventListener('click', function (e) {
+                    var autoBtn = e.target.closest('.m-rte-color-auto-btn');
+                    if (autoBtn) {
+                        if (colorSwatch) {
+                            colorSwatch.style.background = '';
+                            colorSwatch.classList.add('m-rte-color-swatch-auto');
+                        }
+                        colorPanel.hidden = true;
+                        return;
+                    }
                     var swatchBtn = e.target.closest('.m-rte-color-swatch-btn');
                     if (!swatchBtn) { return; }
                     var color = swatchBtn.getAttribute('data-rte-value');
                     if (color) {
-                        if (colorSwatch) { colorSwatch.style.background = color; }
+                        if (colorSwatch) {
+                            colorSwatch.style.background = color;
+                            colorSwatch.classList.remove('m-rte-color-swatch-auto');
+                        }
                         colorPanel.hidden = true;
                     }
                 });
@@ -1276,7 +1328,10 @@
                     colorCustom.addEventListener('change', function () {
                         var color = colorCustom.value;
                         execCmd('foreColor', color);
-                        if (colorSwatch) { colorSwatch.style.background = color; }
+                        if (colorSwatch) {
+                            colorSwatch.style.background = color;
+                            colorSwatch.classList.remove('m-rte-color-swatch-auto');
+                        }
                         colorPanel.hidden = true;
                     });
                 }
