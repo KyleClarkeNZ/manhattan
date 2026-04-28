@@ -268,6 +268,16 @@
             select.style.display = 'none';
             // Populate the options list.
             renderDropdownOptions(existing, options);
+            // Ensure m-has-value is set correctly now that options are rendered.
+            var existingVal = existing.getAttribute('data-value');
+            var existingValueSpan = existing.querySelector('.m-dropdown-value');
+            if (existingValueSpan) {
+                if (existingVal) {
+                    existingValueSpan.classList.add('m-has-value');
+                } else {
+                    existingValueSpan.classList.remove('m-has-value');
+                }
+            }
             return existing;
         }
 
@@ -290,6 +300,14 @@
         // Hide original select
         select.style.display = 'none';
         wrapper.insertBefore(custom, select);
+
+        // Mark as having a value if pre-selected (data-bound from server).
+        if (select.value) {
+            var initValueSpan = custom.querySelector('.m-dropdown-value');
+            if (initValueSpan) {
+                initValueSpan.classList.add('m-has-value');
+            }
+        }
 
         renderDropdownOptions(custom, options);
 

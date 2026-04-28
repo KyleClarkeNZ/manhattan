@@ -19,6 +19,7 @@ class Button extends Component
     private bool $success = false;
     private bool $block = false;
     private bool $loading = false;
+    private bool $disabled = false;
     private ?string $confirmMessage = null;
 
     public function __construct(string $id, string $text, array $options = [])
@@ -52,6 +53,9 @@ class Button extends Component
         }
         if (isset($options['loading'])) {
             $this->loading = (bool)$options['loading'];
+        }
+        if (isset($options['disabled'])) {
+            $this->disabled = (bool)$options['disabled'];
         }
         if (isset($options['confirm'])) {
             $this->confirmMessage = (string)$options['confirm'];
@@ -109,6 +113,15 @@ class Button extends Component
     public function loading(bool $loading = true): self
     {
         $this->loading = $loading;
+        return $this;
+    }
+
+    /**
+     * Disable the button.
+     */
+    public function disabled(bool $disabled = true): self
+    {
+        $this->disabled = $disabled;
         return $this;
     }
 
@@ -177,6 +190,7 @@ class Button extends Component
         }
         
         $classAttr = implode(' ', $classes);
+        $disabledAttr = $this->disabled ? ' disabled' : '';
         $iconHtml = '';
 
         if ($this->icon) {
@@ -195,7 +209,7 @@ class Button extends Component
             : '';
 
         return <<<HTML
-<button id="{$this->id}" type="{$this->type}"{$nameAttr} class="{$classAttr}"{$confirmAttr}{$eventAttrs}{$extraAttrs}>
+<button id="{$this->id}" type="{$this->type}"{$nameAttr} class="{$classAttr}"{$disabledAttr}{$confirmAttr}{$eventAttrs}{$extraAttrs}>
     {$iconHtml}{$escapedText}
 </button>
 HTML;

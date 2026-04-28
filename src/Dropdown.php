@@ -229,12 +229,14 @@ class Dropdown extends Component
         // post-load layout-shift / paint flash where the empty <select> area
         // would suddenly be replaced by the custom dropdown markup.
         $displayText = '';
+        $hasRealValue = false;
         if ($this->value !== null && $this->value !== '') {
             // Find matching option text from dataSource / groupedDataSource.
             foreach ($this->dataSource as $row) {
                 if (is_array($row) && isset($row[$this->valueField])
                     && (string)$row[$this->valueField] === (string)$this->value) {
                     $displayText = isset($row[$this->textField]) ? (string)$row[$this->textField] : '';
+                    $hasRealValue = true;
                     break;
                 }
             }
@@ -245,6 +247,7 @@ class Dropdown extends Component
                         if (is_array($row) && isset($row[$this->valueField])
                             && (string)$row[$this->valueField] === (string)$this->value) {
                             $displayText = isset($row[$this->textField]) ? (string)$row[$this->textField] : '';
+                            $hasRealValue = true;
                             break 2;
                         }
                     }
@@ -261,6 +264,7 @@ class Dropdown extends Component
         if ($this->disabled) {
             $customClasses .= ' m-disabled';
         }
+        $valueSpanClass = $hasRealValue ? 'm-dropdown-value m-has-value' : 'm-dropdown-value';
 
         // Server-rendered wrapper + custom display. The JS dropdown component
         // detects this pre-rendered structure and attaches behaviour to it
@@ -268,7 +272,7 @@ class Dropdown extends Component
         return '<div class="m-dropdown-wrapper">'
             . '<div class="' . $customClasses . '" tabindex="0" data-value="' . $valueEsc . '">'
             . '<div class="m-dropdown-header">'
-            . '<span class="m-dropdown-value">' . $displayTextEsc . '</span>'
+            . '<span class="' . $valueSpanClass . '">' . $displayTextEsc . '</span>'
             . '<i class="fas fa-chevron-down m-dropdown-arrow" aria-hidden="true"></i>'
             . '</div>'
             . '<div class="m-dropdown-list"></div>'
