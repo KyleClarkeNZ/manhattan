@@ -63,13 +63,13 @@ if ($uri === '/demo/toggleTheme' || (strpos($uri, '/toggleTheme') !== false && $
 if (strpos($uri, '/nzpostSuggest') !== false) {
     header('Content-Type: application/json');
     $query = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
-    $key   = getenv('NZPOST_SUBSCRIPTION_KEY') ?: '';
+    $key   = getenv('LINZ_API_KEY') ?: '';
     if ($query === '' || strlen($query) < 3) {
         echo json_encode(['success' => true, 'suggestions' => []]);
         exit;
     }
     if ($key === '') {
-        // Return mock NZ address data for the demo
+        // Return mock NZ address data for the demo (no LINZ_API_KEY set)
         $mockAddresses = [
             ['text' => '1 Queen Street, Auckland Central, Auckland 1010', 'id' => 'mock-1'],
             ['text' => '2 Lambton Quay, Wellington Central, Wellington 6011', 'id' => 'mock-2'],
@@ -83,19 +83,149 @@ if (strpos($uri, '/nzpostSuggest') !== false) {
         if (empty($filtered)) {
             $filtered = array_slice($mockAddresses, 0, 3);
         }
-        echo json_encode(['success' => true, 'addresses' => $filtered]);
+        echo json_encode(['success' => true, 'suggestions' => $filtered]);
         exit;
     }
-    $url = 'https://api.nzpost.co.nz/addresschecker/1.0/suggest?q=' . rawurlencode($query);
-    $ch  = curl_init($url);
-    curl_setopt_array($ch, [
+    // Strip control chars; escape for CQL ILIKE interpolation.
+    $sanitized = preg_replace('/[\x00-\x1F\x7F]/', '', $query);
+    $escaped   = str_replace("'", "''", (string)$sanitized);
+    // Normalize for full_address_ascii: strip macrons then collapse double-vowels.
+    $macronMap   = ['ā'=>'a','ē'=>'e','ī'=>'i','ō'=>'o','ū'=>'u','Ā'=>'A','Ē'=>'E','Ī'=>'I','Ō'=>'O','Ū'=>'U'];
+    $normalized  = strtr((string)$sanitized, $macronMap);
+    $normalized  = (string)preg_replace('/([aeiouAEIOU])\1+/u', '$1', $normalized);
+    $escapedNorm = str_replace("'", "''", $normalized);
+    $cql = "full_address ILIKE '%" . $escaped . "%'"
+         . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%'";
+
+    // ── Parallel: LINZ + Nominatim ──────────────────────────────────────
+    $mh = curl_multi_init();
+
+    $linzUrl = 'https://data.linz.govt.nz/services;key=' . rawurlencode($key) . '/wfs'
+        . '?service=WFS&version=2.0.0&request=GetFeature'
+        . '&typeNames=layer-123113&outputFormat=application%2Fjson'
+        . '&count=10&srsName=CRS%3A84'
+        . '&CQL_FILTER=' . rawurlencode($cql);
+    $chLinz = curl_init($linzUrl);
+    curl_setopt_array($chLinz, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 8,
-        CURLOPT_HTTPHEADER     => ['Ocp-Apim-Subscription-Key: ' . $key],
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
     ]);
-    $body = curl_exec($ch);
-    curl_close($ch);
-    echo $body ?: json_encode(['success' => false, 'suggestions' => []]);
+    curl_multi_add_handle($mh, $chLinz);
+
+    $nominatimUrl = 'https://nominatim.openstreetmap.org/search'
+        . '?q=' . rawurlencode($sanitized)
+        . '&format=jsonv2&countrycodes=nz&limit=5&addressdetails=1';
+    $chNominatim = curl_init($nominatimUrl);
+    curl_setopt_array($chNominatim, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 8,
+        CURLOPT_HTTPHEADER     => [
+            'Accept: application/json',
+            'User-Agent: ManhattanDemo/1.0 (https://github.com/KyleClarkeNZ/manhattan)',
+        ],
+    ]);
+    curl_multi_add_handle($mh, $chNominatim);
+
+    $running = null;
+    do { curl_multi_exec($mh, $running); curl_multi_select($mh, 0.1); } while ($running > 0);
+
+    $linzBody        = curl_multi_getcontent($chLinz);
+    $linzStatus      = (int)curl_getinfo($chLinz, CURLINFO_HTTP_CODE);
+    $nominatimBody   = curl_multi_getcontent($chNominatim);
+    $nominatimStatus = (int)curl_getinfo($chNominatim, CURLINFO_HTTP_CODE);
+    curl_multi_remove_handle($mh, $chLinz);    curl_close($chLinz);
+    curl_multi_remove_handle($mh, $chNominatim); curl_close($chNominatim);
+    curl_multi_close($mh);
+
+    // ── Parse LINZ ──────────────────────────────────────────────────────
+    $linzSuggestions = [];
+    if ($linzBody !== false && $linzStatus === 200) {
+        $data = json_decode((string)$linzBody, true);
+        if (is_array($data) && isset($data['features'])) {
+            foreach ($data['features'] as $feature) {
+                if (!is_array($feature)) { continue; }
+                $props = is_array($feature['properties'] ?? null) ? $feature['properties'] : [];
+                $geom  = is_array($feature['geometry']   ?? null) ? $feature['geometry']   : null;
+                $addrNum = trim((string)($props['address_number'] ?? ''));
+                $road    = trim((string)($props['road_name']      ?? ''));
+                $line1   = $addrNum !== '' && $road !== '' ? $addrNum . ' ' . $road : trim($addrNum . $road);
+                $lng = $lat = '';
+                if ($geom !== null && isset($geom['coordinates'][0], $geom['coordinates'][1])
+                    && is_numeric($geom['coordinates'][0]) && is_numeric($geom['coordinates'][1])
+                ) {
+                    $lng = (string)$geom['coordinates'][0];
+                    $lat = (string)$geom['coordinates'][1];
+                }
+                $linzSuggestions[] = [
+                    'text'     => (string)($props['full_address'] ?? $line1),
+                    'id'       => (string)($props['id'] ?? ''),
+                    'line1'    => $line1,
+                    'suburb'   => (string)($props['suburb_locality'] ?? ''),
+                    'city'     => (string)($props['town_city']       ?? ''),
+                    'postcode' => (string)($props['postcode']         ?? ''),
+                    'lat'      => $lat,
+                    'lng'      => $lng,
+                ];
+            }
+        }
+    }
+
+    // ── Parse Nominatim ─────────────────────────────────────────────────
+    $nominatimSuggestions = [];
+    if ($nominatimBody !== false && $nominatimStatus === 200) {
+        $nominatimData = json_decode((string)$nominatimBody, true);
+        if (is_array($nominatimData)) {
+            foreach ($nominatimData as $item) {
+                if (!is_array($item)) { continue; }
+                $addr     = is_array($item['address'] ?? null) ? $item['address'] : [];
+                $poiName  = trim((string)(
+                    $addr['amenity']  ?? $addr['building'] ?? $addr['tourism'] ??
+                    $addr['leisure'] ?? $addr['shop']     ?? $addr['office']   ?? ''
+                ));
+                $houseNo  = trim((string)($addr['house_number'] ?? ''));
+                $road     = trim((string)($addr['road']         ?? ''));
+                $suburb   = trim((string)($addr['suburb']       ?? $addr['quarter'] ?? $addr['neighbourhood'] ?? ''));
+                $city     = trim((string)($addr['city']         ?? $addr['town']    ?? $addr['county']        ?? ''));
+                $postcode = trim((string)($addr['postcode']     ?? ''));
+                $line1    = $houseNo !== '' && $road !== '' ? $houseNo . ' ' . $road : ($houseNo !== '' ? $houseNo : $road);
+                $parts    = array_filter([$poiName, $line1, $suburb, trim($city . ($postcode !== '' ? ' ' . $postcode : ''))]);
+                $text     = implode(', ', $parts);
+                if ($text === '' || ($poiName === '' && $line1 === '')) { continue; }
+                $nominatimSuggestions[] = [
+                    'text'     => $text,
+                    'id'       => 'osm-' . ($item['osm_id'] ?? ''),
+                    'line1'    => $line1,
+                    'suburb'   => $suburb,
+                    'city'     => $city,
+                    'postcode' => $postcode,
+                    'lat'      => (string)($item['lat'] ?? ''),
+                    'lng'      => (string)($item['lon'] ?? ''),
+                ];
+            }
+        }
+    }
+
+    // ── Merge, deduplicate by proximity, sort ───────────────────────────
+    $merged = [];
+    foreach (array_merge($nominatimSuggestions, $linzSuggestions) as $item) {
+        $iLat = (float)$item['lat']; $iLng = (float)$item['lng']; $isDup = false;
+        if ($iLat !== 0.0 || $iLng !== 0.0) {
+            foreach ($merged as $ex) {
+                if (abs($iLat - (float)$ex['lat']) < 0.001 && abs($iLng - (float)$ex['lng']) < 0.001) {
+                    $isDup = true; break;
+                }
+            }
+        }
+        if (!$isDup) { $merged[] = $item; }
+    }
+    $queryLower = mb_strtolower($query);
+    usort($merged, static function (array $a, array $b) use ($queryLower): int {
+        $aStarts = mb_strtolower(mb_substr($a['text'], 0, mb_strlen($queryLower))) === $queryLower ? 0 : 1;
+        $bStarts = mb_strtolower(mb_substr($b['text'], 0, mb_strlen($queryLower))) === $queryLower ? 0 : 1;
+        return $aStarts - $bStarts;
+    });
+    echo json_encode(['success' => true, 'suggestions' => array_slice($merged, 0, 10)]);
     exit;
 }
 

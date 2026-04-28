@@ -36,6 +36,25 @@
             .replace(/'/g, '&#039;');
     }
 
+    // ── Shared result cache (module-scoped, keyed by 'url|query') ─────────────
+    // Avoids repeat API calls for the same query; expires after 5 minutes.
+    const CACHE_TTL_MS = 5 * 60 * 1000;
+    const suggestCache = {};
+
+    function cacheKey(url, query) { return url + '|' + query.toLowerCase(); }
+
+    function getCached(url, query) {
+        const key = cacheKey(url, query);
+        const entry = suggestCache[key];
+        if (!entry) { return null; }
+        if (Date.now() - entry.ts > CACHE_TTL_MS) { delete suggestCache[key]; return null; }
+        return entry.data;
+    }
+
+    function setCached(url, query, data) {
+        suggestCache[cacheKey(url, query)] = { ts: Date.now(), data: data };
+    }
+
     function getDataAttr(el, name, fallback) {
         const v = el.getAttribute('data-' + name);
         return (v === null || v === undefined || v === '') ? fallback : v;
@@ -179,6 +198,18 @@
 
         const typeRadios = Array.from(root.querySelectorAll('input[type="radio"][name$="[type]"]'));
 
+        // Inject a small loader between the search box and the results dropdown.
+        // Hidden by default; shown while an API request is in flight.
+        const searchWrapper = nzPanel ? nzPanel.querySelector('.m-address-search-wrapper') : null;
+        const affixIcon = searchWrapper ? searchWrapper.querySelector('.m-address-search-affix i') : null;
+        var loader = null;
+        if (searchWrapper && results) {
+            loader = document.createElement('div');
+            loader.className = 'm-loader m-loader-sm m-address-loader m-hidden';
+            loader.innerHTML = '<div class="m-loader-spinner"></div><span class="m-loader-text">Searching…</span>';
+            results.parentNode.insertBefore(loader, results);
+        }
+
         function currentMode() {
             const checked = typeRadios.find(function(r) { return r.checked; });
             return checked ? checked.value : 'nz';
@@ -217,6 +248,8 @@
             setHidden(root, 'suburb', '');
             setHidden(root, 'city', '');
             setHidden(root, 'postcode', '');
+            setHidden(root, 'lat', '');
+            setHidden(root, 'lng', '');
             setHidden(root, 'raw', '');
         }
 
@@ -246,6 +279,13 @@
 
             if (results) hideResults(results);
             setHelp(root, '', 'info');
+            if (loader) { loader.classList.add('m-hidden'); }
+            // Show a confirmed-address checkmark in the search affix icon
+            if (affixIcon) {
+                affixIcon.classList.remove('fa-search');
+                affixIcon.classList.add('fa-check-circle');
+            }
+            root.classList.add('m-address-confirmed');
 
             utils.trigger(root, 'm:address:select', { suggestion: suggestion, label: label, value: suggestionValue(suggestion) });
             if (typeof options.onChange === 'function') {
@@ -253,17 +293,25 @@
             }
         }
 
+        // Generation counter — incremented on every new request. Response handlers
+        // compare their captured generation against this value; if it has moved on,
+        // the response is stale and is silently discarded.  This prevents a slow
+        // response for "te a" from overwriting the fresher results already shown
+        // for "te ata" when the user typed quickly.
+        var requestGen = 0;
+
         const doSuggest = debounce(function() {
             if (!search || !results) return;
-
             if (currentMode() !== 'nz') return;
 
             const q = String(search.value || '').trim();
             clearSelection();
 
             if (q.length < options.minChars) {
+                requestGen++; // discard any in-flight request
                 hideResults(results);
                 setHelp(root, '', 'info');
+                if (loader) { loader.classList.add('m-hidden'); }
                 return;
             }
 
@@ -273,27 +321,49 @@
                 return;
             }
 
-            setHelp(root, 'Searching...', 'info');
+            // Cache hit — instant results, no request needed.
+            const cached = getCached(suggestUrl, q);
+            if (cached !== null) {
+                if (!cached.length) {
+                    setHelp(root, 'No matches found.', 'info');
+                    hideResults(results);
+                } else {
+                    setHelp(root, '', 'info');
+                    renderResults(results, cached);
+                }
+                return;
+            }
+
+            // New request — bump generation so any in-flight response for an older
+            // query is discarded when it arrives.
+            requestGen++;
+            var myGen = requestGen;
+
+            setHelp(root, '', 'info');
+            if (loader) { loader.classList.remove('m-hidden'); }
 
             m.ajax(suggestUrl + (suggestUrl.indexOf('?') === -1 ? '?' : '&') + 'q=' + encodeURIComponent(q), {
                 method: 'GET',
                 contentType: null
             }).then(function(payload) {
-                const suggestions = normalizeSuggestions(payload).map(function(item) {
-                    // Our proxy returns {label, value, data}; if not, keep raw
-                    if (item && (item.label || item.value)) return item;
-                    return { label: suggestionLabel(item), value: suggestionValue(item), data: item };
-                });
+                if (myGen !== requestGen) { return; } // stale response — discard
+                if (loader) { loader.classList.add('m-hidden'); }
+
+                const suggestions = normalizeSuggestions(payload);
 
                 if (!suggestions.length) {
+                    setCached(suggestUrl, q, suggestions);
                     setHelp(root, 'No matches found.', 'info');
                     hideResults(results);
                     return;
                 }
 
+                setCached(suggestUrl, q, suggestions);
                 setHelp(root, '', 'info');
                 renderResults(results, suggestions);
             }).catch(function() {
+                if (myGen !== requestGen) { return; } // stale — discard
+                if (loader) { loader.classList.add('m-hidden'); }
                 setHelp(root, 'Address lookup failed. Please type the address manually.', 'error');
                 hideResults(results);
             });
@@ -309,6 +379,12 @@
         // Suggest on input
         if (search && results) {
             search.addEventListener('input', function() {
+                // Clear confirmed state when the user starts typing again
+                if (affixIcon) {
+                    affixIcon.classList.remove('fa-check-circle');
+                    affixIcon.classList.add('fa-search');
+                }
+                root.classList.remove('m-address-confirmed');
                 doSuggest();
             });
 
@@ -364,6 +440,29 @@
                 if (search) search.value = '';
                 clearSelection();
                 if (results) hideResults(results);
+                if (loader) { loader.classList.add('m-hidden'); }
+                if (affixIcon) {
+                    affixIcon.classList.remove('fa-check-circle');
+                    affixIcon.classList.add('fa-search');
+                }
+                root.classList.remove('m-address-confirmed');
+                return this;
+            },
+            /**
+             * Pre-populate the search box display text without triggering a search.
+             * Use this when restoring a saved address from the database on edit pages.
+             * Automatically shows the confirmed (green checkmark) state when a non-empty
+             * value is provided.
+             */
+            setValue: function(text) {
+                if (search) { search.value = text; }
+                if (text && String(text).trim()) {
+                    if (affixIcon) {
+                        affixIcon.classList.remove('fa-search');
+                        affixIcon.classList.add('fa-check-circle');
+                    }
+                    root.classList.add('m-address-confirmed');
+                }
                 return this;
             },
             getCoordinates: function() {

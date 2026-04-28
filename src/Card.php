@@ -64,13 +64,19 @@ class Card extends Component
     /**
      * Prepend a section-header divider with optional link before the card body.
      * Call multiple times to add multiple sections.
+     *
+     * @param string      $title        Trusted HTML string (icons allowed).
+     * @param string|null $linkUrl      Optional href for the right-side action link.
+     * @param string      $linkText     Trusted HTML for the link label (icons allowed).
+     * @param bool        $linkExternal When true, adds target="_blank" rel="noopener noreferrer".
      */
-    public function sectionHeader(string $title, ?string $linkUrl = null, string $linkText = 'View all'): self
+    public function sectionHeader(string $title, ?string $linkUrl = null, string $linkText = 'View all', bool $linkExternal = false): self
     {
         $this->sectionHeaders[] = [
-            'title' => $title,
-            'linkUrl' => $linkUrl,
-            'linkText' => $linkText,
+            'title'        => $title,
+            'linkUrl'      => $linkUrl,
+            'linkText'     => $linkText,
+            'linkExternal' => $linkExternal,
         ];
         return $this;
     }
@@ -104,9 +110,10 @@ class Card extends Component
             $shTitle = $sh['title']; // trusted HTML, not escaped (same as content/title)
             $shLink = '';
             if ($sh['linkUrl'] !== null) {
-                $shLinkUrl = htmlspecialchars($sh['linkUrl'], ENT_QUOTES, 'UTF-8');
-                $shLinkText = htmlspecialchars($sh['linkText'], ENT_QUOTES, 'UTF-8');
-                $shLink = '<a class="m-card-section-link" href="' . $shLinkUrl . '">' . $shLinkText . '</a>';
+                $shLinkUrl  = htmlspecialchars($sh['linkUrl'], ENT_QUOTES, 'UTF-8');
+                $shLinkText = $sh['linkText']; // trusted HTML — allows icons in the link label
+                $shExtAttrs = !empty($sh['linkExternal']) ? ' target="_blank" rel="noopener noreferrer"' : '';
+                $shLink = '<a class="m-card-section-link" href="' . $shLinkUrl . '"' . $shExtAttrs . '>' . $shLinkText . '</a>';
             }
             $sectionHeadersHtml .= '<div class="m-card-section-header"><span class="m-card-section-title">' . $shTitle . '</span>' . $shLink . '</div>';
         }

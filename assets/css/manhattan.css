@@ -1840,6 +1840,17 @@
     color: #7f8c8d;
 }
 
+/* Inline loader shown while fetching address suggestions */
+.m-address-loader {
+    display: flex;
+    padding: 4px 2px;
+}
+
+/* Confirmed-address state: green checkmark replaces the search icon */
+.m-address-confirmed .m-address-search-affix i {
+    color: #4CAF50;
+}
+
 /* ============================================================
    Map Component
    ============================================================ */
@@ -1851,6 +1862,19 @@
     overflow: hidden;
     background: #e8e8e8;
     border: 1px solid #ddd;
+}
+
+/* Leaflet: ensure tile canvas fills the container */
+.m-map .leaflet-container {
+    width: 100%;
+    height: 100%;
+    background: #e8e8e8;
+}
+
+/* Ensure Leaflet controls stay below Manhattan modals/windows (z-index 9999) */
+.m-map .leaflet-top,
+.m-map .leaflet-bottom {
+    z-index: 999;
 }
 
 .m-map-loading,

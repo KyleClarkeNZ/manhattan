@@ -6,30 +6,41 @@ namespace Manhattan;
 /**
  * Manhattan Map Component
  *
- * Renders an embedded Google Maps container. GPS coordinates from the Address
- * component (or any other source) can be fed to the JS API to display pins.
+ * Renders an interactive map container powered by Leaflet/OSM (default, no API key)
+ * or Google Maps (requires ->apiKey()).
  *
  * @example
- * // Static map with a pre-set centre and marker
+ * // Leaflet map (free, no API key) — recommended
  * <?= $m->map('venueMap')
- *       ->apiKey($_ENV['GOOGLE_MAPS_KEY'])
+ *       ->provider('leaflet')
  *       ->center(-36.8485, 174.7633)
- *       ->zoom(14)
+ *       ->zoom(15)
  *       ->marker(-36.8485, 174.7633, 'Auckland CBD')
  *       ->height('400px') ?>
  *
- * // Empty map — populate from address picker via JS
- * <?= $m->map('locationMap')->apiKey($_ENV['GOOGLE_MAPS_KEY'])->height('300px') ?>
+ * // Google Maps (requires API key)
+ * <?= $m->map('venueMap')
+ *       ->provider('google')
+ *       ->apiKey($_ENV['GOOGLE_MAPS_KEY'])
+ *       ->center(-36.8485, 174.7633)
+ *       ->height('400px') ?>
  *
- * // JS API
- * var map = m.map('locationMap');
+ * // JS API (same for both providers)
+ * var map = m.map('venueMap');
  * map.setCenter(-36.8485, 174.7633);
  * map.addMarker(-36.8485, 174.7633, 'My Location');
+ * map.fitMarkers();
  */
 class Map extends Component
 {
-    /** @var string Google Maps JavaScript API key */
+    /** @var string Map provider: 'leaflet' (default, free) or 'google' (requires API key) */
+    protected string $provider = 'leaflet';
+
+    /** @var string Google Maps JavaScript API key (only used when provider = 'google') */
     protected string $apiKey = '';
+
+    /** @var string Custom tile URL for Leaflet (leave empty for OpenStreetMap default) */
+    protected string $tileUrl = '';
 
     /** @var float|null Default centre latitude */
     protected ?float $centerLat = null;
@@ -47,11 +58,33 @@ class Map extends Component
     protected array $markers = [];
 
     /**
-     * Set the Google Maps JavaScript API key.
+     * Set the map provider.
+     *
+     * @param string $provider 'leaflet' (default, OpenStreetMap, no API key) or 'google'
+     */
+    public function provider(string $provider): self
+    {
+        $this->provider = $provider;
+        return $this;
+    }
+
+    /**
+     * Set the Google Maps JavaScript API key (only required when provider = 'google').
      */
     public function apiKey(string $key): self
     {
         $this->apiKey = $key;
+        return $this;
+    }
+
+    /**
+     * Override the Leaflet tile URL (leave empty for OpenStreetMap default).
+     *
+     * Example: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+     */
+    public function tileUrl(string $url): self
+    {
+        $this->tileUrl = $url;
         return $this;
     }
 
@@ -119,15 +152,21 @@ class Map extends Component
 
     protected function renderHtml(): string
     {
-        $idEsc    = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8');
-        $keyEsc   = htmlspecialchars($this->apiKey, ENT_QUOTES, 'UTF-8');
-        $heightEsc = htmlspecialchars($this->height, ENT_QUOTES, 'UTF-8');
+        $idEsc     = htmlspecialchars($this->id,       ENT_QUOTES, 'UTF-8');
+        $keyEsc    = htmlspecialchars($this->apiKey,   ENT_QUOTES, 'UTF-8');
+        $heightEsc = htmlspecialchars($this->height,   ENT_QUOTES, 'UTF-8');
+        $provEsc   = htmlspecialchars($this->provider, ENT_QUOTES, 'UTF-8');
 
-        $classes = array_merge(['m-map'], $this->classes);
+        $classes  = array_merge(['m-map'], $this->getExtraClasses());
         $classStr = htmlspecialchars(implode(' ', $classes), ENT_QUOTES, 'UTF-8');
 
-        $dataAttrs  = 'data-api-key="' . $keyEsc . '"';
+        $dataAttrs  = 'data-provider="' . $provEsc . '"';
+        $dataAttrs .= ' data-api-key="' . $keyEsc . '"';
         $dataAttrs .= ' data-zoom="' . (int)$this->zoom . '"';
+
+        if ($this->tileUrl !== '') {
+            $dataAttrs .= ' data-tile-url="' . htmlspecialchars($this->tileUrl, ENT_QUOTES, 'UTF-8') . '"';
+        }
 
         if ($this->centerLat !== null && $this->centerLng !== null) {
             $dataAttrs .= ' data-center-lat="' . htmlspecialchars((string)$this->centerLat, ENT_QUOTES, 'UTF-8') . '"';
