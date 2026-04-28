@@ -253,14 +253,32 @@
     }
 
     function createCustomDropdown(select, wrapper, options) {
+        // Reuse a server-rendered .m-dropdown-custom if one is already present
+        // in the wrapper. The PHP Dropdown component renders the full wrapper
+        // + custom display structure to avoid a post-load layout shift; in
+        // that case we just attach behaviour rather than rebuild the DOM.
+        var existing = wrapper.querySelector('.m-dropdown-custom');
+        if (existing) {
+            // Ensure data-value reflects the current select value (in case it
+            // was set after render). Don't clobber a populated data-value.
+            if (!existing.hasAttribute('data-value')) {
+                existing.setAttribute('data-value', select.value || '');
+            }
+            // Hide the original select (CSS does this too, defence-in-depth).
+            select.style.display = 'none';
+            // Populate the options list.
+            renderDropdownOptions(existing, options);
+            return existing;
+        }
+
         const custom = utils.createElement('div', 'm-dropdown-custom');
         custom.setAttribute('tabindex', '0');
         custom.setAttribute('data-value', select.value || '');
-        
-        const selectedText = select.selectedIndex >= 0 ? 
-            select.options[select.selectedIndex].textContent : 
+
+        const selectedText = select.selectedIndex >= 0 ?
+            select.options[select.selectedIndex].textContent :
             options.placeholder;
-        
+
         custom.innerHTML = `
             <div class="m-dropdown-header">
                 <span class="m-dropdown-value">${selectedText}</span>
@@ -268,13 +286,13 @@
             </div>
             <div class="m-dropdown-list"></div>
         `;
-        
+
         // Hide original select
         select.style.display = 'none';
         wrapper.insertBefore(custom, select);
-        
+
         renderDropdownOptions(custom, options);
-        
+
         return custom;
     }
 

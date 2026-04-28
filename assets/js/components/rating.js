@@ -40,6 +40,17 @@
         this._starsEl = this.element.querySelector('.m-rating-stars');
         this._textEl  = this.element.querySelector('.m-rating-value-text');
 
+        // Build the star elements ONCE up front. Subsequent renders mutate the
+        // existing <i> nodes' classes rather than rewriting innerHTML — this is
+        // critical because rebuilding innerHTML during a hover sequence destroys
+        // the very DOM nodes the browser is tracking for mouseover / mousedown,
+        // which causes:
+        //   • mouseleave to never fire reliably (continuous mouseover / mouseout
+        //     storms as new nodes appear under the cursor),
+        //   • clicks to be silently dropped (mousedown and mouseup land on
+        //     different DOM nodes).
+        this._buildStars();
+
         if (this.config.aggregate) {
             // Show user's saved rating if they have one, otherwise the community avg
             this._renderAgg(this.userValue > 0 ? this.userValue : this.config.aggregate.avg);
@@ -53,24 +64,47 @@
 
     // ─── Rendering ───────────────────────────────────────────────────────────
 
+    /**
+     * Create the persistent <i> star elements. Called once from init().
+     * Class state (filled / half / empty) is applied later by _render().
+     */
+    Rating.prototype._buildStars = function () {
+        if (!this._starsEl) { return; }
+        var frag = document.createDocumentFragment();
+        for (var i = 1; i <= this.max; i++) {
+            var iEl = document.createElement('i');
+            iEl.className       = 'm-rating-star' + (this.config.readonly ? '' : ' m-rating-star-interactive');
+            iEl.setAttribute('data-value',   String(i));
+            iEl.setAttribute('aria-hidden',  'true');
+            // Default empty appearance — _render will toggle filled state.
+            iEl.classList.add('far', 'fa-star');
+            frag.appendChild(iEl);
+        }
+        // Replace any pre-existing children in one shot (e.g. from a prior init).
+        this._starsEl.innerHTML = '';
+        this._starsEl.appendChild(frag);
+        this._starNodes = Array.prototype.slice.call(
+            this._starsEl.querySelectorAll('[data-value]')
+        );
+    };
+
     Rating.prototype._render = function (activeValue) {
-        var html = '';
         var half = this.config.halfStars;
 
-        for (var i = 1; i <= this.max; i++) {
-            var filled = i <= Math.floor(activeValue);
-            var isHalf = !filled && half && i <= Math.ceil(activeValue) && (activeValue % 1) >= 0.5;
-            var icon   = isHalf ? 'fa-star-half-alt' : 'fa-star';
-            var style  = (filled || isHalf) ? 'fas' : 'far';
-            var cls    = 'm-rating-star' + ((filled || isHalf) ? ' m-rating-star-filled' : '') +
-                         (this.config.readonly ? '' : ' m-rating-star-interactive');
-            html += '<i class="' + style + ' ' + icon + ' ' + cls + '"'
-                 +  ' data-value="' + i + '"'
-                 +  ' aria-hidden="true"></i>';
-        }
+        if (this._starNodes && this._starNodes.length) {
+            for (var i = 0; i < this._starNodes.length; i++) {
+                var idx    = i + 1;
+                var node   = this._starNodes[i];
+                var filled = idx <= Math.floor(activeValue);
+                var isHalf = !filled && half && idx <= Math.ceil(activeValue) && (activeValue % 1) >= 0.5;
 
-        if (this._starsEl) {
-            this._starsEl.innerHTML = html;
+                // Toggle the FA style + glyph classes in place — no DOM rebuild.
+                node.classList.toggle('fas',              filled || isHalf);
+                node.classList.toggle('far',              !(filled || isHalf));
+                node.classList.toggle('fa-star',          !isHalf);
+                node.classList.toggle('fa-star-half-alt',  isHalf);
+                node.classList.toggle('m-rating-star-filled', filled || isHalf);
+            }
         }
 
         if (this._textEl) {

@@ -5,8 +5,29 @@
 
 /* === Base: Icon reset ===
  * Font Awesome icons should never be selectable as text or show a text cursor.
- * pointer-events:none passes clicks through to the parent button/link. */
-.fas, .far, .fab, .fal, .fad, .fa {
+ * pointer-events:none passes clicks through to the parent button/link.
+ *
+ * Space reservation: FA glyphs are rendered by a webfont. Until the font
+ * finishes loading the browser draws an invisible placeholder whose width can
+ * be 0 (FOIT). When the glyph finally paints, surrounding inline content
+ * reflows — producing the visible "flash" / content shift. Fix:
+ *
+ *   • display:inline-block lifts the element out of inline text flow and
+ *     gives it a stable box even before the glyph is drawn.
+ *   • min-width:1em reserves exactly one character-width of space.
+ *   • text-align:center keeps glyphs centred in that reserved box.
+ *   • line-height:1 prevents descender-gap when icons appear inside flex rows.
+ *   • vertical-align:middle aligns icons with adjacent text without the gap
+ *     that baseline alignment causes for inline-block elements.
+ *
+ * Together these ensure icons occupy a stable layout slot from the first
+ * paint, so no reflow occurs when the webfont completes loading. */
+.fas, .far, .fab, .fal, .fat, .fad, .fa {
+    display: inline-block;
+    min-width: 1em;
+    text-align: center;
+    line-height: 1;
+    vertical-align: middle;
     user-select: none;
     -webkit-user-select: none;
     cursor: inherit;
@@ -3945,8 +3966,12 @@ body::-webkit-scrollbar-thumb:hover {
 .m-rating-color-danger  .m-rating-star-filled   { color: #e74c3c; }
 .m-rating-color-purple  .m-rating-star-filled   { color: #9b59b6; }
 
-/* Focus ring for keyboard navigation */
+/* Focus ring for keyboard navigation only — :focus-visible avoids the blue
+   outline appearing on mouse click while preserving keyboard accessibility. */
 .m-rating:focus {
+    outline: none;
+}
+.m-rating:focus-visible {
     outline: 2px solid #2196F3;
     outline-offset: 2px;
     border-radius: 4px;

@@ -222,6 +222,58 @@ class Dropdown extends Component
         $eventAttrs = $this->renderEventAttributes();
         $extraAttrs = $this->renderAdditionalAttributes(array_keys($attrs));
 
-        return "<select{$attrString}{$eventAttrs}{$extraAttrs}>{$optionsHtml}</select>";
+        $selectHtml = "<select{$attrString}{$eventAttrs}{$extraAttrs}>{$optionsHtml}</select>";
+
+        // Compute the initially-displayed text so the server-rendered custom
+        // dropdown matches what the JS would build on init. This eliminates a
+        // post-load layout-shift / paint flash where the empty <select> area
+        // would suddenly be replaced by the custom dropdown markup.
+        $displayText = '';
+        if ($this->value !== null && $this->value !== '') {
+            // Find matching option text from dataSource / groupedDataSource.
+            foreach ($this->dataSource as $row) {
+                if (is_array($row) && isset($row[$this->valueField])
+                    && (string)$row[$this->valueField] === (string)$this->value) {
+                    $displayText = isset($row[$this->textField]) ? (string)$row[$this->textField] : '';
+                    break;
+                }
+            }
+            if ($displayText === '') {
+                foreach ($this->groupedDataSource as $group) {
+                    $items = isset($group['items']) && is_array($group['items']) ? $group['items'] : [];
+                    foreach ($items as $row) {
+                        if (is_array($row) && isset($row[$this->valueField])
+                            && (string)$row[$this->valueField] === (string)$this->value) {
+                            $displayText = isset($row[$this->textField]) ? (string)$row[$this->textField] : '';
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+        if ($displayText === '' && $this->placeholder !== null) {
+            $displayText = $this->placeholder;
+        }
+
+        $displayTextEsc = htmlspecialchars($displayText, ENT_QUOTES, 'UTF-8');
+        $valueEsc = htmlspecialchars((string)($this->value ?? ''), ENT_QUOTES, 'UTF-8');
+        $customClasses = 'm-dropdown-custom';
+        if ($this->disabled) {
+            $customClasses .= ' m-disabled';
+        }
+
+        // Server-rendered wrapper + custom display. The JS dropdown component
+        // detects this pre-rendered structure and attaches behaviour to it
+        // instead of rebuilding the DOM.
+        return '<div class="m-dropdown-wrapper">'
+            . '<div class="' . $customClasses . '" tabindex="0" data-value="' . $valueEsc . '">'
+            . '<div class="m-dropdown-header">'
+            . '<span class="m-dropdown-value">' . $displayTextEsc . '</span>'
+            . '<i class="fas fa-chevron-down m-dropdown-arrow"></i>'
+            . '</div>'
+            . '<div class="m-dropdown-list"></div>'
+            . '</div>'
+            . $selectHtml
+            . '</div>';
     }
 }
