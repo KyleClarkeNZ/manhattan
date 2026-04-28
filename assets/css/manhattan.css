@@ -3893,12 +3893,21 @@ body::-webkit-scrollbar-thumb:hover {
 .m-rating-star {
     color: #c9cfd6;      /* empty star */
     transition: color 0.1s, transform 0.1s;
+    /* Override the global Font Awesome reset (pointer-events:none) so each
+       star is individually hit-testable for hover/click handlers. Also
+       inline-block so the full bounding box (not just the glyph) responds
+       to elementFromPoint and pointer events. */
+    display: inline-block;
+    text-align: center;
+    min-width: 1em;
+    pointer-events: auto;
 }
 .m-rating-star-filled {
     color: #f0ad00;      /* filled star */
 }
 .m-rating-star-interactive {
     cursor: pointer;
+    pointer-events: auto;
 }
 .m-rating-star-interactive:hover,
 .m-rating-stars:hover .m-rating-star-interactive ~ .m-rating-star-interactive {
@@ -3941,6 +3950,19 @@ body::-webkit-scrollbar-thumb:hover {
     outline: 2px solid #2196F3;
     outline-offset: 2px;
     border-radius: 4px;
+}
+
+/* ── Aggregate / overlay mode ─────────────────────────────────────────────── */
+/* Stars are dimmed when showing a community average (no personal rating set,
+   avg > 0). Hovering or selecting removes the dim so the user gets clear
+   interactive feedback. No opacity transition — the change is intentionally
+   instant to avoid a "slow to respond" feel on hover entry. */
+.m-rating.m-rating-showing-avg .m-rating-star {
+    opacity: 0.55;
+}
+.m-rating.m-rating-showing-avg:hover .m-rating-star,
+.m-rating.m-rating-showing-avg:focus .m-rating-star {
+    opacity: 1;
 }
 
 

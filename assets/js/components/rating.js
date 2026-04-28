@@ -22,13 +22,16 @@
     // ─── Constructor ──────────────────────────────────────────────────────────
 
     function Rating(element, config) {
-        this.element  = element;
-        this.config   = config;
-        this.value    = parseFloat(config.value) || 0;
-        this.max      = parseInt(config.max, 10)  || 5;
-        this._hover   = null;
-        this._starsEl = null;
-        this._textEl  = null;
+        this.element    = element;
+        this.config     = config;
+        this.max        = parseInt(config.max, 10)  || 5;
+        this._hover     = null;
+        this._starsEl   = null;
+        this._textEl    = null;
+        // In aggregate mode, userValue tracks the user's own selection (separate
+        // from the community-average display value).
+        this.userValue  = parseFloat(config.value) || 0;
+        this.value      = parseFloat(config.value) || 0;
     }
 
     // ─── Initialise ───────────────────────────────────────────────────────────
@@ -36,7 +39,13 @@
     Rating.prototype.init = function () {
         this._starsEl = this.element.querySelector('.m-rating-stars');
         this._textEl  = this.element.querySelector('.m-rating-value-text');
-        this._render(this.value);
+
+        if (this.config.aggregate) {
+            // Show user's saved rating if they have one, otherwise the community avg
+            this._renderAgg(this.userValue > 0 ? this.userValue : this.config.aggregate.avg);
+        } else {
+            this._render(this.value);
+        }
         if (!this.config.readonly) {
             this._bindInteractive();
         }
@@ -65,11 +74,35 @@
         }
 
         if (this._textEl) {
-            if (activeValue > 0) {
-                this._textEl.textContent = activeValue + '\u00a0/\u00a0' + this.max;
-            } else {
-                this._textEl.textContent = '';
+            // In aggregate mode the calling code manages the label — don't overwrite it
+            if (!this.config.aggregate) {
+                if (activeValue > 0) {
+                    this._textEl.textContent = activeValue + '\u00a0/\u00a0' + this.max;
+                } else {
+                    this._textEl.textContent = '';
+                }
             }
+        }
+    };
+
+    /**
+     * Render for aggregate mode: updates stars and manages the dim class that
+     * signals "showing community average, not a personal selection".
+     *
+     * The dim is only applied when there is a meaningful community average to
+     * show (avg > 0) AND the user has not set a personal rating. When there are
+     * no ratings yet the widget shows fully-bright empty stars so it is clearly
+     * visible and inviting as an interactive control.
+     */
+    Rating.prototype._renderAgg = function (displayVal) {
+        this._render(displayVal);
+        var hasAvg = this.config.aggregate && this.config.aggregate.avg > 0;
+        if (!this.userValue && hasAvg) {
+            // Dim: showing community avg, user hasn't rated yet
+            this.element.classList.add('m-rating-showing-avg');
+        } else {
+            // Full brightness: either user has rated, or no avg exists yet
+            this.element.classList.remove('m-rating-showing-avg');
         }
     };
 
@@ -78,28 +111,45 @@
     Rating.prototype._bindInteractive = function () {
         var self  = this;
         var stars = this._starsEl;
+        var agg   = self.config.aggregate;
         if (!stars) return;
 
         // Hover preview
         stars.addEventListener('mouseover', function (e) {
-            var star = e.target.closest ? e.target.closest('[data-value]') : _closestDataValue(e.target);
+            var star = _findStarFromEvent(stars, e);
             if (!star) return;
             self._hover = parseInt(star.getAttribute('data-value'), 10);
+            // Remove dim BEFORE rendering so newly-created star elements are not
+            // painted with the dimmed opacity from the 'm-rating-showing-avg' rule.
+            if (agg) { self.element.classList.remove('m-rating-showing-avg'); }
             self._render(self._hover);
         });
 
         stars.addEventListener('mouseleave', function () {
             self._hover = null;
-            self._render(self.value);
+            if (agg) {
+                // Revert to user's saved value if set, otherwise the community avg
+                self._renderAgg(self.userValue > 0 ? self.userValue : agg.avg);
+            } else {
+                self._render(self.value);
+            }
         });
 
-        // Select on click; click same value again to clear
+        // Select on click
         stars.addEventListener('click', function (e) {
-            var star = e.target.closest ? e.target.closest('[data-value]') : _closestDataValue(e.target);
+            var star = _findStarFromEvent(stars, e);
             if (!star) return;
             var clicked = parseInt(star.getAttribute('data-value'), 10);
-            self.value  = (clicked === self.value) ? 0 : clicked;
-            self._render(self.value);
+            if (agg) {
+                // Aggregate mode: no toggle-to-zero; record user's selection
+                self.userValue = clicked;
+                self.value     = clicked;
+                self._renderAgg(self.userValue);
+            } else {
+                // Standard mode: click same value to clear
+                self.value = (clicked === self.value) ? 0 : clicked;
+                self._render(self.value);
+            }
             self._fireChange();
         });
 
@@ -108,13 +158,25 @@
         this.element.addEventListener('keydown', function (e) {
             if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                self.value = Math.min(self.max, self.value + 1);
-                self._render(self.value);
+                if (agg) {
+                    self.userValue = Math.min(self.max, (self.userValue || 0) + 1);
+                    self.value = self.userValue;
+                    self._renderAgg(self.userValue);
+                } else {
+                    self.value = Math.min(self.max, self.value + 1);
+                    self._render(self.value);
+                }
                 self._fireChange();
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                self.value = Math.max(0, self.value - 1);
-                self._render(self.value);
+                if (agg) {
+                    self.userValue = Math.max(0, (self.userValue || 0) - 1);
+                    self.value = self.userValue;
+                    self._renderAgg(self.userValue > 0 ? self.userValue : agg.avg);
+                } else {
+                    self.value = Math.max(0, self.value - 1);
+                    self._render(self.value);
+                }
                 self._fireChange();
             }
         });
@@ -125,6 +187,30 @@
         while (el) {
             if (el.hasAttribute && el.hasAttribute('data-value')) return el;
             el = el.parentElement;
+        }
+        return null;
+    }
+
+    /**
+     * Locate the star [data-value] for a mouse event. First tries closest(),
+     * then falls back to coordinate-based hit-testing of each star's bounding
+     * box. The fallback is required because Font Awesome icons render via a
+     * ::before pseudo-element whose painted area is only the glyph itself —
+     * so when the mouse is over the inline <i>'s reported bounding box but
+     * not the glyph, the event target resolves to the parent container and
+     * closest('[data-value]') returns null.
+     */
+    function _findStarFromEvent(stars, e) {
+        var target = e.target;
+        var hit = target.closest ? target.closest('[data-value]') : _closestDataValue(target);
+        if (hit) return hit;
+        var children = stars.querySelectorAll('[data-value]');
+        for (var i = 0; i < children.length; i++) {
+            var r = children[i].getBoundingClientRect();
+            if (e.clientX >= r.left && e.clientX <= r.right
+             && e.clientY >= r.top  && e.clientY <= r.bottom) {
+                return children[i];
+            }
         }
         return null;
     }
@@ -160,10 +246,38 @@
         return this.value;
     };
 
-    /** Set value programmatically. */
+    /** Get the user's personal selection (aggregate mode only; same as getValue otherwise). */
+    Rating.prototype.getUserValue = function () {
+        return this.userValue;
+    };
+
+    /** Set value programmatically (also updates userValue in aggregate mode). */
     Rating.prototype.setValue = function (v) {
         this.value = Math.max(0, Math.min(this.max, parseFloat(v) || 0));
-        this._render(this.value);
+        if (this.config.aggregate) {
+            this.userValue = this.value;
+            var displayVal = this.userValue > 0 ? this.userValue : this.config.aggregate.avg;
+            this._renderAgg(displayVal);
+        } else {
+            this._render(this.value);
+        }
+    };
+
+    /**
+     * Update the aggregate data after a user submits a rating.
+     * Re-renders the stars to reflect the new community average.
+     * @param {number} avg   New community average
+     * @param {number} count New total count
+     */
+    Rating.prototype.setAggregate = function (avg, count) {
+        if (!this.config.aggregate) { return; }
+        this.config.aggregate.avg   = avg;
+        this.config.aggregate.count = count;
+        // Re-render only when not currently hovering
+        if (this._hover === null) {
+            var displayVal = this.userValue > 0 ? this.userValue : avg;
+            this._renderAgg(displayVal);
+        }
     };
 
     /** Destroy instance. */

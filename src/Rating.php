@@ -32,6 +32,7 @@ final class Rating extends Component
     private string  $size      = 'md';
     private string  $color     = '';
     private ?string $onChange  = null;
+    private ?array  $aggregate = null;
 
     // ── Fluent builder ────────────────────────────────────────────────────────
 
@@ -99,6 +100,23 @@ final class Rating extends Component
         return $this;
     }
 
+    /**
+     * Enable aggregate / Amazon-style overlay mode.
+     *
+     * Stars display the community average by default. When a logged-in user
+     * hovers, the stars become interactive so they can preview and set their
+     * own rating with the same widget. The built-in value text is suppressed
+     * in this mode — the calling view is responsible for updating the label.
+     *
+     * @param float $avg   Community average (0–max)
+     * @param int   $count Total number of ratings
+     */
+    public function aggregate(float $avg, int $count): self
+    {
+        $this->aggregate = ['avg' => round($avg, 1), 'count' => $count];
+        return $this;
+    }
+
     // ── Component interface ───────────────────────────────────────────────────
 
     protected function getComponentType(): string
@@ -122,6 +140,7 @@ final class Rating extends Component
             'readonly'  => $this->readonly,
             'halfStars' => $this->halfStars,
             'onChange'  => $this->onChange,
+            'aggregate' => $this->aggregate,
         ];
         $configJson = htmlspecialchars(
             json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP) ?: '{}',

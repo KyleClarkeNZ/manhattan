@@ -1381,6 +1381,14 @@ body.theme-dark .m-rating-value-text { color: #8b949e; }
 body.m-dark .m-rating:focus,
 body.theme-dark .m-rating:focus { outline-color: #58a6ff; }
 
+/* Aggregate mode dim — slightly stronger in dark mode for clarity; no transition (instant feedback) */
+body.m-dark .m-rating.m-rating-showing-avg .m-rating-star,
+body.theme-dark .m-rating.m-rating-showing-avg .m-rating-star { opacity: 0.45; }
+body.m-dark .m-rating.m-rating-showing-avg:hover .m-rating-star,
+body.theme-dark .m-rating.m-rating-showing-avg:hover .m-rating-star,
+body.m-dark .m-rating.m-rating-showing-avg:focus .m-rating-star,
+body.theme-dark .m-rating.m-rating-showing-avg:focus .m-rating-star { opacity: 1; }
+
 /* =====================================================================
    DARK: EMBEDDED CELL COMPONENTS
    ===================================================================== */
