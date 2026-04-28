@@ -392,11 +392,14 @@ class RichTextEditor extends Component
 
         // Placeholder on the content div
         $placeholderAttr = '';
+        $ariaPlaceholderAttr = '';
         if ($this->placeholder !== null) {
             $placeholderAttr = ' data-placeholder="' . htmlspecialchars($this->placeholder, ENT_QUOTES, 'UTF-8') . '"';
+            $ariaPlaceholderAttr = ' aria-placeholder="' . htmlspecialchars($this->placeholder, ENT_QUOTES, 'UTF-8') . '"';
         }
 
         $editableAttr = $this->readOnly ? 'false' : 'true';
+        $ariaReadonlyAttr = $this->readOnly ? ' aria-readonly="true"' : '';
 
         // Toolbar HTML
         $toolbarHtml = $this->renderToolbar();
@@ -412,7 +415,7 @@ class RichTextEditor extends Component
         // Character count footer — auto-enabled when minChars/maxChars is set
         $effectiveShowCharCount = $this->showCharCount || ($this->minChars !== null) || ($this->maxChars !== null);
         if ($effectiveShowCharCount) {
-            $charCountHtml = '<div class="m-rte-footer"><span class="m-rte-char-count">0 characters</span></div>';
+            $charCountHtml = '<div class="m-rte-footer"><span class="m-rte-char-count" aria-live="polite" aria-atomic="true">0 characters</span></div>';
         } else {
             $charCountHtml = '';
         }
@@ -442,7 +445,7 @@ class RichTextEditor extends Component
 <div id="{$id}" class="{$classAttr}" data-component="richtexteditor"{$dataAttrs}{$extraAttrs}>
     <div class="m-rte-toolbar">{$toolbarHtml}</div>
     <div class="{$bodyClass}" style="{$bodyStyle}">
-        <div class="m-rte-content m-richtext" contenteditable="{$editableAttr}"{$placeholderAttr}>{$contentHtml}</div>
+        <div class="m-rte-content m-richtext" contenteditable="{$editableAttr}" role="textbox" aria-multiline="true" aria-labelledby="{$id}_label"{$ariaPlaceholderAttr}{$ariaReadonlyAttr}{$placeholderAttr}>{$contentHtml}</div>
     </div>
     {$charCountHtml}{$hiddenField}{$linkDialogHtml}{$imageDialogHtml}{$youtubeDialogHtml}
 </div>

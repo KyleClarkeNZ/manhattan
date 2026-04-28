@@ -121,10 +121,10 @@ class ToggleSwitch extends Component
 
         $stateLabels = '';
         if ($this->onLabel !== null && $this->offLabel !== null) {
-            $stateLabels = '<span class="m-switch-state-label m-switch-state-on">' 
+            $stateLabels = '<span class="m-switch-state-label m-switch-state-on" aria-hidden="true">' 
                 . htmlspecialchars($this->onLabel, ENT_QUOTES, 'UTF-8') 
                 . '</span>'
-                . '<span class="m-switch-state-label m-switch-state-off">' 
+                . '<span class="m-switch-state-label m-switch-state-off" aria-hidden="true">' 
                 . htmlspecialchars($this->offLabel, ENT_QUOTES, 'UTF-8') 
                 . '</span>';
         }

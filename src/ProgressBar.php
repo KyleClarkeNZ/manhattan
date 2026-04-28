@@ -147,7 +147,7 @@ final class ProgressBar extends Component
         return <<<HTML
 <div id="{$idAttr}" class="{$classAttr}"{$extraAttrs}{$dataAttrs}>
     {$labelHtml}
-    <div class="m-progress-track" role="progressbar" aria-valuenow="{$ariaValue}" aria-valuemax="{$ariaMax}" aria-label="{$ariaLabel}">
+    <div class="m-progress-track" role="progressbar" aria-valuenow="{$ariaValue}" aria-valuemin="0" aria-valuemax="{$ariaMax}" aria-label="{$ariaLabel}">
         <div class="{$fillClassAttr}" style="width:{$pctRounded}%"></div>
     </div>
 </div>
@@ -191,7 +191,7 @@ HTML;
         return <<<HTML
 <div id="{$idAttr}" class="{$classAttr} m-progress-segmented"{$extraAttrs}{$dataAttrs}>
     {$labelHtml}
-    <div class="m-progress-track" role="progressbar" aria-valuenow="{$ariaValue}" aria-valuemax="{$ariaMax}" aria-label="{$ariaLabel}">
+    <div class="m-progress-track" role="progressbar" aria-valuenow="{$ariaValue}" aria-valuemin="0" aria-valuemax="{$ariaMax}" aria-label="{$ariaLabel}">
         {$segmentsHtml}
     </div>
 </div>

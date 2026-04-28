@@ -122,7 +122,7 @@ class Accordion extends Component
             
             if (!empty($panel['icon'])) {
                 $iconHelper = new Icon('', $panel['icon']);
-                $html[] = '<span class="m-accordion-icon">' . $iconHelper . '</span>';
+                $html[] = '<span class="m-accordion-icon" aria-hidden="true">' . $iconHelper . '</span>';
             }
             
             $html[] = '<span class="m-accordion-title">' . htmlspecialchars($panel['title'], ENT_QUOTES, 'UTF-8') . '</span>';

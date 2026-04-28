@@ -269,7 +269,7 @@ class Dropdown extends Component
             . '<div class="' . $customClasses . '" tabindex="0" data-value="' . $valueEsc . '">'
             . '<div class="m-dropdown-header">'
             . '<span class="m-dropdown-value">' . $displayTextEsc . '</span>'
-            . '<i class="fas fa-chevron-down m-dropdown-arrow"></i>'
+            . '<i class="fas fa-chevron-down m-dropdown-arrow" aria-hidden="true"></i>'
             . '</div>'
             . '<div class="m-dropdown-list"></div>'
             . '</div>'

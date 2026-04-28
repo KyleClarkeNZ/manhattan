@@ -316,7 +316,7 @@ final class Pagination extends Component
         $html .= '</div>';
 
         // Controls column
-        $html .= '<div class="m-pagination-controls" role="list">';
+        $html .= '<div class="m-pagination-controls">';
         $html .= $this->renderControls($currentPage, $totalPages);
         $html .= '</div>';
 
@@ -328,7 +328,7 @@ final class Pagination extends Component
             $source = array_map(function (int $s): array {
                 return ['value' => (string)$s, 'text' => (string)$s];
             }, $this->pageSizes);
-            $html .= '<label class="m-pagination-size-label">Per page</label>';
+            $html .= '<label class="m-pagination-size-label" for="' . htmlspecialchars($sizeId, ENT_QUOTES, 'UTF-8') . '">Per page</label>';
             $html .= (string)$helper->dropdown($sizeId)
                 ->dataSource($source)
                 ->value((string)$this->perPage)

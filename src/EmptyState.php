@@ -143,7 +143,7 @@ final class EmptyState extends Component
 
         $iconHtml = '';
         if ($this->icon !== null) {
-            $iconHtml = '<div class="m-empty-state-icon">' . (new Icon('', $this->icon))->render() . '</div>';
+            $iconHtml = '<div class="m-empty-state-icon" aria-hidden="true">' . (new Icon('', $this->icon))->render() . '</div>';
         }
 
         $titleHtml = '';
@@ -163,7 +163,7 @@ final class EmptyState extends Component
                     // Anchor links retain <a> semantics — Button component renders <button>, not <a>.
                     $url           = htmlspecialchars((string)$this->actionUrl, ENT_QUOTES, 'UTF-8');
                     $actionIconHtml = $this->actionIcon !== null
-                        ? (new Icon('', $this->actionIcon))->render() . ' '
+                        ? Icon::html($this->actionIcon, ['ariaHidden' => true]) . ' '
                         : '';
                     $label         = htmlspecialchars($this->actionLabel, ENT_QUOTES, 'UTF-8');
                     $actionHtml    = '<a href="' . $url . '" class="m-button m-button-primary m-empty-state-action">'

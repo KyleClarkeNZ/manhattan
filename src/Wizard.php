@@ -461,7 +461,8 @@ class Wizard extends Component
             $html .= '<div class="m-wizard-step'
                    . ($isActive ? ' m-wizard-step-active' : '')
                    . ($step->noReturn ? ' m-wizard-step-no-return' : '')
-                   . '" data-step-index="' . $i . '" data-step-key="' . $stepKey . '"'
+                   . '" id="' . $eid . '-step-tab-' . $i . '"'
+                   . ' data-step-index="' . $i . '" data-step-key="' . $stepKey . '"'
                    . ($step->noReturn ? ' data-no-return="1"' : '')
                    . ' role="tab" aria-selected="' . ($isActive ? 'true' : 'false') . '"'
                    . ' tabindex="' . ($isActive ? '0' : '-1') . '">';
@@ -491,7 +492,7 @@ class Wizard extends Component
         $html .= '</div>'; // .m-wizard-header
 
         // ── Step content panels ──────────────────────────────────────────────
-        $html .= '<div class="m-wizard-body" role="tabpanel">';
+        $html .= '<div class="m-wizard-body">';
 
         // Loading overlay (shown while dataUrl is being fetched)
         $html .= '<div class="m-wizard-loading" aria-live="polite" style="display:none">'
@@ -503,7 +504,8 @@ class Wizard extends Component
         foreach ($this->steps as $i => $step) {
             $html .= '<div class="m-wizard-panel'
                    . ($i === 0 ? ' m-wizard-panel-active' : '')
-                   . '" data-panel="' . $i . '" data-step-key="'
+                   . '" role="tabpanel" aria-labelledby="' . $eid . '-step-tab-' . $i . '"'
+                   . ' data-panel="' . $i . '" data-step-key="'
                    . htmlspecialchars($step->key, ENT_QUOTES, 'UTF-8') . '">';
             $html .= $step->content;
             $html .= '</div>'; // .m-wizard-panel

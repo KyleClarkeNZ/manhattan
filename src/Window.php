@@ -245,11 +245,21 @@ class Window extends Component
         $dataAttrs .= ' data-draggable="' . ($effectiveDraggable ? 'true' : 'false') . '"';
         $dataAttrs .= ' data-close-on-esc="' . ($this->closeOnEsc ? 'true' : 'false') . '"';
         
-        $html = '<div id="' . htmlspecialchars($this->id) . '" class="' . implode(' ', $classes) . '"' . $dataAttrs . '>';
-        
-        // Modal overlay
+        $html = '<div id="' . htmlspecialchars($this->id) . '" class="' . implode(' ', $classes) . '"' . $dataAttrs;
+        // ARIA: dialogs need role, modal state, and an accessible name from the title.
+        $html .= ' role="dialog"';
         if ($this->isModal) {
-            $html .= '<div class="m-window-overlay"></div>';
+            $html .= ' aria-modal="true"';
+        }
+        $titleId = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8') . '-title';
+        if ($this->title !== '') {
+            $html .= ' aria-labelledby="' . $titleId . '"';
+        }
+        $html .= '>';
+        
+        // Modal overlay — purely decorative
+        if ($this->isModal) {
+            $html .= '<div class="m-window-overlay" aria-hidden="true"></div>';
         }
         
         // Window content wrapper
@@ -259,8 +269,8 @@ class Window extends Component
         if ($this->title) {
             $titleBarClass = $effectiveDraggable ? 'm-window-titlebar m-draggable' : 'm-window-titlebar';
             $html .= '<div class="' . $titleBarClass . '">';
-            $html .= '<span class="m-window-title">' . $this->title . '</span>';
-            $html .= '<button class="m-window-close" type="button">' . Icon::html('fa-times', ['ariaHidden' => true]) . '</button>';
+            $html .= '<span id="' . $titleId . '" class="m-window-title">' . $this->title . '</span>';
+            $html .= '<button class="m-window-close" type="button" aria-label="Close">' . Icon::html('fa-times', ['ariaHidden' => true]) . '</button>';
             $html .= '</div>';
         }
         

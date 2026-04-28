@@ -198,7 +198,7 @@ class Tabs extends Component
             $iconHtml = '';
             if ($panel->getIcon() !== null) {
                 $iconObj = new Icon('', $panel->getIcon());
-                $iconHtml = (string)$iconObj . ' ';
+                $iconHtml = Icon::html($panel->getIcon(), ['ariaHidden' => true]) . ' ';
             }
 
             $disabledAttr = $panel->isDisabled() ? ' aria-disabled="true" tabindex="-1"' : '';
@@ -207,7 +207,7 @@ class Tabs extends Component
             $badgeHtml = '';
             if (isset($this->badges[$panel->key()]) && $this->badges[$panel->key()] > 0) {
                 $badgeCount = htmlspecialchars((string)$this->badges[$panel->key()], ENT_QUOTES, 'UTF-8');
-                $badgeHtml = '<span class="m-tabs-badge">' . $badgeCount . '</span>';
+                $badgeHtml = '<span class="m-tabs-badge" aria-label="' . $badgeCount . ' items">' . $badgeCount . '</span>';
             }
 
             $tabButtons .= <<<HTML

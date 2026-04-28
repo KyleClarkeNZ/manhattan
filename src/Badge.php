@@ -93,8 +93,7 @@ final class Badge extends Component
 
         $content = '';
         if ($this->icon) {
-            $iconHelper = new Icon('', $this->icon);
-            $content .= $iconHelper . ' ';
+            $content .= Icon::html($this->icon, ['ariaHidden' => true]) . ' ';
         }
         $content .= htmlspecialchars($this->text, ENT_QUOTES, 'UTF-8');
 

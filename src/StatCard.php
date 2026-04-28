@@ -96,7 +96,7 @@ final class StatCard extends Component
 
         $iconHtml = '';
         if ($this->icon !== null) {
-            $iconHtml = '<div class="m-stat-card-icon">' . (new Icon('', $this->icon))->render() . '</div>';
+            $iconHtml = '<div class="m-stat-card-icon" aria-hidden="true">' . (new Icon('', $this->icon))->render() . '</div>';
         }
 
         $valueHtml = '<div class="m-stat-card-value">' . htmlspecialchars($this->value, ENT_QUOTES, 'UTF-8') . '</div>';
@@ -108,10 +108,10 @@ final class StatCard extends Component
             $deltaIcon = '';
             if ($this->deltaUp === true) {
                 $deltaClass .= ' m-stat-card-delta-up';
-                $deltaIcon = (new Icon('', 'fa-arrow-up'))->render() . ' ';
+                $deltaIcon = Icon::html('fa-arrow-up', ['ariaHidden' => true]) . ' ';
             } elseif ($this->deltaUp === false) {
                 $deltaClass .= ' m-stat-card-delta-down';
-                $deltaIcon = (new Icon('', 'fa-arrow-down'))->render() . ' ';
+                $deltaIcon = Icon::html('fa-arrow-down', ['ariaHidden' => true]) . ' ';
             }
             $deltaHtml = '<div class="' . $deltaClass . '">' . $deltaIcon . htmlspecialchars($this->delta, ENT_QUOTES, 'UTF-8') . '</div>';
         }

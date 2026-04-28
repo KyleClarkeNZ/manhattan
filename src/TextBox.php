@@ -189,9 +189,10 @@ class TextBox extends Component
         if ($this->charCountMax !== null) {
             $currentLen = strlen($this->value ?? '');
             $max = $this->charCountMax;
+            $countId = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8') . '-char-count';
             return '<div class="m-textbox-wrapper">' .
-                "<input{$attrString} data-char-count=\"{$max}\"{$eventAttrs}{$extraAttrs}>" .
-                '<span class="m-char-count" data-max="' . $max . '">' . $currentLen . '/' . $max . '</span>' .
+                "<input{$attrString} data-char-count=\"{$max}\" aria-describedby=\"{$countId}\"{$eventAttrs}{$extraAttrs}>" .
+                '<span id="' . $countId . '" class="m-char-count" data-max="' . $max . '" aria-live="polite" aria-atomic="true">' . $currentLen . '/' . $max . '</span>' .
                 '</div>';
         }
 

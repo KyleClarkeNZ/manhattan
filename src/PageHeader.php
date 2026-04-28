@@ -65,7 +65,7 @@ final class PageHeader extends Component
 
         $iconHtml = '';
         if ($this->icon !== null) {
-            $iconHtml = (new Icon('', $this->icon))->render() . ' ';
+            $iconHtml = Icon::html($this->icon, ['ariaHidden' => true]) . ' ';
         }
 
         $titleHtml = '';

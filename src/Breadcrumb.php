@@ -95,15 +95,15 @@ final class Breadcrumb extends Component
             
             // Add separator before each item except the first
             if ($index > 0) {
-                $html .= '<span class="m-breadcrumb-sep">' . (new Icon('', 'fa-chevron-right'))->render() . '</span>';
+                $html .= '<span class="m-breadcrumb-sep" aria-hidden="true">' . (new Icon('', 'fa-chevron-right'))->render() . '</span>';
             }
 
             // Render the item
             if ($isCurrent || $isLast) {
                 // Current page - no link
-                $html .= '<span class="m-breadcrumb-current">';
+                $html .= '<span class="m-breadcrumb-current" aria-current="page">';
                 if (isset($item['icon'])) {
-                    $html .= (new Icon('', $item['icon']))->render() . ' ';
+                    $html .= Icon::html($item['icon'], ['ariaHidden' => true]) . ' ';
                 }
                 $html .= htmlspecialchars($item['text'], ENT_QUOTES, 'UTF-8');
                 $html .= '</span>';
@@ -112,7 +112,7 @@ final class Breadcrumb extends Component
                 $url = htmlspecialchars($item['url'] ?? '#', ENT_QUOTES, 'UTF-8');
                 $html .= "<a href=\"{$url}\" class=\"m-breadcrumb-link\">";
                 if (isset($item['icon'])) {
-                    $html .= (new Icon('', $item['icon']))->render() . ' ';
+                    $html .= Icon::html($item['icon'], ['ariaHidden' => true]) . ' ';
                 }
                 $html .= htmlspecialchars($item['text'], ENT_QUOTES, 'UTF-8');
                 $html .= '</a>';

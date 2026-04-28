@@ -44,7 +44,7 @@ final class MList extends Component
         $attrs = $this->renderAdditionalAttributes();
         $events = $this->renderEventAttributes();
 
-        $html = "<div id=\"{$id}\" class=\"{$classAttr}\"{$attrs}{$events}>";
+        $html = "<div id=\"{$id}\" class=\"{$classAttr}\" role=\"list\"{$attrs}{$events}>";
 
         foreach ($this->items as $item) {
             $itemId = isset($item['id']) ? (string)$item['id'] : '';
@@ -71,7 +71,7 @@ final class MList extends Component
             }
 
             $itemHtml = (string)$item['html'];
-            $html .= '<div class="' . htmlspecialchars($itemClass, ENT_QUOTES, 'UTF-8') . '"' . $itemAttrs . '>' . $itemHtml . '</div>';
+            $html .= '<div class="' . htmlspecialchars($itemClass, ENT_QUOTES, 'UTF-8') . '" role="listitem"' . $itemAttrs . '>' . $itemHtml . '</div>';
         }
 
         if ($this->emptyMessage !== null && empty($this->items)) {

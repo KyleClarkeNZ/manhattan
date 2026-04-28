@@ -95,13 +95,13 @@ final class Toaster extends Component
                 $message = $item['message'];
 
                 $alertClass = htmlspecialchars($this->alertClassForType($type), ENT_QUOTES, 'UTF-8');
-                $iconHtml = Icon::html($this->iconForType($type));
+                $iconHtml = Icon::html($this->iconForType($type), ['ariaHidden' => true]);
                 $msg = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
 
                 $innerHtml .= "<div class=\"alert {$alertClass}\">{$iconHtml} {$msg}</div>";
             }
         }
 
-        return "<div id=\"{$id}\" class=\"{$classAttr}\" role=\"region\" aria-live=\"polite\" aria-atomic=\"true\"{$attrs}{$events}>{$innerHtml}</div>";
+        return "<div id=\"{$id}\" class=\"{$classAttr}\" role=\"region\" aria-label=\"Notifications\" aria-live=\"polite\" aria-atomic=\"false\"{$attrs}{$events}>{$innerHtml}</div>";
     }
 }

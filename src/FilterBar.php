@@ -188,7 +188,8 @@ final class FilterBar extends Component
         $groupClasses = 'm-button-group m-filter-bar-group'
             . ($hasLabel ? ' m-button-group--labeled' : '');
 
-        $html = '<div id="' . $gId . '" class="' . $groupClasses . '" role="group" data-filter-type="' . $type . '">';
+        $groupAriaLabel = ($type === 'sort') ? 'Sort options' : 'Group options';
+        $html = '<div id="' . $gId . '" class="' . $groupClasses . '" role="group" aria-label="' . htmlspecialchars($groupAriaLabel, ENT_QUOTES, 'UTF-8') . '" data-filter-type="' . $type . '">';
 
         foreach ($options as $opt) {
             $value   = htmlspecialchars((string)($opt['value']   ?? ''), ENT_QUOTES, 'UTF-8');
@@ -199,9 +200,13 @@ final class FilterBar extends Component
 
             $btnClass = 'm-button-group-btn' . ($active ? ' m-button-group-active' : '');
 
+            // Icon-only buttons need aria-label from tooltip for screen readers
+            $ariaLabelAttr = ($label === '' && $tooltip !== '') ? ' aria-label="' . $tooltip . '"' : '';
+
             $html .= '<button type="button" class="' . $btnClass . '"'
                 . ' data-value="' . $value . '"'
                 . ($tooltip !== '' ? ' data-m-tooltip="' . $tooltip . '"' : '')
+                . $ariaLabelAttr
                 . ' aria-pressed="' . ($active ? 'true' : 'false') . '">';
 
             if ($icon !== '') {

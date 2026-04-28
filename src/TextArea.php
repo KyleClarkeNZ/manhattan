@@ -200,7 +200,10 @@ class TextArea extends Component
         $counterHtml = '';
         if ($this->charCountMax !== null) {
             $currentLen = strlen($this->value ?? '');
-            $counterHtml = '<span class="m-char-count" data-max="' . $this->charCountMax . '">' . $currentLen . '/' . $this->charCountMax . '</span>';
+            $countId = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8') . '-char-count';
+            // Add aria-describedby to the textarea attrs
+            $attrString .= ' aria-describedby="' . $countId . '"';
+            $counterHtml = '<span id="' . $countId . '" class="m-char-count" data-max="' . $this->charCountMax . '" aria-live="polite" aria-atomic="true">' . $currentLen . '/' . $this->charCountMax . '</span>';
         }
 
         return <<<HTML
