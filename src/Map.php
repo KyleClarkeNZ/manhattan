@@ -57,6 +57,9 @@ class Map extends Component
     /** @var array Pre-set markers [{lat, lng, title}] */
     protected array $markers = [];
 
+    /** @var bool Whether to show the recenter / reset-view button on the map */
+    protected bool $recenterButton = false;
+
     /**
      * Set the map provider.
      *
@@ -120,6 +123,20 @@ class Map extends Component
     }
 
     /**
+     * Show a recenter / reset-view button on the map.
+     *
+     * When clicked, the button resets the map viewport to the original centre
+     * coordinates and zoom level supplied at construction time.
+     *
+     * @param bool $enabled Default true; pass false to disable explicitly.
+     */
+    public function recenterButton(bool $enabled = true): self
+    {
+        $this->recenterButton = $enabled;
+        return $this;
+    }
+
+    /**
      * Add a single marker to the initial set of pins.
      *
      * @param float  $lat   Latitude
@@ -176,6 +193,10 @@ class Map extends Component
         if (!empty($this->markers)) {
             $markersJson = htmlspecialchars(json_encode($this->markers), ENT_QUOTES, 'UTF-8');
             $dataAttrs  .= ' data-markers="' . $markersJson . '"';
+        }
+
+        if ($this->recenterButton) {
+            $dataAttrs .= ' data-recenter-button="true"';
         }
 
         // Render additional attributes from ->attr()

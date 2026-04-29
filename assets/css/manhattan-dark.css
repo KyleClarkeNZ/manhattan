@@ -1061,6 +1061,20 @@ body.theme-dark .m-map-error {
     background: #3a1e1e;
 }
 
+body.m-dark .m-map-recenter-btn,
+body.theme-dark .m-map-recenter-btn {
+    background: #2d2d2d;
+    color: #c5cdd8;
+}
+
+body.m-dark .m-map-recenter-btn:hover,
+body.theme-dark .m-map-recenter-btn:hover,
+body.m-dark .m-map-recenter-btn:focus-visible,
+body.theme-dark .m-map-recenter-btn:focus-visible {
+    background: #383838;
+    color: #60b4d8;
+}
+
 /* ========================================
    Dark scrollbars
    ======================================== */

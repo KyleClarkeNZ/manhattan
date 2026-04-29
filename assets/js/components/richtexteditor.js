@@ -1336,9 +1336,11 @@
                     });
                 }
 
-                // Close when clicking outside
+                // Close when clicking outside the colour panel (and not the toggle button)
                 document.addEventListener('click', function (e) {
-                    if (colorPanel && !colorPanel.hidden && !container.contains(e.target)) {
+                    if (colorPanel && !colorPanel.hidden &&
+                        !colorPanel.contains(e.target) &&
+                        !colorBtn.contains(e.target)) {
                         colorPanel.hidden = true;
                     }
                     if (toolbar && !container.contains(e.target)) {

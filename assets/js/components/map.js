@@ -96,14 +96,15 @@
     // ── Shared helpers ─────────────────────────────────────────────────────
     function readConfig(el) {
         return {
-            provider  : el.getAttribute('data-provider')   || 'google',
-            apiKey    : el.getAttribute('data-api-key')    || '',
-            zoom      : parseInt(el.getAttribute('data-zoom') || '14', 10),
-            centerLat : parseFloat(el.getAttribute('data-center-lat') || '0'),
-            centerLng : parseFloat(el.getAttribute('data-center-lng') || '0'),
-            hasCenter : el.hasAttribute('data-center-lat') && el.hasAttribute('data-center-lng'),
-            tileUrl   : el.getAttribute('data-tile-url')   || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            markersRaw: el.getAttribute('data-markers')    || '[]',
+            provider      : el.getAttribute('data-provider')        || 'google',
+            apiKey        : el.getAttribute('data-api-key')         || '',
+            zoom          : parseInt(el.getAttribute('data-zoom') || '14', 10),
+            centerLat     : parseFloat(el.getAttribute('data-center-lat') || '0'),
+            centerLng     : parseFloat(el.getAttribute('data-center-lng') || '0'),
+            hasCenter     : el.hasAttribute('data-center-lat') && el.hasAttribute('data-center-lng'),
+            tileUrl       : el.getAttribute('data-tile-url')        || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            markersRaw    : el.getAttribute('data-markers')         || '[]',
+            recenterButton: el.getAttribute('data-recenter-button') === 'true',
         };
     }
 
@@ -113,9 +114,11 @@
 
     // ── Leaflet map initialiser ────────────────────────────────────────────
     function initLeafletMap(el) {
-        var cfg     = readConfig(el);
-        var lMap    = null;
-        var markers = [];
+        var cfg           = readConfig(el);
+        var lMap          = null;
+        var markers       = [];
+        var initialCenter = cfg.hasCenter ? [cfg.centerLat, cfg.centerLng] : [NZ_DEFAULT_LAT, NZ_DEFAULT_LNG];
+        var initialZoom   = cfg.zoom;
 
         function buildApi(map) {
             return {
@@ -129,6 +132,11 @@
 
                 setZoom: function(z) {
                     if (map) { map.setZoom(z); }
+                    return this;
+                },
+
+                recenter: function() {
+                    if (map) { map.setView(initialCenter, initialZoom); }
                     return this;
                 },
 
@@ -166,9 +174,7 @@
 
         loadLeaflet(function() {
             var L      = window.L;
-            var center = cfg.hasCenter
-                ? [cfg.centerLat, cfg.centerLng]
-                : [NZ_DEFAULT_LAT, NZ_DEFAULT_LNG];
+            var center = initialCenter;
 
             el.innerHTML = '';
             lMap = L.map(el, { zoomControl: true }).setView(center, cfg.zoom);
@@ -188,6 +194,27 @@
                 }
             }
 
+            if (cfg.recenterButton) {
+                var RecentreControl = L.Control.extend({
+                    options: { position: 'bottomleft' },
+                    onAdd: function() {
+                        var container = L.DomUtil.create('div', 'm-map-recenter leaflet-bar');
+                        var btn       = L.DomUtil.create('button', 'm-map-recenter-btn', container);
+                        btn.type      = 'button';
+                        btn.title     = 'Recentre map';
+                        btn.setAttribute('aria-label', 'Recentre map');
+                        btn.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                        L.DomEvent.on(btn, 'click', function(e) {
+                            L.DomEvent.stopPropagation(e);
+                            lMap.setView(initialCenter, initialZoom);
+                        });
+                        L.DomEvent.disableClickPropagation(container);
+                        return container;
+                    }
+                });
+                new RecentreControl().addTo(lMap);
+            }
+
             el._manhattanMap = buildApi(lMap);
             utils.trigger(el, 'm:map:ready', { map: lMap });
         });
@@ -198,9 +225,11 @@
 
     // ── Google Maps initialiser ────────────────────────────────────────────
     function initGoogleMap(el) {
-        var cfg     = readConfig(el);
-        var gMap    = null;
-        var markers = [];
+        var cfg           = readConfig(el);
+        var gMap          = null;
+        var markers       = [];
+        var initialCenter = cfg.hasCenter ? { lat: cfg.centerLat, lng: cfg.centerLng } : { lat: NZ_DEFAULT_LAT, lng: NZ_DEFAULT_LNG };
+        var initialZoom   = cfg.zoom;
 
         if (cfg.apiKey === '') {
             el.innerHTML = '<div class="m-map-error">'
@@ -239,6 +268,11 @@
                     return this;
                 },
 
+                recenter: function() {
+                    if (map) { map.setCenter(initialCenter); map.setZoom(initialZoom); }
+                    return this;
+                },
+
                 addMarker: function(lat, lng, title) {
                     if (!map) { return null; }
                     var gm = createGMarker(lat, lng, title || '');
@@ -269,9 +303,7 @@
         }
 
         loadGoogleMaps(cfg.apiKey, function() {
-            var center = cfg.hasCenter
-                ? { lat: cfg.centerLat, lng: cfg.centerLng }
-                : { lat: NZ_DEFAULT_LAT, lng: NZ_DEFAULT_LNG };
+            var center = initialCenter;
 
             el.innerHTML = '';
 
@@ -290,6 +322,20 @@
                     var gm = createGMarker(im.lat, im.lng, im.title || '');
                     markers.push({ lat: im.lat, lng: im.lng, title: im.title || '', marker: gm });
                 }
+            }
+
+            if (cfg.recenterButton) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'm-map-recenter-btn m-map-recenter-btn--google';
+                btn.title = 'Recentre map';
+                btn.setAttribute('aria-label', 'Recentre map');
+                btn.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                btn.addEventListener('click', function() {
+                    gMap.setCenter(initialCenter);
+                    gMap.setZoom(initialZoom);
+                });
+                gMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(btn);
             }
 
             el._manhattanMap = buildApi(gMap);

@@ -99,7 +99,12 @@
             <span class="m-datepicker-value">${originalInput.value || originalInput.getAttribute('placeholder') || 'Select date...'}</span>
             <i class="fas fa-calendar-alt m-datepicker-icon"></i>
         `;
-        
+
+        // Apply value class if pre-populated (e.g. via PHP ->value())
+        if (originalInput.value) {
+            customInput.querySelector('.m-datepicker-value').classList.add('m-has-value');
+        }
+
         // Hide original input
         originalInput.style.display = 'none';
         wrapper.insertBefore(customInput, originalInput);

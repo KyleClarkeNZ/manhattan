@@ -172,21 +172,59 @@ var pins = map.getMarkers(); // [{lat, lng, title, marker}, ...]'
     ) ?>
 </div>
 
+<div class="m-demo-section">
+    <h3>Recenter Button</h3>
+    <p class="m-demo-desc">
+        Enable <code>->recenterButton()</code> to add a crosshairs button to the map. Clicking it resets the
+        viewport back to the original centre coordinates and zoom level supplied at initialisation.
+        Implemented as a native Leaflet control (bottom-left) — consistent with Leaflet's built-in zoom controls.
+    </p>
+    <div class="m-demo-row" style="display:block;">
+        <?= $m->map('demo-map-recenter')
+            ->provider('leaflet')
+            ->center(-36.8485, 174.7633)
+            ->zoom(13)
+            ->marker(-36.8485, 174.7633, 'Auckland CBD')
+            ->height('350px')
+            ->recenterButton() ?>
+    </div>
+    <p class="m-demo-desc" style="margin-top:0.5rem;">
+        Pan or zoom the map, then click the <i class="fas fa-crosshairs"></i> button in the bottom-left to reset.
+        The <code>recenter()</code> JS method does the same programmatically.
+    </p>
+
+    <?= demoCodeTabs(
+        '<?= $m->map(\'venueMap\')
+    ->provider(\'leaflet\')
+    ->center(-36.8485, 174.7633)
+    ->zoom(13)
+    ->marker(-36.8485, 174.7633, \'Auckland CBD\')
+    ->height(\'350px\')
+    ->recenterButton() ?>',
+        '// Programmatic recenter via the JS API
+var map = m.map(\'venueMap\');
+map.recenter();   // snaps back to original centre + zoom'
+    ) ?>
+</div>
+
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->map($id)', 'string', 'Create a map component.'],
-    ['->apiKey($key)', 'string', 'Google Maps JavaScript API key. Required to render.'],
+    ['->provider($name)', 'string', 'Map provider: <code>\'leaflet\'</code> (default, free) or <code>\'google\'</code>.'],
+    ['->apiKey($key)', 'string', 'Google Maps JavaScript API key. Required when provider = <code>\'google\'</code>.'],
     ['->center($lat, $lng)', 'float, float', 'Default map centre coordinates. Defaults to Wellington, NZ if not set.'],
     ['->zoom($zoom)', 'int', 'Initial zoom level (1–21). Default: <code>14</code>.'],
     ['->height($css)', 'string', 'Container height as a CSS value. Default: <code>\'400px\'</code>.'],
     ['->marker($lat, $lng, $title)', 'float, float, string', 'Add a single initial marker. <code>$title</code> optional; shown in info window on click.'],
     ['->markers($array)', 'array', 'Set all initial markers at once. Each element: <code>[\'lat\' => …, \'lng\' => …, \'title\' => …]</code>.'],
+    ['->recenterButton()', 'bool', 'Show a recenter button on the map. Click resets the view to the original centre and zoom. Default: <code>false</code>.'],
 ]) ?>
 
 <?= apiTable('JS Methods', 'js', [
     ['m.map(id)', 'string', 'Get the map API instance (auto-initialised on DOMContentLoaded).'],
     ['setCenter(lat, lng)', 'float, float', 'Pan the map to the given coordinates.'],
     ['setZoom(zoom)', 'int', 'Set the zoom level.'],
-    ['addMarker(lat, lng, title)', 'float, float, ?string', 'Add a pin at the given coordinates. Returns the Google Maps <code>Marker</code> instance.'],
+    ['recenter()', '', 'Reset the map to the original centre coordinates and zoom level.'],
+    ['addMarker(lat, lng, title)', 'float, float, ?string', 'Add a pin at the given coordinates. Returns the native marker instance.'],
     ['clearMarkers()', '', 'Remove all pins from the map.'],
     ['getMarkers()', '', 'Returns an array of <code>{lat, lng, title, marker}</code> objects.'],
     ['fitMarkers()', '', 'Adjust the map bounds to fit all current markers.'],
