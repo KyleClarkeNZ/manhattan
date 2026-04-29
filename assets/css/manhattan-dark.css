@@ -892,6 +892,136 @@ body.theme-dark .m-cal-today-btn:hover {
 }
 
 /* ========================================
+   DateRangePicker
+   ======================================== */
+body.m-dark .m-drp-trigger,
+body.theme-dark .m-drp-trigger {
+    background-color: #161b22;
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #e6e6e6;
+}
+
+body.m-dark .m-drp-trigger:hover,
+body.theme-dark .m-drp-trigger:hover {
+    border-color: #64b5f6;
+}
+
+body.m-dark .m-drp-trigger:focus,
+body.m-dark .m-drp-open > .m-drp-trigger,
+body.theme-dark .m-drp-trigger:focus,
+body.theme-dark .m-drp-open > .m-drp-trigger {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.18);
+}
+
+body.m-dark .m-drp-trigger.m-disabled,
+body.theme-dark .m-drp-trigger.m-disabled {
+    background-color: #1e242b;
+}
+
+body.m-dark .m-drp-icon,
+body.theme-dark .m-drp-icon {
+    color: #a7b0bb;
+}
+
+body.m-dark .m-drp-trigger:hover .m-drp-icon,
+body.theme-dark .m-drp-trigger:hover .m-drp-icon {
+    color: #64b5f6;
+}
+
+body.m-dark .m-drp-label,
+body.theme-dark .m-drp-label {
+    color: rgba(230, 230, 230, 0.45);
+}
+
+body.m-dark .m-drp-label.m-drp-has-value,
+body.theme-dark .m-drp-label.m-drp-has-value {
+    color: #e6e6e6;
+}
+
+body.m-dark .m-drp-arrow,
+body.theme-dark .m-drp-arrow {
+    color: #555;
+}
+
+body.m-dark .m-drp-panel,
+body.theme-dark .m-drp-panel {
+    background: #1e242b;
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.m-dark .m-drp-presets,
+body.theme-dark .m-drp-presets {
+    border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+body.m-dark .m-drp-preset,
+body.theme-dark .m-drp-preset {
+    color: #c0c8d0;
+}
+
+body.m-dark .m-drp-preset:hover,
+body.theme-dark .m-drp-preset:hover {
+    background: rgba(100, 181, 246, 0.15);
+    color: #64b5f6;
+}
+
+body.m-dark .m-drp-preset.m-drp-preset-active,
+body.theme-dark .m-drp-preset.m-drp-preset-active {
+    background: #2196F3;
+    color: #fff;
+}
+
+body.m-dark .m-drp-calendar + .m-drp-calendar,
+body.theme-dark .m-drp-calendar + .m-drp-calendar {
+    border-left-color: rgba(255, 255, 255, 0.08);
+}
+
+body.m-dark .m-cal-day.m-cal-in-range,
+body.theme-dark .m-cal-day.m-cal-in-range {
+    background-color: rgba(33, 150, 243, 0.2);
+}
+
+body.m-dark .m-cal-day.m-cal-range-start,
+body.m-dark .m-cal-day.m-cal-range-end,
+body.theme-dark .m-cal-day.m-cal-range-start,
+body.theme-dark .m-cal-day.m-cal-range-end {
+    background-color: #2196F3;
+    color: #fff;
+}
+
+body.m-dark .m-drp-footer,
+body.theme-dark .m-drp-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+body.m-dark .m-drp-clear,
+body.theme-dark .m-drp-clear {
+    color: #a7b0bb;
+}
+
+body.m-dark .m-drp-clear:hover,
+body.theme-dark .m-drp-clear:hover {
+    background: rgba(231, 76, 60, 0.2);
+    color: #ff6b6b;
+}
+
+body.m-dark .m-drp-cancel,
+body.theme-dark .m-drp-cancel {
+    color: #c0c8d0;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: transparent;
+}
+
+body.m-dark .m-drp-cancel:hover,
+body.theme-dark .m-drp-cancel:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #e6e6e6;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* ========================================
    Validator
    ======================================== */
 body.m-dark .m-validator-error,

@@ -2147,6 +2147,16 @@
     color: #2196F3;
 }
 
+/* Invisible spacer — same dimensions as .m-cal-btn, keeps title centred */
+.m-cal-btn-spacer {
+    display: inline-block;
+    padding: 8px 12px;
+    visibility: hidden;
+    pointer-events: none;
+    background: none !important;
+    border: none;
+}
+
 .m-cal-title {
     font-weight: 600;
     font-size: 15px;
@@ -2251,6 +2261,321 @@
 
 .m-cal-today-btn i {
     font-size: 12px;
+}
+
+/* === DateRangePicker Component === */
+
+/* Wrapper */
+.m-daterangepicker-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Trigger button — mirrors .m-datepicker-input / .m-timepicker-input */
+.m-drp-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 35px 10px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+    text-align: left;
+    outline: none;
+    transition: all 0.3s ease;
+    user-select: none;
+    font-family: inherit;
+}
+
+.m-drp-trigger:hover {
+    border-color: #2196F3;
+}
+
+.m-drp-trigger:focus,
+.m-drp-open > .m-drp-trigger {
+    border-color: #2196F3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.m-drp-trigger.m-disabled,
+.m-drp-trigger:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Calendar icon — absolutely positioned on the right, same as datepicker */
+.m-drp-icon {
+    position: absolute;
+    right: 10px;
+    color: #666;
+    pointer-events: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.m-drp-trigger:hover .m-drp-icon {
+    color: #2196F3;
+}
+
+/* Value/placeholder span */
+.m-drp-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #999;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: normal;
+}
+
+.m-drp-label.m-drp-has-value {
+    color: #333;
+    font-weight: 500;
+}
+
+.m-drp-segment { white-space: nowrap; }
+.m-drp-ph      { color: #999; font-weight: normal; }
+
+.m-drp-arrow {
+    color: #bbb;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+/* Drop-down panel */
+.m-drp-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 500;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    min-width: 300px;
+}
+
+.m-drp-open-up .m-drp-panel {
+    top: auto;
+    bottom: calc(100% + 6px);
+}
+
+.m-drp-align-right .m-drp-panel {
+    left: auto;
+    right: 0;
+}
+
+.m-drp-panel-inner {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+}
+
+/* Presets sidebar */
+.m-drp-presets {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 8px;
+    min-width: 130px;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.m-drp-preset {
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.13s, color 0.13s;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.m-drp-preset:hover {
+    background: rgba(33, 150, 243, 0.1);
+    color: #2196F3;
+}
+
+.m-drp-preset.m-drp-preset-active {
+    background: #2196F3;
+    color: #fff;
+}
+
+/* Calendars area */
+.m-drp-calendars {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    gap: 0;
+    flex-wrap: nowrap;
+}
+
+.m-drp-single .m-drp-calendar:last-child {
+    display: none;
+}
+
+.m-drp-calendar {
+    flex: 1;
+    min-width: 240px;
+    padding: 12px 14px 6px;
+}
+
+.m-drp-calendar + .m-drp-calendar {
+    border-left: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Range highlighting — reuse m-calendar internals */
+.m-cal-day.m-cal-in-range {
+    background-color: rgba(33, 150, 243, 0.12);
+    border-radius: 0;
+}
+
+.m-cal-day.m-cal-range-start {
+    background-color: #2196F3;
+    color: #fff;
+    border-radius: 50% 0 0 50%;
+}
+
+.m-cal-day.m-cal-range-end {
+    background-color: #2196F3;
+    color: #fff;
+    border-radius: 0 50% 50% 0;
+}
+
+/* Single-day selection: both start and end */
+.m-cal-day.m-cal-range-start.m-cal-range-end {
+    border-radius: 50%;
+}
+
+/* Panel inner: column flex — row of [presets | calendars] on top, footer below */
+.m-drp-panel-inner {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Row that holds presets + calendars side-by-side */
+.m-drp-panel-row {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+}
+
+/* Footer */
+.m-drp-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    gap: 8px;
+}
+
+.m-drp-clear {
+    font-size: 13px;
+    color: #888;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-family: inherit;
+    transition: background 0.13s, color 0.13s;
+}
+
+.m-drp-clear:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.m-drp-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.m-drp-cancel {
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 6px 14px;
+    font-family: inherit;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+}
+
+.m-drp-cancel:hover {
+    border-color: #aaa;
+    color: #333;
+    background: #f5f5f5;
+}
+
+/* Apply button reuses .m-button.m-button-primary styles; just add sizing */
+.m-drp-apply {
+    font-size: 13px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* Responsive — single-column stack on narrow screens */
+@media (max-width: 600px) {
+    .m-drp-panel {
+        left: 0 !important;
+        right: 0 !important;
+        min-width: unset;
+        width: 100vw;
+        max-width: 100vw;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .m-drp-panel-row {
+        flex-direction: column;
+    }
+
+    .m-drp-presets {
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 8px;
+        min-width: 0;
+    }
+
+    .m-drp-preset {
+        flex: 0 0 auto;
+    }
+
+    .m-drp-calendars {
+        flex-direction: column;
+    }
+
+    /* Hide right calendar on mobile — always single-month on small screens */
+    .m-drp-calendar + .m-drp-calendar {
+        display: none;
+    }
+
+    .m-drp-calendar {
+        min-width: 0;
+    }
 }
 
 /* === TimePicker Component === */

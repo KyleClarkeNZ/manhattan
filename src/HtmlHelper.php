@@ -103,6 +103,24 @@ class HtmlHelper
     }
 
     /**
+     * Create a DateRangePicker component — dual-calendar start/end date selector.
+     *
+     * Renders two hidden inputs (start + end) and a styled trigger button.
+     * JavaScript enhances the trigger into a dropdown with two month calendars,
+     * range highlighting, optional preset shortcuts, and keyboard support.
+     *
+     * @param string $id      Unique identifier for the wrapper element
+     * @param array  $options Configuration options (startValue, endValue, startName, endName,
+     *                        placeholder, min, max, format, disabled, showPresets, weekStartsMonday,
+     *                        singleMonth, autoApply, presets, highlightToday)
+     * @return DateRangePicker
+     */
+    public function daterangepicker(string $id, array $options = []): DateRangePicker
+    {
+        return new DateRangePicker($id, $options);
+    }
+
+    /**
      * Create a TimePicker component — custom time selection control.
      *
      * The rendered hidden input is replaced at runtime by a styled trigger
@@ -674,6 +692,7 @@ class HtmlHelper
 <script src="{$js}/components/button.js" defer></script>
 <script src="{$js}/components/tooltip.js" defer></script>
 <script src="{$js}/components/datepicker.js" defer></script>
+<script src="{$js}/components/daterangepicker.js" defer></script>
 <script src="{$js}/components/timepicker.js" defer></script>
 <script src="{$js}/components/dropdown.js" defer></script>
 <script src="{$js}/components/textbox.js" defer></script>

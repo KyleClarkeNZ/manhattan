@@ -211,4 +211,11 @@ abstract class Component
     abstract protected function getComponentType(): string;
 
     abstract protected function renderHtml(): string;
+
+    // ── Protected label accessors for subclasses that override render() ──────
+
+    protected function getLabelText(): string    { return $this->labelText;     }
+    protected function getLabelRequired(): bool  { return $this->labelRequired; }
+    protected function getLabelHint(): string    { return $this->labelHint;     }
+    protected function getLabelIcon(): string    { return $this->labelIcon;     }
 }
