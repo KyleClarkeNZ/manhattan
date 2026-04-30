@@ -2666,6 +2666,11 @@ body.theme-dark .m-cal-widget {
     border-color: rgba(255, 255, 255, 0.1);
 }
 
+body.m-dark .m-cal-nav-row button,
+body.theme-dark .m-cal-nav-row button {
+    color: inherit;
+}
+
 body.m-dark .m-cal-header,
 body.theme-dark .m-cal-header {
     background: rgba(255, 255, 255, 0.03);

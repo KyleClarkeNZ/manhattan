@@ -273,7 +273,31 @@
             var header = document.createElement('div');
             header.className = 'm-cal-header';
 
-            // Left: prev/today/next
+            // Top row: month/year title (full width, centred)
+            var title = document.createElement('div');
+            title.className = 'm-cal-title';
+            if (currentView === 'week') {
+                var ws = getWeekStart(currentDate);
+                var we = new Date(ws.getTime());
+                we.setDate(we.getDate() + 6);
+                var titleText;
+                if (ws.getMonth() === we.getMonth()) {
+                    titleText = MONTH_NAMES[ws.getMonth()] + ' ' + ws.getDate()
+                        + '–' + we.getDate() + ', ' + ws.getFullYear();
+                } else {
+                    titleText = MONTH_NAMES[ws.getMonth()] + ' ' + ws.getDate()
+                        + ' – ' + MONTH_NAMES[we.getMonth()] + ' ' + we.getDate()
+                        + ', ' + we.getFullYear();
+                }
+                title.textContent = titleText;
+            } else {
+                title.textContent = MONTH_NAMES[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+            }
+
+            // Bottom row: prev/today/next on the left, view switcher on the right
+            var navRow = document.createElement('div');
+            navRow.className = 'm-cal-nav-row';
+
             var nav = document.createElement('div');
             nav.className = 'm-cal-nav';
 
@@ -310,29 +334,7 @@
             nav.appendChild(btnToday);
             nav.appendChild(btnNext);
 
-            // Centre: month/year title
-            var title = document.createElement('div');
-            title.className = 'm-cal-title';
-            if (currentView === 'week') {
-                var ws = getWeekStart(currentDate);
-                var we = new Date(ws.getTime());
-                we.setDate(we.getDate() + 6);
-                // e.g. "Apr 28 – May 4, 2025"
-                var titleText;
-                if (ws.getMonth() === we.getMonth()) {
-                    titleText = MONTH_NAMES[ws.getMonth()] + ' ' + ws.getDate()
-                        + '–' + we.getDate() + ', ' + ws.getFullYear();
-                } else {
-                    titleText = MONTH_NAMES[ws.getMonth()] + ' ' + ws.getDate()
-                        + ' – ' + MONTH_NAMES[we.getMonth()] + ' ' + we.getDate()
-                        + ', ' + we.getFullYear();
-                }
-                title.textContent = titleText;
-            } else {
-                title.textContent = MONTH_NAMES[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
-            }
-
-            // Right: view switcher
+            // View switcher
             var switcher = document.createElement('div');
             switcher.className = 'm-cal-view-switcher';
 
@@ -349,9 +351,11 @@
                 switcher.appendChild(btn);
             });
 
-            header.appendChild(nav);
+            navRow.appendChild(nav);
+            navRow.appendChild(switcher);
+
             header.appendChild(title);
-            header.appendChild(switcher);
+            header.appendChild(navRow);
             return header;
         }
 

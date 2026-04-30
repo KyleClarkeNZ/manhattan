@@ -7897,25 +7897,34 @@ textarea.m-wizard-field-error {
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
 
+/* Outer header shell: stacks title row then nav row vertically */
 .m-cal-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.65rem 0.9rem;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.65rem 0.9rem 0.55rem;
     border-bottom: 1px solid var(--m-border, #e0e0e0);
     background: var(--m-surface, #fafafa);
-    gap: 0.6rem;
-    flex-wrap: wrap;
 }
 
+/* Title: full-width, centred */
 .m-cal-title {
     font-size: 0.97rem;
     font-weight: 600;
     color: var(--m-text, #333);
-    flex: 1;
     text-align: center;
-    min-width: 0;
+    line-height: 1.2;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Nav row: prev/today/next on the left, view switcher on the right */
+.m-cal-nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
 }
 
 .m-cal-nav {
@@ -8000,13 +8009,17 @@ textarea.m-wizard-field-error {
 }
 
 .m-cal-day-hdr {
-    padding: 0.4rem 0.35rem;
+    padding: 0.4rem 0.2rem;
     text-align: center;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
     color: var(--m-text-muted, #999);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 /* Week view: day headers contain name + date number */
@@ -8072,8 +8085,8 @@ textarea.m-wizard-field-error {
 /* ── Day cells ───────────────────────────────────────────────────────────── */
 
 .m-cal-cell {
-    min-height: 82px;
-    padding: 0.35rem 0.38rem 0.25rem;
+    min-height: 72px;
+    padding: 0.3rem 0.3rem 0.2rem;
     border-right: 1px solid var(--m-border, #f0f0f0);
     display: flex;
     flex-direction: column;
@@ -8150,9 +8163,9 @@ textarea.m-wizard-field-error {
 }
 
 .m-cal-event {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     font-weight: 500;
-    padding: 0.1rem 0.32rem;
+    padding: 0.08rem 0.28rem;
     border-radius: 3px;
     background: var(--m-cal-event-color, var(--m-primary, #118AB2));
     color: #fff;
@@ -8160,7 +8173,7 @@ textarea.m-wizard-field-error {
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;
-    line-height: 1.5;
+    line-height: 1.45;
     transition: opacity 0.12s, transform 0.1s;
 }
 
