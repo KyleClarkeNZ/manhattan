@@ -79,8 +79,14 @@
             utils.trigger(windowEl, 'm:window:open', { id });
         };
 
-        // Close window
+        // Close window — fires a cancellable m:window:beforeclose event first.
+        // Listeners can call e.preventDefault() to abort the close.
         const close = function() {
+            var beforeEvent = utils.trigger(windowEl, 'm:window:beforeclose', { id });
+            if (beforeEvent && beforeEvent.defaultPrevented) {
+                return; // listener cancelled the close
+            }
+
             windowEl.classList.remove('m-visible');
             
             // Restore scroll (only matters for modals)

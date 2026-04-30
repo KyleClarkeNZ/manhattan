@@ -6975,12 +6975,25 @@ textarea.m-wizard-field-error {
     border-right: 1px solid var(--m-border, #e2e6ea);
 }
 
-/* Below: horizontal scrolling row */
+/* Below: horizontal scrolling row above the stage */
 .m-imageviewer--below .m-imageviewer-thumbstrip {
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
     border-top: 1px solid var(--m-border, #e2e6ea);
+}
+
+/* Bottom layout: stage above, thumbstrip below */
+.m-imageviewer--bottom .m-imageviewer-body {
+    flex-direction: column-reverse;
+}
+
+/* Bottom: horizontal scrolling row below the stage */
+.m-imageviewer--bottom .m-imageviewer-thumbstrip {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-bottom: 1px solid var(--m-border, #e2e6ea);
 }
 
 /* ── Apple-style thin overlay scrollbars ─────────────────────────────────── */

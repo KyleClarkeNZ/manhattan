@@ -6,12 +6,13 @@ namespace Manhattan;
 /**
  * Manhattan ImageViewer Component
  *
- * An accessible image/video gallery with two layout modes, thumbnail
+ * An accessible image/video gallery with three layout modes, thumbnail
  * navigation, auto-advance, and optional lightbox integration.
  *
  * Layouts:
- *   side  (default) – vertical thumbnail strip on the left, main stage on right
- *   below            – main stage above, horizontal thumbnail strip below
+ *   side   (default) – vertical thumbnail strip on the left, main stage on right
+ *   below             – horizontal thumbnail strip above the main stage
+ *   bottom            – horizontal thumbnail strip below the main stage
  *
  * Supports:
  *   - Images (with custom thumbnail or auto-uses full-size src)
@@ -35,7 +36,7 @@ class ImageViewer extends Component
     /** @var array<int, array<string, string>> */
     private array $items = [];
 
-    /** @var string 'side' | 'below' */
+    /** @var string 'side' | 'below' | 'bottom' */
     private string $layout = 'side';
 
     private bool $lightboxEnabled = false;
@@ -61,11 +62,12 @@ class ImageViewer extends Component
     /**
      * Set the thumbnail strip layout.
      *
-     * @param string $layout 'side' (default) or 'below'
+     * @param string $layout 'side' (default), 'below', or 'bottom'
      */
     public function layout(string $layout): self
     {
-        $this->layout = ($layout === 'below') ? 'below' : 'side';
+        $allowed = ['side', 'below', 'bottom'];
+        $this->layout = in_array($layout, $allowed, true) ? $layout : 'side';
         return $this;
     }
 

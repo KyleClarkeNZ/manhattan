@@ -41,6 +41,7 @@
                 cancelable: true
             });
             element.dispatchEvent(event);
+            return event;
         },
 
         formatDate: function(date, format) {
