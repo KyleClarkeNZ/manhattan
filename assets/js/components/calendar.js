@@ -448,6 +448,7 @@
                 : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
             var ws = getWeekStart(currentDate);
+            var todayStr = dateToStr(todayDate());
             var headerRow = document.createElement('div');
             headerRow.className = 'm-cal-day-headers' + (cfg.showWeekNumbers ? ' m-cal-has-week-nums' : '');
 
@@ -460,8 +461,9 @@
 
             for (var i = 0; i < 7; i++) {
                 var d = new Date(ws.getFullYear(), ws.getMonth(), ws.getDate() + i);
+                var isToday = dateToStr(d) === todayStr;
                 var dh = document.createElement('div');
-                dh.className = 'm-cal-day-hdr';
+                dh.className = 'm-cal-day-hdr' + (isToday ? ' m-cal-day-hdr--today' : '');
                 dh.innerHTML = '<span class="m-cal-day-hdr-name">' + escHtml(dayBases[i]) + '</span>'
                     + '<span class="m-cal-day-hdr-num">' + d.getDate() + '</span>';
                 headerRow.appendChild(dh);
@@ -481,10 +483,10 @@
                 row.appendChild(wn);
             }
 
-            var todayStr = dateToStr(todayDate());
+            var todayStr2 = dateToStr(todayDate());
             for (var j = 0; j < 7; j++) {
                 var wd = new Date(ws.getFullYear(), ws.getMonth(), ws.getDate() + j);
-                row.appendChild(buildCell(wd, todayStr, wd.getMonth()));
+                row.appendChild(buildCell(wd, todayStr2, wd.getMonth()));
             }
 
             body.appendChild(row);

@@ -8035,14 +8035,35 @@ textarea.m-wizard-field-error {
 .m-cal-day-hdr-name {
     display: block;
     font-size: 0.65rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .m-cal-day-hdr-num {
-    display: block;
-    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 0.82rem;
     font-weight: 600;
     color: var(--m-text, #444);
-    margin-top: 0.1rem;
+    border-radius: 50%;
+    margin-top: 0.08rem;
+    line-height: 1;
+}
+
+/* Today — filled primary circle on the header date number */
+.m-cal-day-hdr--today .m-cal-day-hdr-num {
+    background: var(--m-primary, #118AB2);
+    color: #fff;
+    font-weight: 700;
+}
+
+/* Week view: the date already appears in the header — hide redundant cell day num */
+.m-cal-grid--week .m-cal-cell .m-cal-day-num {
+    display: none;
 }
 
 .m-cal-week-num-hdr {
@@ -8077,7 +8098,7 @@ textarea.m-wizard-field-error {
 }
 
 .m-cal-row--week {
-    min-height: var(--m-calendar-height, 180px);
+    min-height: var(--m-calendar-height, 120px);
 }
 
 .m-cal-week-num {

@@ -2775,6 +2775,11 @@ body.theme-dark .m-cal-day-num {
     color: #c4cdd8;
 }
 
+body.m-dark .m-cal-day-hdr-num,
+body.theme-dark .m-cal-day-hdr-num {
+    color: #c4cdd8;
+}
+
 body.m-dark .m-cal-cell--selected:not(.m-cal-cell--today) .m-cal-day-num,
 body.theme-dark .m-cal-cell--selected:not(.m-cal-cell--today) .m-cal-day-num {
     color: #4db8d4;
