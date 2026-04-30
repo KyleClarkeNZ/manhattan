@@ -7893,6 +7893,15 @@ textarea.m-wizard-field-error {
     background: var(--m-bg, #fff);
     -webkit-user-select: none;
     user-select: none;
+    /* Hide until JS has built the DOM — prevents layout-height jump + content flash */
+    opacity: 0;
+    min-height: 420px;
+}
+
+.m-cal-widget.m-cal-ready {
+    opacity: 1;
+    transition: opacity 0.15s ease;
+    min-height: 0;
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────── */

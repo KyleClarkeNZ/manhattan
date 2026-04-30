@@ -602,6 +602,7 @@
 
         // Initial render
         render();
+        el.classList.add('m-cal-ready');
 
         // ── Public API ────────────────────────────────────────────────────────
 
