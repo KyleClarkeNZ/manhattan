@@ -195,7 +195,7 @@ final class Calendar extends Component
     {
         $id = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8');
 
-        $classes = array_merge(['m-calendar'], $this->getExtraClasses());
+        $classes = array_merge(['m-cal-widget'], $this->getExtraClasses());
         $classStr = implode(' ', array_map(static function (string $c): string {
             return htmlspecialchars($c, ENT_QUOTES, 'UTF-8');
         }, $classes));

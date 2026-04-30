@@ -2660,8 +2660,8 @@ body.theme-dark .m-tp-clear-btn:hover {
 
 /* === Calendar Component (dark) === */
 
-body.m-dark .m-calendar,
-body.theme-dark .m-calendar {
+body.m-dark .m-cal-widget,
+body.theme-dark .m-cal-widget {
     background: var(--m-bg, #1a2030);
     border-color: rgba(255, 255, 255, 0.1);
 }

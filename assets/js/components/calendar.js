@@ -4,7 +4,7 @@
  * Renders a month or week view calendar with event chips, selectable dates,
  * event-detail popovers, week numbers, and full JS navigation API.
  *
- * Auto-initialises every .m-calendar element on DOMContentLoaded.
+ * Auto-initialises every .m-cal-widget element on DOMContentLoaded.
  * Manual init: m.calendar('myId')
  *
  * PHP fluent API:
@@ -681,7 +681,7 @@
     // ── Auto-init ─────────────────────────────────────────────────────────────
 
     document.addEventListener('DOMContentLoaded', function() {
-        var cals = document.querySelectorAll('.m-calendar[id]');
+        var cals = document.querySelectorAll('.m-cal-widget[id]');
         for (var i = 0; i < cals.length; i++) {
             m.calendar(cals[i].id);
         }
