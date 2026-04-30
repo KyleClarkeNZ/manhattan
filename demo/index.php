@@ -402,6 +402,7 @@ $demoNav = [
     'list'        => ['List',        'fa-list',               'Data & Visualisation'],
     'reorderable' => ['Reorderable', 'fa-grip-vertical',      'Data & Visualisation'],
     'chart'       => ['Chart',       'fa-chart-bar',          'Data & Visualisation'],
+    'calendar'    => ['Calendar',    'fa-calendar-alt',       'Data & Visualisation'],
     'progressbar' => ['ProgressBar', 'fa-tasks',              'Data & Visualisation'],
     'rating'      => ['Rating',      'fa-star',               'Data & Visualisation'],
     'pagination'  => ['Pagination',  'fa-ellipsis-h',         'Data & Visualisation'],

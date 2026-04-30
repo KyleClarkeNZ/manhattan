@@ -91,6 +91,19 @@ class HtmlHelper
     }
 
     /**
+     * Create a Calendar component — month/week event calendar with popovers.
+     *
+     * @param string $id      Unique identifier for the calendar container
+     * @param array  $options Configuration options (view, initialDate, selectable, highlightToday,
+     *                        weekStartsMonday, showWeekNumbers, withPopover, minDate, maxDate, height, events)
+     * @return Calendar
+     */
+    public function calendar(string $id, array $options = []): Calendar
+    {
+        return new Calendar($id, $options);
+    }
+
+    /**
      * Create a DatePicker component
      * 
      * @param string $id Unique identifier for the date picker
@@ -725,6 +738,7 @@ class HtmlHelper
 <script src="{$js}/components/lightbox.js" defer></script>
 <script src="{$js}/components/imageviewer.js" defer></script>
 <script src="{$js}/components/carousel.js" defer></script>
+<script src="{$js}/components/calendar.js" defer></script>
 HTML;
     }
 

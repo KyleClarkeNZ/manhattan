@@ -2657,3 +2657,175 @@ body.theme-dark .m-tp-clear-btn:hover {
     border-color: #ff6b6b;
     color: #ff6b6b;
 }
+
+/* === Calendar Component (dark) === */
+
+body.m-dark .m-calendar,
+body.theme-dark .m-calendar {
+    background: var(--m-bg, #1a2030);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.m-dark .m-cal-header,
+body.theme-dark .m-cal-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.m-dark .m-cal-title,
+body.theme-dark .m-cal-title {
+    color: #dde4f0;
+}
+
+body.m-dark .m-cal-nav-btn,
+body.theme-dark .m-cal-nav-btn {
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #a7b0bb;
+}
+
+body.m-dark .m-cal-nav-btn:hover,
+body.theme-dark .m-cal-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: #4db8d4;
+    color: #4db8d4;
+}
+
+body.m-dark .m-cal-view-switcher,
+body.theme-dark .m-cal-view-switcher {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.m-dark .m-cal-view-btn,
+body.theme-dark .m-cal-view-btn {
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #a7b0bb;
+}
+
+body.m-dark .m-cal-view-btn:hover,
+body.theme-dark .m-cal-view-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #dde4f0;
+}
+
+body.m-dark .m-cal-view-btn.m-active,
+body.theme-dark .m-cal-view-btn.m-active {
+    background: var(--m-primary, #118AB2);
+    color: #fff;
+}
+
+body.m-dark .m-cal-day-headers,
+body.theme-dark .m-cal-day-headers {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+body.m-dark .m-cal-day-hdr,
+body.theme-dark .m-cal-day-hdr {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+body.m-dark .m-cal-day-hdr-num,
+body.theme-dark .m-cal-day-hdr-num {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+body.m-dark .m-cal-week-num-hdr,
+body.theme-dark .m-cal-week-num-hdr {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+body.m-dark .m-cal-row,
+body.theme-dark .m-cal-row {
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+body.m-dark .m-cal-week-num,
+body.theme-dark .m-cal-week-num {
+    color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+body.m-dark .m-cal-cell,
+body.theme-dark .m-cal-cell {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.m-dark .m-cal-cell--other-month,
+body.theme-dark .m-cal-cell--other-month {
+    background: rgba(0, 0, 0, 0.18);
+}
+
+body.m-dark .m-cal-cell--selectable:hover,
+body.theme-dark .m-cal-cell--selectable:hover {
+    background: rgba(77, 184, 212, 0.07);
+}
+
+body.m-dark .m-cal-cell--selected,
+body.theme-dark .m-cal-cell--selected {
+    background: rgba(77, 184, 212, 0.1);
+}
+
+body.m-dark .m-cal-day-num,
+body.theme-dark .m-cal-day-num {
+    color: #c4cdd8;
+}
+
+body.m-dark .m-cal-cell--selected:not(.m-cal-cell--today) .m-cal-day-num,
+body.theme-dark .m-cal-cell--selected:not(.m-cal-cell--today) .m-cal-day-num {
+    color: #4db8d4;
+}
+
+body.m-dark .m-cal-event,
+body.theme-dark .m-cal-event {
+    opacity: 0.88;
+}
+
+body.m-dark .m-cal-event-more,
+body.theme-dark .m-cal-event-more {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+body.m-dark .m-cal-popover,
+body.theme-dark .m-cal-popover {
+    background: #1e2840;
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.5);
+}
+
+body.m-dark .m-cal-pop-header,
+body.theme-dark .m-cal-pop-header {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.m-dark .m-cal-pop-title,
+body.theme-dark .m-cal-pop-title {
+    color: #dde4f0;
+}
+
+body.m-dark .m-cal-pop-date,
+body.theme-dark .m-cal-pop-date {
+    color: rgba(255, 255, 255, 0.38);
+}
+
+body.m-dark .m-cal-pop-body,
+body.theme-dark .m-cal-pop-body {
+    color: #c4cdd8;
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+body.m-dark .m-cal-pop-footer,
+body.theme-dark .m-cal-pop-footer {
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+body.m-dark .m-cal-pop-close,
+body.theme-dark .m-cal-pop-close {
+    color: rgba(255, 255, 255, 0.22);
+}
+
+body.m-dark .m-cal-pop-close:hover,
+body.theme-dark .m-cal-pop-close:hover {
+    color: rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.07);
+}
