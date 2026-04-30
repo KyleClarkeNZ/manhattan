@@ -51,7 +51,8 @@
         return fetch(url, {
             method: method,
             headers: headers,
-            body: hasBody ? JSON.stringify(options.data) : null
+            body: hasBody ? JSON.stringify(options.data) : null,
+            signal: options.signal || undefined
         })
         .then(async (response) => {
             lastResponse = response;
@@ -81,10 +82,14 @@
             return parsed;
         })
         .catch((error) => {
-            if (typeof options.error === 'function') {
+            // AbortError is expected (e.g. typeahead cancelling stale requests) — don't log
+            const isAbort = error && (error.name === 'AbortError' || error.code === 20);
+            if (typeof options.error === 'function' && !isAbort) {
                 try { options.error(error, lastResponse); } catch (e) { /* noop */ }
             }
-            console.error('Manhattan Ajax Error:', error);
+            if (!isAbort) {
+                console.error('Manhattan Ajax Error:', error);
+            }
             return null;
         })
         .finally(() => {

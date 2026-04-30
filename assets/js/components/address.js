@@ -299,6 +299,9 @@
         // response for "te a" from overwriting the fresher results already shown
         // for "te ata" when the user typed quickly.
         var requestGen = 0;
+        // AbortController for the in-flight request — aborted on every new keystroke
+        // so stale network requests don't continue consuming bandwidth/server CPU.
+        var inflightAbort = null;
 
         const doSuggest = debounce(function() {
             if (!search || !results) return;
@@ -309,6 +312,7 @@
 
             if (q.length < options.minChars) {
                 requestGen++; // discard any in-flight request
+                if (inflightAbort) { try { inflightAbort.abort(); } catch (e) {} inflightAbort = null; }
                 hideResults(results);
                 setHelp(root, '', 'info');
                 if (loader) { loader.classList.add('m-hidden'); }
@@ -338,14 +342,21 @@
             // query is discarded when it arrives.
             requestGen++;
             var myGen = requestGen;
+// Abort the previous in-flight request to free server/network resources.
+            if (inflightAbort) { try { inflightAbort.abort(); } catch (e) {} }
+            var ac = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            inflightAbort = ac;
 
             setHelp(root, '', 'info');
             if (loader) { loader.classList.remove('m-hidden'); }
 
             m.ajax(suggestUrl + (suggestUrl.indexOf('?') === -1 ? '?' : '&') + 'q=' + encodeURIComponent(q), {
                 method: 'GET',
-                contentType: null
+                contentType: null,
+                signal: ac ? ac.signal : undefined
             }).then(function(payload) {
+                if (myGen !== requestGen) { return; } // stale response — discard
+                if (payload === null) { return; } // aborted or network error (handled in catch)
                 if (myGen !== requestGen) { return; } // stale response — discard
                 if (loader) { loader.classList.add('m-hidden'); }
 
