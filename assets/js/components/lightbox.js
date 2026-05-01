@@ -54,9 +54,13 @@
         var closeBtn    = el.querySelector('.m-lightbox-close');
         var prevBtn     = el.querySelector('.m-lightbox-nav--prev');
         var nextBtn     = el.querySelector('.m-lightbox-nav--next');
+        var stageEl     = el.querySelector('.m-lightbox-stage');
         var imgEl       = el.querySelector('.m-lightbox-img');
         var captionEl   = el.querySelector('.m-lightbox-caption');
         var counterEl   = el.querySelector('.m-lightbox-counter');
+
+        // Tracks the in-flight Image preloader so stale loads can be cancelled
+        var pendingLoad = null;
 
         // Image list — can be loaded from data attribute or provided at show() time
         var imageList   = [];
@@ -84,10 +88,7 @@
             var item = imageList[currentIdx];
             if (!item) return;
 
-            if (imgEl) {
-                imgEl.src = item.src  || '';
-                imgEl.alt = item.caption || '';
-            }
+            // Update caption and counter immediately — no need to wait for image
             if (captionEl) {
                 captionEl.textContent = item.caption || '';
                 captionEl.style.display = item.caption ? '' : 'none';
@@ -95,10 +96,41 @@
             if (counterEl) {
                 counterEl.textContent = (currentIdx + 1) + ' / ' + imageList.length;
             }
-
             var hasMult = imageList.length > 1;
             if (prevBtn) prevBtn.style.display = hasMult ? '' : 'none';
             if (nextBtn) nextBtn.style.display = hasMult ? '' : 'none';
+
+            // Cancel any in-flight preload
+            if (pendingLoad) {
+                pendingLoad.onload  = null;
+                pendingLoad.onerror = null;
+                pendingLoad = null;
+            }
+
+            // Show loading state immediately
+            if (stageEl) stageEl.classList.add('m-lightbox-loading');
+            if (imgEl)   imgEl.alt = item.caption || '';
+
+            // Preload the image off-screen, then swap in when ready
+            var loader = new window.Image();
+            pendingLoad = loader;
+
+            loader.onload = function () {
+                if (pendingLoad !== loader) return; // superseded by a newer navigation
+                if (imgEl) imgEl.src = loader.src;
+                if (stageEl) stageEl.classList.remove('m-lightbox-loading');
+                pendingLoad = null;
+            };
+
+            loader.onerror = function () {
+                if (pendingLoad !== loader) return;
+                // Show broken-image rather than leaving spinner spinning forever
+                if (imgEl) imgEl.src = loader.src;
+                if (stageEl) stageEl.classList.remove('m-lightbox-loading');
+                pendingLoad = null;
+            };
+
+            loader.src = item.src || '';
         }
 
         function show(index, items) {
@@ -110,11 +142,13 @@
             if (currentIdx < 0) currentIdx = 0;
             if (currentIdx >= imageList.length) currentIdx = imageList.length - 1;
 
-            updateView();
+            // Show the backdrop immediately so the user sees a response at once,
+            // then kick off image preloading (spinner shown by updateView)
             el.removeAttribute('hidden');
             document.body.style.overflow = 'hidden';
             el.setAttribute('tabindex', '-1');
             el.focus();
+            updateView();
             utils.trigger(el, 'm:lightbox:open', { index: currentIdx });
         }
 

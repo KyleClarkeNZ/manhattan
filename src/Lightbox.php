@@ -90,6 +90,7 @@ class Lightbox extends Component
 
         // Main image stage
         $html .= '<div class="m-lightbox-stage" aria-live="polite">';
+        $html .= '<div class="m-lightbox-spinner" aria-hidden="true"></div>';
         $html .= '<img class="m-lightbox-img" src="" alt="" draggable="false">';
         $html .= '</div>';
 
