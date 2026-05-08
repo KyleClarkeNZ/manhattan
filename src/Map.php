@@ -200,12 +200,7 @@ class Map extends Component
         }
 
         // Render additional attributes from ->attr()
-        $extraAttrs = '';
-        foreach ($this->attributes as $name => $value) {
-            $nameEsc  = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-            $valueEsc = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-            $extraAttrs .= " {$nameEsc}=\"{$valueEsc}\"";
-        }
+        $extraAttrs = $this->renderAdditionalAttributes();
 
         return '<div id="' . $idEsc . '" class="' . $classStr . '" style="height:' . $heightEsc . '" ' . $dataAttrs . $extraAttrs . '>'
              . '<div class="m-map-loading"><i class="fas fa-map-marked-alt"></i> Loading map…</div>'

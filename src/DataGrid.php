@@ -70,6 +70,7 @@ final class DataGrid extends Component
     private bool $isSelectable  = false;
     private bool $showToolbar   = false;
     private bool $isFilterable  = false;
+    private bool $scrollOnPage  = false;
 
     // ── Extra params sent with every remote request ────────────────────────────
 
