@@ -369,7 +369,7 @@ class HtmlHelper
     }
 
     /**
-     * Create an Address component (NZ Post address lookup)
+     * Create an Address component (NZ address autocomplete)
      *
      * @param string $id Unique identifier for the address
      * @param array $options Configuration options

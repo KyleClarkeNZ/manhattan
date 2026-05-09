@@ -5,7 +5,7 @@ namespace Manhattan;
 
 final class Address extends Component
 {
-    private string $suggestUrl = '/manhattan/nzpostSuggest';
+    private string $suggestUrl = '/manhattan/addressSuggest';
     private string $mode = 'nz';
 
     private string $namePrefix;

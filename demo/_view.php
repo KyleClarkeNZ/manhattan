@@ -93,7 +93,7 @@ document.querySelectorAll('input[name="plan"]').forEach(function (el) {
 JS;
 
 $phpAddress = <<<'PHP'
-<?= $m->address('demo-address', ['suggestUrl' => '/manhattan/nzpostSuggest']) ?>
+<?= $m->address('demo-address', ['suggestUrl' => '/manhattan/addressSuggest']) ?>
 PHP;
 $jsAddress = <<<'JS'
 m.address('demo-address', { onChange: function (data) { console.log(data); } });
@@ -1112,7 +1112,7 @@ Use labels for status tags, categories</code></pre>
                     <h2><?= $m->icon('fa-map-marker-alt') ?> Address</h2>
                     <div class="m-demo-row">
                         <div class="m-demo-field" style="width: 100%; max-width: 760px;">
-                            <?= $m->address('demo-address', ['suggestUrl' => '/manhattan/nzpostSuggest']) ?>
+                            <?= $m->address('demo-address', ['suggestUrl' => '/manhattan/addressSuggest']) ?>
                         </div>
                     </div>
                     <div class="m-demo-output" id="address-output">Choose NZ or Overseas, then enter an address...</div>

@@ -13,9 +13,9 @@ DirectoryIndex index.php
     # Handle demo endpoints
     RewriteRule ^demo/toggleTheme$ demo/index.php [L,QSA]
     RewriteRule ^toggleTheme$ demo/index.php [L,QSA]
-    RewriteRule ^demo/nzpostSuggest$ demo/index.php [L,QSA]
-    RewriteRule ^nzpostSuggest$ demo/index.php [L,QSA]
-    RewriteRule ^manhattan/nzpostSuggest$ demo/index.php [L,QSA]
+    RewriteRule ^demo/addressSuggest$ demo/index.php [L,QSA]
+    RewriteRule ^addressSuggest$ demo/index.php [L,QSA]
+    RewriteRule ^manhattan/addressSuggest$ demo/index.php [L,QSA]
     
     # Handle AJAX endpoints
     RewriteRule ^manhattan/handleButtonClick$ demo/index.php [L,QSA]

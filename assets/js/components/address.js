@@ -1,6 +1,6 @@
 /**
  * Manhattan UI Framework - Address Component
- * - NZ mode: typeahead suggestions via backend proxy (NZPost)
+ * - NZ mode: typeahead suggestions via backend proxy (LINZ + OpenStreetMap)
  * - Overseas mode: manual address inputs
  */
 
@@ -320,7 +320,7 @@
             }
 
             if (!suggestUrl) {
-                setHelp(root, 'NZPost autocomplete is not configured (missing suggest URL).', 'error');
+                setHelp(root, 'Address autocomplete is not configured (missing suggest URL).', 'error');
                 hideResults(results);
                 return;
             }

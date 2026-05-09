@@ -141,14 +141,14 @@ var pins = map.getMarkers(); // [{lat, lng, title, marker}, ...]'
     <h3>Address Picker + Map Workflow</h3>
     <p class="m-demo-desc">
         The Address component now exposes <code>getCoordinates()</code> — returns <code>{lat, lng}</code> if the
-        selected NZPost suggestion includes GPS data, or <code>null</code> otherwise. This example shows how to wire
+        selected address suggestion includes GPS data, or <code>null</code> otherwise. This example shows how to wire
         an address picker to a map in application JS.
     </p>
 
     <?= demoCodeTabs(
         '// In your view:
 <?= $m->address(\'deliveryAddress\')
-    ->suggestUrl(\'/manhattan/nzpostSuggest\')
+    ->suggestUrl(\'/manhattan/addressSuggest\')
     ->mode(\'nz\') ?>
 
 <?= $m->map(\'deliveryMap\')

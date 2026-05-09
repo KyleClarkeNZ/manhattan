@@ -133,7 +133,7 @@ DirectoryIndex demo/index.php
     
     # Handle demo endpoints
     RewriteRule ^toggleTheme$ demo/index.php [L,QSA]
-    RewriteRule ^nzpostSuggest$ demo/index.php [L,QSA]
+    RewriteRule ^addressSuggest$ demo/index.php [L,QSA]
     RewriteRule ^handleButtonClick$ demo/index.php [L,QSA]
     RewriteRule ^getDropdownData$ demo/index.php [L,QSA]
     RewriteRule ^getGridData$ demo/index.php [L,QSA]

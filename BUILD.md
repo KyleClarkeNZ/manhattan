@@ -122,7 +122,7 @@ chmod -R 755 .
 The build script creates a `.htaccess` file automatically if it doesn't exist. This file:
 - Serves `index.php` as the directory index (root entry point)
 - Serves assets directly
-- Handles demo endpoints (`/toggleTheme`, `/nzpostSuggest`)
+- Handles demo endpoints (`/toggleTheme`, `/addressSuggest`)
 - Sets security headers
 - Disables directory browsing
 
@@ -164,13 +164,13 @@ manhattan.kyleclarke.co.nz/
 
 ## Environment Variables (Optional)
 
-The demo supports an optional NZ Post Address autocomplete API key:
+The demo supports an optional LINZ API key for NZ address autocomplete:
 
 ```bash
-export NZPOST_SUBSCRIPTION_KEY=your_key_here
+export LINZ_API_KEY=your_key_here
 ```
 
-This enables the Address component demo. If not set, the address component will show a friendly error message.
+This enables the Address component demo with live LINZ + OpenStreetMap suggestions. If not set, the component returns mock address data.
 
 ## Troubleshooting
 

@@ -2,13 +2,13 @@
 
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-map-marker-alt') ?> Address</h2>
-    <p class="m-demo-desc">NZ Post-powered address autocomplete with overseas manual-entry fallback. Proxies API keys server-side for security.</p>
+    <p class="m-demo-desc">NZ address autocomplete (LINZ + OpenStreetMap) with overseas manual-entry fallback. Proxies API keys server-side for security.</p>
 
     <h3>NZ Address (Autocomplete)</h3>
-    <p>Start typing an NZ address below. The component queries a server-side proxy that forwards requests to the NZ Post API (or returns mock data when no API key is configured).</p>
+    <p>Start typing an NZ address below. The component queries a server-side proxy that blends LINZ street addresses and OpenStreetMap POIs (or returns mock data when no API key is configured).</p>
     <div class="m-demo-row">
         <?= $m->address('demo-address-nz')
-            ->suggestUrl('/nzpostSuggest')
+            ->suggestUrl('/addressSuggest')
             ->mode('nz') ?>
     </div>
 
@@ -23,7 +23,7 @@
     <?= demoCodeTabs(
         '// NZ address with autocomplete
 <?= $m->address(\'deliveryAddress\')
-    ->suggestUrl(\'/nzpostSuggest\')
+    ->suggestUrl(\'/addressSuggest\')
     ->mode(\'nz\') ?>
 
 // Overseas manual input
@@ -33,7 +33,7 @@
 // Custom name prefix for form fields
 <?= $m->address(\'billing\')
     ->namePrefix(\'billing_address\')
-    ->suggestUrl(\'/nzpostSuggest\')
+    ->suggestUrl(\'/addressSuggest\')
     ->mode(\'nz\') ?>',
         '// Get address instance
 var addr = m.address(\'deliveryAddress\');
@@ -61,7 +61,7 @@ document.getElementById(\'deliveryAddress\')
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->address($id)', 'string', 'Create an address component.'],
-    ['->suggestUrl($url)', 'string', 'Server-side proxy URL for NZ Post suggestions.'],
+    ['->suggestUrl($url)', 'string', 'Server-side proxy URL for address suggestions.'],
     ['->mode($mode)', 'string', 'Initial mode: <code>nz</code> (autocomplete) or <code>overseas</code> (manual).'],
     ['->namePrefix($prefix)', 'string', 'Prefix for hidden field names (default: component ID).'],
 ]) ?>
@@ -75,7 +75,7 @@ document.getElementById(\'deliveryAddress\')
 <?= apiTable('JS Options', 'js', [
     ['minChars', 'int', 'Minimum characters before triggering autocomplete (default: 3).'],
     ['debounceMs', 'int', 'Debounce delay in milliseconds (default: 250).'],
-    ['suggestUrl', 'string', 'Override the proxy URL for NZ Post suggestions.'],
+    ['suggestUrl', 'string', 'Override the proxy URL for address suggestions.'],
     ['onChange', 'function(data)', 'Called when an address is selected or mode changes.'],
 ]) ?>
 
