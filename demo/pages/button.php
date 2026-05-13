@@ -8,6 +8,7 @@
     <div class="m-demo-row">
         <?= $m->button('btn-primary', 'Primary')->primary()->icon('fa-rocket')->on('click', 'handlePrimaryClick') ?>
         <?= $m->button('btn-secondary', 'Secondary')->icon('fa-save') ?>
+        <?= $m->button('btn-outline', 'Outline')->outline()->icon('fa-envelope') ?>
         <?= $m->button('btn-danger', 'Danger')->danger()->icon('fa-trash') ?>
         <?= $m->button('btn-success', 'Success')->success()->icon('fa-check') ?>
         <?= $m->button('btn-disabled', 'Disabled')->icon('fa-ban')->attr('disabled', 'disabled') ?>
@@ -26,6 +27,11 @@
     ->primary()
     ->icon(\'fa-save\')
     ->type(\'submit\') ?>
+
+// Outline (transparent fill, coloured border and text)
+<?= $m->button(\'msgBtn\', \'Message\')
+    ->outline()
+    ->icon(\'fa-envelope\') ?>
 
 // Danger action
 <?= $m->button(\'deleteBtn\', \'Delete\')
@@ -66,6 +72,7 @@ btn.icon(\'fa-check\', \'left\');'
     ['$m->button($id, $text)', 'string, string', 'Create a button component.'],
     ['->primary()', '', 'Apply primary (blue) styling.'],
     ['->secondary()', '', 'Apply secondary styling.'],
+    ['->outline()', '', 'Apply outline styling (transparent fill, coloured border and text).'],
     ['->danger()', '', 'Apply danger (red) styling.'],
     ['->success()', '', 'Apply success (green) styling.'],
     ['->block()', '', 'Make the button full-width.'],

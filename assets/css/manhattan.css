@@ -1243,6 +1243,18 @@
     border-color: #45a049;
 }
 
+.m-button.m-button-outline {
+    background-color: transparent;
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
+.m-button.m-button-outline:hover {
+    background-color: #2196F3;
+    border-color: #2196F3;
+    color: #fff;
+}
+
 .m-button.m-button-block {
     display: block;
     width: 100%;

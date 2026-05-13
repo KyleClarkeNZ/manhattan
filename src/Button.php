@@ -15,6 +15,7 @@ class Button extends Component
     private ?string $name = null;
     private bool $primary = false;
     private bool $secondary = false;
+    private bool $outline = false;
     private bool $danger = false;
     private bool $success = false;
     private bool $block = false;
@@ -41,6 +42,9 @@ class Button extends Component
         }
         if (isset($options['secondary'])) {
             $this->secondary = (bool)$options['secondary'];
+        }
+        if (isset($options['outline'])) {
+            $this->outline = (bool)$options['outline'];
         }
         if (isset($options['danger'])) {
             $this->danger = (bool)$options['danger'];
@@ -77,6 +81,15 @@ class Button extends Component
     public function secondary(bool $secondary = true): self
     {
         $this->secondary = $secondary;
+        return $this;
+    }
+
+    /**
+     * Set button as outline styled (transparent background, coloured border and text)
+     */
+    public function outline(bool $outline = true): self
+    {
+        $this->outline = $outline;
         return $this;
     }
 
@@ -175,6 +188,9 @@ class Button extends Component
         }
         if ($this->secondary) {
             $classes[] = 'm-button-secondary';
+        }
+        if ($this->outline) {
+            $classes[] = 'm-button-outline';
         }
         if ($this->danger) {
             $classes[] = 'm-button-danger';
