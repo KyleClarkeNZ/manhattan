@@ -237,8 +237,22 @@ final class Chart extends Component
                         }
                     }
 
-                    $rx = $isTopSeg ? ' rx="4"' : '';
-                    $seriesSvg .= '<rect class="m-chart-bar" x="' . $x . '" y="' . $cumBase . '" width="' . $barW . '" height="' . $segH . '" fill="' . $segColor . '"' . $rx . ' data-m-tooltip="' . $tipEsc . '" data-m-tooltip-position="top" />';
+                    if ($isTopSeg) {
+                        // Path with rounded top-left and top-right corners only
+                        $r  = min(4.0, $barW / 2, $segH / 2);
+                        $x1 = round($x, 2);
+                        $x2 = round($x + $barW, 2);
+                        $yt = round($cumBase, 2);
+                        $yb = round($cumBase + $segH, 2);
+                        $d  = "M {$x1},{$yb} L {$x1}," . round($yt + $r, 2)
+                            . " A {$r},{$r} 0 0 1 " . round($x1 + $r, 2) . ",{$yt}"
+                            . " L " . round($x2 - $r, 2) . ",{$yt}"
+                            . " A {$r},{$r} 0 0 1 {$x2}," . round($yt + $r, 2)
+                            . " L {$x2},{$yb} Z";
+                        $seriesSvg .= '<path class="m-chart-bar" d="' . $d . '" fill="' . $segColor . '" data-m-tooltip="' . $tipEsc . '" data-m-tooltip-position="top" />';
+                    } else {
+                        $seriesSvg .= '<rect class="m-chart-bar" x="' . $x . '" y="' . $cumBase . '" width="' . $barW . '" height="' . $segH . '" fill="' . $segColor . '" data-m-tooltip="' . $tipEsc . '" data-m-tooltip-position="top" />';
+                    }
                 }
 
                 // X-axis labels (sparse if many)
