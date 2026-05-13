@@ -33,7 +33,7 @@ final class Chart extends Component
     public function type(string $type): self
     {
         $type = strtolower(trim($type));
-        if (!in_array($type, ['bar', 'line'], true)) {
+        if (!in_array($type, ['bar', 'line', 'stacked-bar'], true)) {
             $type = 'bar';
         }
         $this->type = $type;
@@ -124,6 +124,12 @@ final class Chart extends Component
         $values = $series0['values'];
 
         $n = max(count($labels), count($values));
+        // For stacked-bar, extend $n to cover all series lengths
+        if ($this->type === 'stacked-bar') {
+            foreach ($this->series as $ser) {
+                $n = max($n, count((array)$ser['values']));
+            }
+        }
         if ($n <= 0) {
             $empty = '<div class="m-chart-empty">No data</div>';
             return "<div id=\"{$idAttr}\" class=\"{$classAttr}\"{$eventAttrs}{$extraAttrs}>{$empty}</div>";
@@ -140,8 +146,19 @@ final class Chart extends Component
         }
 
         $maxVal = 0.0;
-        foreach ($values as $v) {
-            $maxVal = max($maxVal, (float)$v);
+        if ($this->type === 'stacked-bar') {
+            // yMax = largest cumulative stack total across all positions
+            for ($i = 0; $i < $n; $i++) {
+                $sum = 0.0;
+                foreach ($this->series as $ser) {
+                    $sum += max(0.0, (float)(((array)$ser['values'])[$i] ?? 0.0));
+                }
+                $maxVal = max($maxVal, $sum);
+            }
+        } else {
+            foreach ($values as $v) {
+                $maxVal = max($maxVal, (float)$v);
+            }
         }
         $yMax = $this->yMax !== null ? max(0.0, $this->yMax) : $maxVal;
         if ($yMax <= 0.0) {
@@ -184,7 +201,54 @@ final class Chart extends Component
 
         $seriesSvg = '';
 
-        if ($this->type === 'bar') {
+        if ($this->type === 'stacked-bar') {
+            $step = $plotW / $n;
+            $barW = max(2.0, $step * 0.62);
+            $seriesCount = count($this->series);
+
+            for ($i = 0; $i < $n; $i++) {
+                $cumBase = $axisY; // build upward from the x-axis
+
+                for ($s = 0; $s < $seriesCount; $s++) {
+                    $ser = $this->series[$s];
+                    $serVals = (array)$ser['values'];
+                    $v = max(0.0, (float)($serVals[$i] ?? 0.0));
+                    if ($v <= 0.0) {
+                        continue;
+                    }
+
+                    $segH = ($v / $yMax) * $plotH;
+                    $cumBase -= $segH;
+
+                    $x = $padL + ($step * $i) + (($step - $barW) / 2);
+                    $segColor = htmlspecialchars((string)$ser['color'], ENT_QUOTES, 'UTF-8');
+
+                    $labRaw = (string)$labels[$i];
+                    $tip = $labRaw . ' — ' . (string)$ser['name'] . ': ' . $formatValue($v);
+                    $tipEsc = htmlspecialchars($tip, ENT_QUOTES, 'UTF-8');
+
+                    // Apply rounded corners only to the topmost visible segment
+                    $isTopSeg = true;
+                    for ($t = $s + 1; $t < $seriesCount; $t++) {
+                        $tVals = (array)$this->series[$t]['values'];
+                        if ((float)($tVals[$i] ?? 0.0) > 0.0) {
+                            $isTopSeg = false;
+                            break;
+                        }
+                    }
+
+                    $rx = $isTopSeg ? ' rx="4"' : '';
+                    $seriesSvg .= '<rect class="m-chart-bar" x="' . $x . '" y="' . $cumBase . '" width="' . $barW . '" height="' . $segH . '" fill="' . $segColor . '"' . $rx . ' data-m-tooltip="' . $tipEsc . '" data-m-tooltip-position="top" />';
+                }
+
+                // X-axis labels (sparse if many)
+                if ($n <= 10 || ($i % 2) === 0) {
+                    $lx = $padL + ($step * $i) + ($step / 2);
+                    $lab = htmlspecialchars((string)$labels[$i], ENT_QUOTES, 'UTF-8');
+                    $seriesSvg .= '<text class="m-chart-x" x="' . $lx . '" y="' . ($h - 10) . '" text-anchor="middle">' . $lab . '</text>';
+                }
+            }
+        } elseif ($this->type === 'bar') {
             $step = $plotW / $n;
             $barW = max(2.0, $step * 0.62);
 
@@ -245,6 +309,24 @@ final class Chart extends Component
 
         $title = htmlspecialchars((string)$series0['name'], ENT_QUOTES, 'UTF-8');
 
+        // Build legend — multi-series for stacked-bar, single-series otherwise
+        $legend = '';
+        if ($this->type === 'stacked-bar' && count($this->series) > 0) {
+            $legendItems = '';
+            foreach ($this->series as $ser) {
+                $serLabel = htmlspecialchars((string)$ser['name'], ENT_QUOTES, 'UTF-8');
+                $serColor = htmlspecialchars((string)$ser['color'], ENT_QUOTES, 'UTF-8');
+                if ($serLabel !== '') {
+                    $legendItems .= '<span class="m-chart-legend-item"><span class="m-chart-swatch" style="background:' . $serColor . '"></span>' . $serLabel . '</span>';
+                }
+            }
+            if ($legendItems !== '') {
+                $legend = '<div class="m-chart-legend">' . $legendItems . '</div>';
+            }
+        } elseif ($title !== '') {
+            $legend = '<div class="m-chart-legend"><span class="m-chart-swatch" style="background:' . $color . '"></span>' . $title . '</div>';
+        }
+
         $goalSvg = '';
         if ($this->goalLine !== null) {
             $goalVal = $this->goalLine['value'];
@@ -270,11 +352,6 @@ final class Chart extends Component
     {$goalSvg}
 </svg>
 SVG;
-
-        $legend = '';
-        if ($title !== '') {
-            $legend = '<div class="m-chart-legend"><span class="m-chart-swatch" style="background:' . $color . '"></span>' . $title . '</div>';
-        }
 
         return "<div id=\"{$idAttr}\" class=\"{$classAttr}\"{$eventAttrs}{$extraAttrs}>{$legend}{$svg}</div>";
     }

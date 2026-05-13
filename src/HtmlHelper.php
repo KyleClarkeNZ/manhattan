@@ -677,6 +677,19 @@ class HtmlHelper
     }
 
     /**
+     * Create a CarouselBanner component — full-width animated banner slideshow.
+     *
+     * @param string $id      Unique element ID.
+     * @param array  $options Optional configuration (animation, animationSpeed, autoPlay, dots,
+     *                        arrows, loop, pauseOnHover, lazyLoad, thumbs, aspectRatio, maxHeight, startIndex).
+     * @return CarouselBanner
+     */
+    public function carouselBanner(string $id, array $options = []): CarouselBanner
+    {
+        return new CarouselBanner($id, $options);
+    }
+
+    /**
      * Create a Lightbox component — full-screen overlay image viewer.
      *
      * Can be pre-populated with images via PHP or supplied dynamically at open
@@ -738,6 +751,7 @@ class HtmlHelper
 <script src="{$js}/components/lightbox.js" defer></script>
 <script src="{$js}/components/imageviewer.js" defer></script>
 <script src="{$js}/components/carousel.js" defer></script>
+<script src="{$js}/components/carouselbanner.js" defer></script>
 <script src="{$js}/components/calendar.js" defer></script>
 HTML;
     }

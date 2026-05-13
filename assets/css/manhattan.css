@@ -195,12 +195,19 @@
 }
 
 .m-chart-legend {
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap: 6px 14px;
     margin-bottom: 8px;
     font-size: 12px;
     color: inherit;
+}
+
+.m-chart-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .m-chart-swatch {
@@ -7924,6 +7931,504 @@ textarea.m-wizard-field-error {
     pointer-events: none;
     opacity: 0.3;
 }
+
+/* =============================================================================
+   CarouselBanner
+   ============================================================================= */
+
+.m-carousel-banner {
+    width: 100%;
+    position: relative;
+    outline: none;
+    /* Default aspect ratio — overridden by --m-cb-aspect inline CSS var */
+    --m-cb-aspect: 16/9;
+    --m-cb-anim-speed: 500ms;
+    --m-cb-overlay-bg: linear-gradient(to top, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.18) 55%, transparent 100%);
+    --m-cb-dot-size: 8px;
+    --m-cb-dot-active-size: 24px;
+}
+
+/* ── Stage (the visible banner frame) ────────────────────────────────────── */
+
+.m-cb-stage {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+    aspect-ratio: var(--m-cb-aspect, 16/9);
+    max-height: var(--m-cb-max-height, none);
+    background: #111;
+    line-height: 0; /* prevent ghost space below img */
+}
+
+/* ── Track (contains all slides) ─────────────────────────────────────────── */
+
+.m-cb-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* ── Individual slide ────────────────────────────────────────────────────── */
+
+.m-cb-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    will-change: opacity, transform;
+    transition: none;
+}
+
+.m-cb-slide.m-active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    position: relative; /* active slide takes up space / defines aspect ratio */
+}
+
+.m-cb-slide-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* ── Slide animation — FADE ───────────────────────────────────────────────── */
+
+.m-carousel-banner.m-cb--fade .m-cb-slide {
+    transition: opacity var(--m-cb-anim-speed, 500ms) ease-in-out,
+                visibility 0s var(--m-cb-anim-speed, 500ms);
+}
+
+.m-carousel-banner.m-cb--fade .m-cb-slide.m-active {
+    transition: opacity var(--m-cb-anim-speed, 500ms) ease-in-out;
+}
+
+.m-carousel-banner.m-cb--fade .m-cb-slide--fade-in {
+    opacity: 0;
+    visibility: visible;
+    position: absolute;
+    inset: 0;
+}
+
+.m-carousel-banner.m-cb--fade .m-cb-slide--entering {
+    z-index: 2;
+}
+
+.m-carousel-banner.m-cb--fade .m-cb-slide--fade-out {
+    opacity: 0;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+/* ── Slide animation — SLIDE ─────────────────────────────────────────────── */
+
+.m-carousel-banner.m-cb--slide .m-cb-slide {
+    transform: translateX(0);
+}
+
+.m-carousel-banner.m-cb--slide .m-cb-slide.m-active {
+    transform: translateX(0);
+}
+
+/* Entering from right */
+.m-carousel-banner.m-cb--slide .m-cb-slide--enter-right {
+    transform: translateX(100%);
+    visibility: visible;
+    opacity: 1;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+}
+
+/* Entering from left */
+.m-carousel-banner.m-cb--slide .m-cb-slide--enter-left {
+    transform: translateX(-100%);
+    visibility: visible;
+    opacity: 1;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+}
+
+/* Active slide translating in */
+.m-carousel-banner.m-cb--slide .m-cb-slide--moving {
+    transition: transform var(--m-cb-anim-speed, 500ms) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Exiting to left */
+.m-carousel-banner.m-cb--slide .m-cb-slide--exit-left {
+    transition: transform var(--m-cb-anim-speed, 500ms) cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-100%);
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Exiting to right */
+.m-carousel-banner.m-cb--slide .m-cb-slide--exit-right {
+    transition: transform var(--m-cb-anim-speed, 500ms) cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(100%);
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    visibility: visible;
+    opacity: 1;
+}
+
+/* ── Overlay text ─────────────────────────────────────────────────────────── */
+
+.m-cb-overlay {
+    position: absolute;
+    z-index: 3;
+    padding: 1.25rem 1.5rem;
+    pointer-events: none;
+    max-width: 55%;
+}
+
+.m-cb-overlay-bottom-left {
+    bottom: 0;
+    left: 0;
+    background: var(--m-cb-overlay-bg);
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0 0 8px 8px; /* match stage radius */
+    padding: 2.5rem 1.75rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.m-cb-overlay-bottom-center {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--m-cb-overlay-bg);
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0 0 8px 8px;
+    padding: 2.5rem 1.75rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.m-cb-overlay-center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.45);
+    border-radius: 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    max-width: 70%;
+}
+
+.m-cb-overlay-top-left {
+    top: 0;
+    left: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%);
+    width: 100%;
+    max-width: 100%;
+    border-radius: 8px 8px 0 0;
+    padding: 1.25rem 1.75rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.m-cb-slide-title {
+    font-size: clamp(1rem, 3vw, 1.9rem);
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.35rem;
+    line-height: 1.2;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    pointer-events: auto;
+}
+
+.m-cb-slide-subtitle {
+    font-size: clamp(0.8rem, 1.8vw, 1.1rem);
+    color: rgba(255,255,255,0.88);
+    margin: 0 0 0.85rem;
+    line-height: 1.4;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    pointer-events: auto;
+}
+
+.m-cb-slide-caption {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.6);
+    margin: 0.6rem 0 0;
+    line-height: 1.4;
+    font-style: italic;
+    pointer-events: auto;
+}
+
+/* ── CTA button ───────────────────────────────────────────────────────────── */
+
+.m-cb-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: background 0.18s, opacity 0.18s, transform 0.12s;
+    pointer-events: auto;
+    white-space: nowrap;
+}
+
+.m-cb-cta:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.m-cb-cta--primary {
+    background: var(--m-primary, #118AB2);
+    color: #fff;
+}
+
+.m-cb-cta--secondary {
+    background: var(--m-secondary, #C44900);
+    color: #fff;
+}
+
+.m-cb-cta--light {
+    background: rgba(255,255,255,0.92);
+    color: #111;
+}
+
+/* ── Arrow navigation buttons ─────────────────────────────────────────────── */
+
+.m-cb-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.78);
+    color: #222;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+    transition: background 0.15s, transform 0.15s, opacity 0.15s;
+    padding: 0;
+    opacity: 0.82;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.m-cb-btn:hover {
+    background: rgba(255,255,255,0.96);
+    opacity: 1;
+    transform: translateY(-50%) scale(1.08);
+}
+
+.m-cb-btn:disabled,
+.m-cb-btn[disabled] {
+    opacity: 0.2;
+    cursor: default;
+    pointer-events: none;
+}
+
+.m-cb-prev { left: 0.65rem; }
+.m-cb-next { right: 0.65rem; }
+
+/* Hide arrows on very small screens to save space */
+@media (max-width: 480px) {
+    .m-cb-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+    .m-cb-prev { left: 0.35rem; }
+    .m-cb-next { right: 0.35rem; }
+}
+
+/* ── Dot indicators ───────────────────────────────────────────────────────── */
+
+.m-cb-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+}
+
+.m-cb-dots--inside {
+    position: absolute;
+    bottom: 0.8rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.m-cb-dots--below {
+    padding: 0.55rem 0 0.25rem;
+}
+
+.m-cb-dot {
+    width: var(--m-cb-dot-size, 8px);
+    height: var(--m-cb-dot-size, 8px);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.55);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.18s, width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.m-cb-dots--below .m-cb-dot {
+    background: var(--m-border-color, #dde1e7);
+    box-shadow: none;
+}
+
+.m-cb-dot.m-active {
+    background: rgba(255,255,255,0.95);
+    width: var(--m-cb-dot-active-size, 24px);
+}
+
+.m-cb-dots--below .m-cb-dot.m-active {
+    background: var(--m-primary, #118AB2);
+    width: var(--m-cb-dot-active-size, 24px);
+}
+
+/* ── Progress bar (auto-play timer) ──────────────────────────────────────── */
+
+.m-cb-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.2);
+    z-index: 12;
+    overflow: hidden;
+    border-radius: 0 0 8px 8px;
+}
+
+.m-cb-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--m-primary, #118AB2);
+    border-radius: 0 0 8px 8px;
+    will-change: width;
+}
+
+/* ── Thumbnail strip ──────────────────────────────────────────────────────── */
+
+.m-cb-thumbs {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.45rem 0 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--m-border-color, #dde1e7) transparent;
+}
+
+.m-cb-thumbs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.m-cb-thumbs::-webkit-scrollbar-thumb {
+    background: var(--m-border-color, #ccc);
+    border-radius: 2px;
+}
+
+.m-cb-thumb {
+    flex-shrink: 0;
+    width: 60px;
+    height: 40px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 0.18s, opacity 0.18s;
+    opacity: 0.6;
+    background: none;
+}
+
+.m-cb-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+}
+
+.m-cb-thumb.m-active,
+.m-cb-thumb:hover {
+    border-color: var(--m-primary, #118AB2);
+    opacity: 1;
+}
+
+/* ── Responsive adjustments ───────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+    .m-cb-overlay-bottom-left,
+    .m-cb-overlay-bottom-center,
+    .m-cb-overlay-top-left {
+        padding: 1.5rem 1rem 0.9rem;
+    }
+
+    .m-cb-overlay-center {
+        max-width: 85%;
+        padding: 0.75rem 1rem;
+    }
+
+    .m-cb-cta {
+        padding: 0.4rem 0.9rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    .m-carousel-banner.m-cb--fade .m-cb-slide,
+    .m-carousel-banner.m-cb--fade .m-cb-slide.m-active {
+        transition: opacity 0.01ms ease-in-out;
+    }
+
+    .m-carousel-banner.m-cb--slide .m-cb-slide--moving,
+    .m-carousel-banner.m-cb--slide .m-cb-slide--exit-left,
+    .m-carousel-banner.m-cb--slide .m-cb-slide--exit-right {
+        transition: none;
+    }
+
+    .m-cb-progress-bar {
+        transition: none !important;
+    }
+}
+
 
 /* === Calendar Component === */
 

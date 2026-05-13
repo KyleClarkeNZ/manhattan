@@ -244,7 +244,8 @@ $demoNav = [
     'tabs'        => ['Tabs',        'fa-folder',             'Layout & Display'],
     'accordion'   => ['Accordion',   'fa-bars-staggered',     'Layout & Display'],
     'imageviewer' => ['ImageViewer', 'fa-images',             'Layout & Display'],
-    'carousel'    => ['Carousel',    'fa-film',               'Layout & Display'],
+    'carousel'       => ['Carousel',       'fa-film',         'Layout & Display'],
+    'carouselbanner' => ['CarouselBanner', 'fa-rectangle-ad',  'Layout & Display'],
     // Actions & Navigation
     'button'      => ['Button',      'fa-hand-pointer',       'Actions & Navigation'],
     'buttongroup' => ['ButtonGroup', 'fa-table-columns',      'Actions & Navigation'],

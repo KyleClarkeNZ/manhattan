@@ -2555,6 +2555,64 @@ body.theme-dark .m-carousel-dot {
 }
 
 /* ========================================
+   CarouselBanner
+   ======================================== */
+
+body.m-dark .m-cb-stage,
+body.theme-dark .m-cb-stage {
+    background: #0d0d0d;
+}
+
+/* Arrow buttons */
+body.m-dark .m-cb-btn,
+body.theme-dark .m-cb-btn {
+    background: rgba(30, 20, 50, 0.75);
+    color: #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+body.m-dark .m-cb-btn:hover,
+body.theme-dark .m-cb-btn:hover {
+    background: rgba(50, 35, 75, 0.95);
+}
+
+/* Dots (below placement uses surface colour) */
+body.m-dark .m-cb-dots--below .m-cb-dot,
+body.theme-dark .m-cb-dots--below .m-cb-dot {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+body.m-dark .m-cb-dots--below .m-cb-dot.m-active,
+body.theme-dark .m-cb-dots--below .m-cb-dot.m-active {
+    background: var(--m-primary, #118AB2);
+}
+
+/* Thumbnails */
+body.m-dark .m-cb-thumbs,
+body.theme-dark .m-cb-thumbs {
+    scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+body.m-dark .m-cb-thumb,
+body.theme-dark .m-cb-thumb {
+    opacity: 0.5;
+}
+
+body.m-dark .m-cb-thumb.m-active,
+body.m-dark .m-cb-thumb:hover,
+body.theme-dark .m-cb-thumb.m-active,
+body.theme-dark .m-cb-thumb:hover {
+    border-color: var(--m-primary, #118AB2);
+    opacity: 1;
+}
+
+/* Progress bar */
+body.m-dark .m-cb-progress,
+body.theme-dark .m-cb-progress {
+    background: rgba(255,255,255,0.1);
+}
+
+/* ========================================
    TimePicker
    ======================================== */
 
