@@ -53,8 +53,9 @@ final class Chart extends Component
      * Add a single series. For now, only the first series is rendered.
      *
      * @param array<int, float|int|string|null> $values
+     * @param bool $striped When true, renders the series bars with a diagonal stripe pattern instead of a solid fill.
      */
-    public function series(string $name, array $values, ?string $color = null): self
+    public function series(string $name, array $values, ?string $color = null, bool $striped = false): self
     {
         $vals = [];
         foreach ($values as $v) {
@@ -66,9 +67,10 @@ final class Chart extends Component
         }
 
         $this->series[] = [
-            'name' => $name,
-            'values' => $vals,
-            'color' => $color ?: '#2196F3',
+            'name'    => $name,
+            'values'  => $vals,
+            'color'   => $color ?: '#2196F3',
+            'striped' => $striped,
         ];
         return $this;
     }
@@ -199,6 +201,21 @@ final class Chart extends Component
             $grid .= '<text class="m-chart-axis" x="' . ($padL - 8) . '" y="' . ($y + 4) . '" text-anchor="end">' . htmlspecialchars((string)round($val), ENT_QUOTES, 'UTF-8') . '</text>';
         }
 
+        // Build SVG <defs> patterns for any striped series
+        $safePatId = preg_replace('/[^a-zA-Z0-9_-]/', '-', $this->id);
+        $stripeDefs = '';
+        foreach ($this->series as $_si => $_ser) {
+            if (!empty($_ser['striped'])) {
+                $patId    = 'm-chart-stripe-' . $safePatId . '-' . $_si;
+                $patColor = htmlspecialchars((string)$_ser['color'], ENT_QUOTES, 'UTF-8');
+                $stripeDefs .= '<pattern id="' . $patId . '" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45 0 0)">'
+                    . '<rect width="8" height="8" fill="' . $patColor . '" fill-opacity="0.15"/>'
+                    . '<rect x="0" y="0" width="4" height="8" fill="' . $patColor . '"/>'
+                    . '</pattern>';
+            }
+        }
+        $defs = $stripeDefs !== '' ? '<defs>' . $stripeDefs . '</defs>' : '';
+
         $seriesSvg = '';
 
         if ($this->type === 'stacked-bar') {
@@ -221,7 +238,11 @@ final class Chart extends Component
                     $cumBase -= $segH;
 
                     $x = $padL + ($step * $i) + (($step - $barW) / 2);
-                    $segColor = htmlspecialchars((string)$ser['color'], ENT_QUOTES, 'UTF-8');
+
+                    // Striped series use an SVG pattern fill; solid series use the colour directly
+                    $segColor = !empty($ser['striped'])
+                        ? 'url(#m-chart-stripe-' . $safePatId . '-' . $s . ')'
+                        : htmlspecialchars((string)$ser['color'], ENT_QUOTES, 'UTF-8');
 
                     $labRaw = (string)$labels[$i];
                     $tip = $labRaw . ' — ' . (string)$ser['name'] . ': ' . $formatValue($v);
@@ -331,7 +352,12 @@ final class Chart extends Component
                 $serLabel = htmlspecialchars((string)$ser['name'], ENT_QUOTES, 'UTF-8');
                 $serColor = htmlspecialchars((string)$ser['color'], ENT_QUOTES, 'UTF-8');
                 if ($serLabel !== '') {
-                    $legendItems .= '<span class="m-chart-legend-item"><span class="m-chart-swatch" style="background:' . $serColor . '"></span>' . $serLabel . '</span>';
+                    if (!empty($ser['striped'])) {
+                        $swatchStyle = 'background: repeating-linear-gradient(45deg, ' . $serColor . ', ' . $serColor . ' 3px, transparent 3px, transparent 7px); border: 1px solid ' . $serColor . ';';
+                    } else {
+                        $swatchStyle = 'background:' . $serColor;
+                    }
+                    $legendItems .= '<span class="m-chart-legend-item"><span class="m-chart-swatch" style="' . $swatchStyle . '"></span>' . $serLabel . '</span>';
                 }
             }
             if ($legendItems !== '') {
@@ -359,6 +385,7 @@ final class Chart extends Component
 
         $svg = <<<SVG
 <svg class="m-chart-svg" viewBox="0 0 {$w} {$h}" role="img" aria-label="{$title}">
+    {$defs}
     {$grid}
     <line class="m-chart-axis-line" x1="{$axisX1}" y1="{$axisY}" x2="{$axisX2}" y2="{$axisY}" />
     <line class="m-chart-axis-line" x1="{$axisX1}" y1="{$padT}" x2="{$axisX1}" y2="{$axisY}" />
