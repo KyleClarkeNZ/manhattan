@@ -21,6 +21,8 @@ class Dropdown extends Component
     private bool $autoLoadRemote = true;
     private bool $useLoader = true;
     private string $loaderText = 'Loading...';
+    private bool $searchable = false;
+    private string $searchPlaceholder = 'Search...';
 
     public function __construct(string $id, array $options = [])
     {
@@ -59,6 +61,12 @@ class Dropdown extends Component
         }
         if (isset($options['loaderText'])) {
             $this->loaderText = (string)$options['loaderText'];
+        }
+        if (isset($options['searchable'])) {
+            $this->searchable = (bool)$options['searchable'];
+        }
+        if (isset($options['searchPlaceholder'])) {
+            $this->searchPlaceholder = (string)$options['searchPlaceholder'];
         }
     }
 
@@ -133,6 +141,26 @@ class Dropdown extends Component
     }
 
     /**
+     * Enable a live-filter search box inside the dropdown list.
+     * Ideal for long option lists such as location selectors.
+     */
+    public function searchable(bool $enabled = true): self
+    {
+        $this->searchable = $enabled;
+        return $this;
+    }
+
+    /**
+     * Set the placeholder text shown inside the search input.
+     * Only relevant when ->searchable() is enabled.
+     */
+    public function searchPlaceholder(string $text): self
+    {
+        $this->searchPlaceholder = $text;
+        return $this;
+    }
+
+    /**
      * Set grouped data source. Each entry: ['group' => 'Label', 'items' => [['value' => ..., 'text' => ...], ...]]
      *
      * @param array<int, array{group: string, items: array<int, array<string, mixed>>}> $groups
@@ -153,6 +181,10 @@ class Dropdown extends Component
         $classes = array_merge(['m-dropdown'], $this->getExtraClasses());
 
         $this->data('component', 'dropdown');
+        if ($this->searchable) {
+            $this->data('searchable', '1');
+            $this->data('search-placeholder', $this->searchPlaceholder);
+        }
         if ($this->remoteUrl !== null && $this->remoteUrl !== '') {
             $this->data('remote-url', $this->remoteUrl);
             $this->data('remote-autoload', $this->autoLoadRemote ? '1' : '0');

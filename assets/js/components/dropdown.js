@@ -43,7 +43,12 @@
             remoteMethod: dataset.remoteMethod || 'GET',
             autoLoadRemote: dataset.remoteAutoload !== '0',
             useLoader: dataset.useLoader !== '0',
-            loaderText: dataset.loaderText || 'Loading...'
+            loaderText: dataset.loaderText || 'Loading...',
+
+            // Searchable filter
+            searchable: dataset.searchable === '1',
+            searchPlaceholder: dataset.searchPlaceholder || 'Search...',
+            searchNoResults: dataset.searchNoResults || 'No results found'
         }, options || {});
 
         // Get existing options as dataSource if not provided
@@ -336,34 +341,170 @@
         return option;
     }
 
-    function renderDropdownOptions(dropdown, options) {
-        var list = dropdown.querySelector('.m-dropdown-list');
-        list.innerHTML = '';
-
+    /**
+     * Render flat/grouped items into any container element.
+     * Used by both the standard (non-searchable) and searchable paths.
+     */
+    function renderItemsInto(container, dropdown, options) {
         if (options.groupedDataSource && options.groupedDataSource.length > 0) {
             // Render any top-level ungrouped items first
             if (options.dataSource && options.dataSource.length > 0) {
                 options.dataSource.forEach(function(item) {
-                    list.appendChild(renderDropdownItem(dropdown, item, options));
+                    container.appendChild(renderDropdownItem(dropdown, item, options));
                 });
             }
-
             // Render each group with a label header
             options.groupedDataSource.forEach(function(group) {
                 var groupLabel = utils.createElement('div', 'm-dropdown-group-label');
                 groupLabel.textContent = group.group || '';
                 groupLabel.setAttribute('aria-hidden', 'true');
-                list.appendChild(groupLabel);
+                container.appendChild(groupLabel);
 
                 var items = Array.isArray(group.items) ? group.items : [];
                 items.forEach(function(item) {
-                    list.appendChild(renderDropdownItem(dropdown, item, options));
+                    container.appendChild(renderDropdownItem(dropdown, item, options));
                 });
             });
         } else if (options.dataSource && options.dataSource.length > 0) {
             options.dataSource.forEach(function(item) {
-                list.appendChild(renderDropdownItem(dropdown, item, options));
+                container.appendChild(renderDropdownItem(dropdown, item, options));
             });
+        }
+    }
+
+    /**
+     * Filter visible items in a searchable dropdown list.
+     * Hides non-matching items and group labels whose groups are fully hidden.
+     */
+    function filterDropdownItems(list, query) {
+        var scroller = list.querySelector('.m-dropdown-items-scroller');
+        if (!scroller) { return; }
+
+        var q = query.trim().toLowerCase();
+        var items = Array.from(scroller.querySelectorAll('.m-dropdown-item'));
+        var visibleCount = 0;
+
+        items.forEach(function(item) {
+            var matches = !q || item.textContent.toLowerCase().indexOf(q) !== -1;
+            item.classList.toggle('m-hidden', !matches);
+            if (matches) { visibleCount++; }
+        });
+
+        // Show/hide group labels: hide when every item in their group is hidden
+        var groups = Array.from(scroller.querySelectorAll('.m-dropdown-group-label'));
+        groups.forEach(function(label) {
+            var hasVisible = false;
+            var next = label.nextElementSibling;
+            while (next && !next.classList.contains('m-dropdown-group-label')) {
+                if (next.classList.contains('m-dropdown-item') && !next.classList.contains('m-hidden')) {
+                    hasVisible = true;
+                    break;
+                }
+                next = next.nextElementSibling;
+            }
+            label.classList.toggle('m-hidden', !hasVisible);
+        });
+
+        // Show/hide "no results" message
+        var noResults = scroller.querySelector('.m-dropdown-no-results');
+        if (visibleCount === 0 && q) {
+            if (!noResults) {
+                noResults = utils.createElement('div', 'm-dropdown-no-results');
+                scroller.appendChild(noResults);
+            }
+            noResults.textContent = list._searchNoResults || 'No results found';
+            noResults.style.display = 'block';
+        } else {
+            if (noResults) { noResults.style.display = 'none'; }
+        }
+    }
+
+    function renderDropdownOptions(dropdown, options) {
+        var list = dropdown.querySelector('.m-dropdown-list');
+
+        if (options.searchable) {
+            // --- Searchable path ---
+            // Build the search wrap + items scroller structure on first render;
+            // on subsequent renders (data reload) just refill the scroller.
+            var scroller = list.querySelector('.m-dropdown-items-scroller');
+
+            if (!scroller) {
+                list.innerHTML = '';
+                list.classList.add('m-searchable');
+
+                // Store the "no results" text so filterDropdownItems can access it
+                list._searchNoResults = options.searchNoResults || 'No results found';
+
+                // Search input wrapper (sticky, does not scroll with items)
+                var searchWrap = utils.createElement('div', 'm-dropdown-search-wrap');
+
+                var searchInput = document.createElement('input');
+                searchInput.type = 'text';
+                searchInput.className = 'm-dropdown-search-input';
+                searchInput.placeholder = options.searchPlaceholder || 'Search...';
+                searchInput.setAttribute('autocomplete', 'off');
+                searchInput.setAttribute('spellcheck', 'false');
+                searchInput.setAttribute('aria-label', searchInput.placeholder);
+                searchWrap.appendChild(searchInput);
+                list.appendChild(searchWrap);
+
+                // Scrollable items area
+                scroller = utils.createElement('div', 'm-dropdown-items-scroller');
+                list.appendChild(scroller);
+
+                // Wire up filtering
+                searchInput.addEventListener('input', function() {
+                    filterDropdownItems(list, this.value);
+                });
+
+                // Keyboard: arrows navigate items, Enter confirms, Escape closes
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigateOptions(dropdown, e.key === 'ArrowDown' ? 1 : -1, options);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Select first visible item or whichever is currently selected
+                        var visibleItems = Array.from(scroller.querySelectorAll('.m-dropdown-item:not(.m-hidden)'));
+                        var currentVal   = dropdown.getAttribute('data-value');
+                        var highlighted  = visibleItems.find(function(i) {
+                            return i.getAttribute('data-value') === currentVal;
+                        });
+                        var target = highlighted || visibleItems[0];
+                        if (target) {
+                            setDropdownValue(dropdown, target.getAttribute('data-value'), options);
+                            closeDropdown(dropdown);
+                            dropdown.focus();
+                        }
+                    } else if (e.key === 'Escape') {
+                        e.stopPropagation();
+                        closeDropdown(dropdown);
+                        dropdown.focus();
+                    }
+                });
+
+                // Prevent clicks on the search input from closing the dropdown
+                // (the outer document click handler checks wrapper.contains(target))
+                searchInput.addEventListener('mousedown', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            // Fill/refill the scroller with items
+            scroller.innerHTML = '';
+            renderItemsInto(scroller, dropdown, options);
+
+            // Re-apply any active filter
+            var currentInput = list.querySelector('.m-dropdown-search-input');
+            if (currentInput && currentInput.value) {
+                filterDropdownItems(list, currentInput.value);
+            }
+        } else {
+            // --- Standard (non-searchable) path: original behaviour ---
+            list.innerHTML = '';
+            renderItemsInto(list, dropdown, options);
         }
     }
 
@@ -496,6 +637,30 @@
                 clippingParent.addEventListener('scroll', dropdown._manhattan._scrollHandler, { passive: true });
                 dropdown._manhattan._clippingParent = clippingParent;
             }
+        }
+
+        // If searchable: clear any previous filter and focus the search input
+        var opts = dropdown._manhattan && dropdown._manhattan.options;
+        if (opts && opts.searchable) {
+            var searchInput = list.querySelector('.m-dropdown-search-input');
+            if (searchInput) {
+                if (searchInput.value) {
+                    searchInput.value = '';
+                    filterDropdownItems(list, '');
+                }
+                // Defer focus slightly so the CSS open animation doesn't steal it
+                setTimeout(function() { searchInput.focus(); }, 30);
+            }
+        }
+
+        // Scroll the selected item into view within its container
+        var scrollContainer = list.querySelector('.m-dropdown-items-scroller') || list;
+        var selectedItem    = scrollContainer.querySelector('.m-dropdown-item.m-selected');
+        if (selectedItem) {
+            var itemTop       = selectedItem.offsetTop;
+            var itemHeight    = selectedItem.offsetHeight;
+            var containerH    = scrollContainer.clientHeight;
+            scrollContainer.scrollTop = itemTop - (containerH / 2) + (itemHeight / 2);
         }
     }
 
@@ -658,7 +823,10 @@
 
     function navigateOptions(dropdown, direction, options) {
         var currentValue = dropdown.getAttribute('data-value');
-        var items = Array.from(dropdown.querySelectorAll('.m-dropdown-item'));
+        // Only consider visible items (hidden when search filter is active)
+        var items = Array.from(dropdown.querySelectorAll('.m-dropdown-item')).filter(function(item) {
+            return !item.classList.contains('m-hidden');
+        });
 
         if (items.length === 0) return;
 

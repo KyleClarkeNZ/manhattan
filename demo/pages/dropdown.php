@@ -28,6 +28,64 @@ $groupedCategories = [
         ['value' => 'learning', 'text' => 'Learning'],
     ]],
 ];
+
+// Searchable demo — a long list of countries / regions
+$countries = [
+    ['value' => 'AU', 'text' => 'Australia'],
+    ['value' => 'AT', 'text' => 'Austria'],
+    ['value' => 'BE', 'text' => 'Belgium'],
+    ['value' => 'BR', 'text' => 'Brazil'],
+    ['value' => 'CA', 'text' => 'Canada'],
+    ['value' => 'CN', 'text' => 'China'],
+    ['value' => 'DK', 'text' => 'Denmark'],
+    ['value' => 'FI', 'text' => 'Finland'],
+    ['value' => 'FR', 'text' => 'France'],
+    ['value' => 'DE', 'text' => 'Germany'],
+    ['value' => 'GR', 'text' => 'Greece'],
+    ['value' => 'IN', 'text' => 'India'],
+    ['value' => 'IE', 'text' => 'Ireland'],
+    ['value' => 'IL', 'text' => 'Israel'],
+    ['value' => 'IT', 'text' => 'Italy'],
+    ['value' => 'JP', 'text' => 'Japan'],
+    ['value' => 'MX', 'text' => 'Mexico'],
+    ['value' => 'NL', 'text' => 'Netherlands'],
+    ['value' => 'NZ', 'text' => 'New Zealand'],
+    ['value' => 'NO', 'text' => 'Norway'],
+    ['value' => 'PL', 'text' => 'Poland'],
+    ['value' => 'PT', 'text' => 'Portugal'],
+    ['value' => 'SG', 'text' => 'Singapore'],
+    ['value' => 'ZA', 'text' => 'South Africa'],
+    ['value' => 'ES', 'text' => 'Spain'],
+    ['value' => 'SE', 'text' => 'Sweden'],
+    ['value' => 'CH', 'text' => 'Switzerland'],
+    ['value' => 'GB', 'text' => 'United Kingdom'],
+    ['value' => 'US', 'text' => 'United States'],
+];
+
+$groupedRegions = [
+    ['group' => 'Oceania', 'items' => [
+        ['value' => 'auckland',    'text' => 'Auckland'],
+        ['value' => 'wellington',  'text' => 'Wellington'],
+        ['value' => 'christchurch','text' => 'Christchurch'],
+        ['value' => 'hamilton',    'text' => 'Hamilton'],
+        ['value' => 'tauranga',    'text' => 'Tauranga'],
+        ['value' => 'dunedin',     'text' => 'Dunedin'],
+    ]],
+    ['group' => 'North America', 'items' => [
+        ['value' => 'new-york',    'text' => 'New York'],
+        ['value' => 'los-angeles', 'text' => 'Los Angeles'],
+        ['value' => 'chicago',     'text' => 'Chicago'],
+        ['value' => 'toronto',     'text' => 'Toronto'],
+        ['value' => 'vancouver',   'text' => 'Vancouver'],
+    ]],
+    ['group' => 'Europe', 'items' => [
+        ['value' => 'london',  'text' => 'London'],
+        ['value' => 'paris',   'text' => 'Paris'],
+        ['value' => 'berlin',  'text' => 'Berlin'],
+        ['value' => 'madrid',  'text' => 'Madrid'],
+        ['value' => 'amsterdam','text' => 'Amsterdam'],
+    ]],
+];
 ?>
 
 <div class="m-demo-section">
@@ -56,6 +114,53 @@ $groupedCategories = [
                 ->name('grouped_category') ?>
         </div>
     </div>
+
+    <h3>Searchable</h3>
+    <p class="m-demo-desc">Add <code>->searchable()</code> to any dropdown with a long list. A live-filter input pins above the options; typing narrows results instantly. Grouped options are also supported — group headings hide automatically when all items in the group are filtered out.</p>
+    <div class="m-demo-row">
+        <div class="m-demo-field">
+            <label>Country (flat, searchable):</label>
+            <?= $m->dropdown('dropdown-search-flat')
+                ->dataSource($countries)
+                ->placeholder('Select country...')
+                ->searchable()
+                ->name('country') ?>
+        </div>
+        <div class="m-demo-field">
+            <label>City (grouped, searchable):</label>
+            <?= $m->dropdown('dropdown-search-grouped')
+                ->groupedDataSource($groupedRegions)
+                ->placeholder('Select city...')
+                ->searchable()
+                ->searchPlaceholder('Search cities...')
+                ->name('city') ?>
+        </div>
+    </div>
+
+    <div class="m-demo-output" id="dropdown-search-output">Select a country or city...</div>
+
+    <?= demoCodeTabs(
+        '// Searchable flat list
+<?= $m->dropdown(\'country\')
+    ->dataSource($countries)
+    ->placeholder(\'Select country...\')
+    ->searchable() ?>
+
+// Searchable with grouped options + custom placeholder
+<?= $m->dropdown(\'city\')
+    ->groupedDataSource($groupedRegions)
+    ->placeholder(\'Select city...\')
+    ->searchable()
+    ->searchPlaceholder(\'Search cities...\') ?>',
+        '// No extra JS needed — searchable is fully automatic.
+// The change event works identically to a standard dropdown.
+document.getElementById(\'country\').addEventListener(\'m:dropdown:change\', function(e) {
+    console.log(e.detail.value, e.detail.text);
+});
+
+// You can also enable searchable at runtime via configure():
+m.dropdown(\'myDd\').configure({ searchable: true });'
+    ) ?>
 
     <h3>Dynamic AJAX Data</h3>
     <div class="m-demo-row">
@@ -148,6 +253,8 @@ dd.clear();'
     ['->autoLoadRemote($auto)', 'bool', 'Auto-fetch remote data on initialisation (default: <code>true</code>).'],
     ['->useLoader($use)', 'bool', 'Show a loading spinner while fetching (default: <code>true</code>).'],
     ['->loaderText($text)', 'string', 'Custom loading text.'],
+    ['->searchable($enabled)', 'bool', 'Enable a live-filter search input inside the dropdown list. Default: <code>false</code>.'],
+    ['->searchPlaceholder($text)', 'string', 'Placeholder for the search input. Only applies when <code>->searchable()</code> is set. Default: <code>"Search..."</code>.'],
 ]) ?>
 
 <?= apiTable('JS Methods', 'js', [
@@ -160,7 +267,7 @@ dd.clear();'
     ['enable()', '', 'Enable the dropdown.'],
     ['disable()', '', 'Disable and close the dropdown.'],
     ['clear()', '', 'Clear the current selection.'],
-    ['configure(options)', 'object', 'Update configuration at runtime.'],
+    ['configure(options)', 'object', 'Update configuration at runtime. Supports all init options, including <code>searchable</code>.'],
 ]) ?>
 
 <?= eventsTable([
@@ -192,6 +299,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Searchable demos
+    var flatEl = document.getElementById('dropdown-search-flat');
+    if (flatEl) {
+        flatEl.addEventListener('m:dropdown:change', function(e) {
+            setOutput('dropdown-search-output', '<strong>Country:</strong> ' + e.detail.text + ' (' + e.detail.value + ')');
+        });
+    }
+    var groupedEl = document.getElementById('dropdown-search-grouped');
+    if (groupedEl) {
+        groupedEl.addEventListener('m:dropdown:change', function(e) {
+            setOutput('dropdown-search-output', '<strong>City:</strong> ' + e.detail.text + ' (' + e.detail.value + ')');
+        });
+    }
 
     var dropdownAjax = m.dropdown('dropdown-ajax', {
         events: {

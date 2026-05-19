@@ -781,6 +781,54 @@ body.theme-dark .m-dropdown-list::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* ── Searchable Dropdown (dark) ─────────────────────────────────────── */
+
+body.m-dark .m-dropdown-search-wrap,
+body.theme-dark .m-dropdown-search-wrap {
+    background: #1e242b;
+    border-bottom-color: rgba(255, 255, 255, 0.10);
+}
+
+body.m-dark .m-dropdown-custom.m-open-up .m-dropdown-search-wrap,
+body.theme-dark .m-dropdown-custom.m-open-up .m-dropdown-search-wrap {
+    border-bottom: none;
+    border-top-color: rgba(255, 255, 255, 0.10);
+}
+
+body.m-dark .m-dropdown-search-input,
+body.theme-dark .m-dropdown-search-input {
+    background: #161b22;
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #e6e6e6;
+}
+
+body.m-dark .m-dropdown-search-input::placeholder,
+body.theme-dark .m-dropdown-search-input::placeholder {
+    color: rgba(230, 230, 230, 0.35);
+}
+
+body.m-dark .m-dropdown-search-input:focus,
+body.theme-dark .m-dropdown-search-input:focus {
+    border-color: #64b5f6;
+    background: #161b22;
+    box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.15);
+}
+
+body.m-dark .m-dropdown-items-scroller::-webkit-scrollbar-track,
+body.theme-dark .m-dropdown-items-scroller::-webkit-scrollbar-track {
+    background: #161b22;
+}
+
+body.m-dark .m-dropdown-items-scroller::-webkit-scrollbar-thumb,
+body.theme-dark .m-dropdown-items-scroller::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+body.m-dark .m-dropdown-no-results,
+body.theme-dark .m-dropdown-no-results {
+    color: #555;
+}
+
 /* ========================================
    DatePicker
    ======================================== */

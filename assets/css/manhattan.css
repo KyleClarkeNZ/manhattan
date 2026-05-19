@@ -3004,6 +3004,106 @@
     background: #555;
 }
 
+/* ── Searchable Dropdown ─────────────────────────────────────────────────── */
+
+/* When the search structure is active the list uses flex so the search bar
+   stays pinned and only the items area scrolls.
+   NOTE: display is intentionally NOT set here — it stays under the control
+   of .m-open so the list remains hidden until the dropdown is opened. */
+.m-dropdown-list.m-searchable {
+    flex-direction: column;
+    max-height: 320px;
+    overflow: hidden;
+}
+
+/* Switch from display:block → display:flex when the dropdown is open */
+.m-dropdown-custom.m-open .m-dropdown-list.m-searchable {
+    display: flex;
+}
+
+/* When opening upward, reverse the column so the search bar sits at the
+   bottom (closest to the trigger) and items stack above it. */
+.m-dropdown-custom.m-open-up .m-dropdown-list.m-searchable {
+    flex-direction: column-reverse;
+}
+
+/* Non-scrolling search input bar */
+.m-dropdown-search-wrap {
+    flex-shrink: 0;
+    padding: 8px;
+    border-bottom: 1px solid #e8e8e8;
+    background: #fff;
+}
+
+.m-dropdown-custom.m-open-up .m-dropdown-search-wrap {
+    border-bottom: none;
+    border-top: 1px solid #e8e8e8;
+}
+
+.m-dropdown-search-input {
+    width: 100%;
+    padding: 7px 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f8f9fa;
+    color: #333;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.m-dropdown-search-input::placeholder {
+    color: #bbb;
+}
+
+.m-dropdown-search-input:focus {
+    border-color: #2196F3;
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.12);
+}
+
+/* Scrollable items area */
+.m-dropdown-items-scroller {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 252px;
+}
+
+.m-dropdown-items-scroller::-webkit-scrollbar {
+    width: 8px;
+}
+
+.m-dropdown-items-scroller::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.m-dropdown-items-scroller::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.m-dropdown-items-scroller::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Hide items that do not match the current search query */
+.m-dropdown-item.m-hidden,
+.m-dropdown-group-label.m-hidden {
+    display: none;
+}
+
+/* "No results" message shown when nothing matches */
+.m-dropdown-no-results {
+    padding: 12px 14px;
+    text-align: center;
+    color: #aaa;
+    font-size: 13px;
+    font-style: italic;
+    user-select: none;
+}
+
 /* === Responsive adjustments === */
 @media (max-width: 768px) {
     .m-datepicker-wrapper,
