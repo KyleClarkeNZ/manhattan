@@ -127,7 +127,7 @@ document.getElementById(\'myWin\')
     ['->height($h)', 'string', 'Window height.'],
     ['->minWidth($w)', 'string', 'Minimum width.'],
     ['->minHeight($h)', 'string', 'Minimum height.'],
-    ['->addButton($text, $action, $style)', 'string, string, string', 'Add a footer button. Style: <code>primary</code>, <code>secondary</code>, <code>danger</code>.'],
+    ['->addButton($text, $action, $style, $loadingText)', 'string×4', 'Add a footer button. Style: <code>primary</code>, <code>secondary</code>, <code>danger</code>. Optional <code>$loadingText</code> sets <code>data-loading-text</code> so <code>m.button(id).setLoading(true)</code> works on it. Button ID: <code>{windowId}_btn_{index}</code>.'],
     ['->visible($vis)', 'bool', 'Show the window on page load.'],
 ]) ?>
 

@@ -159,12 +159,13 @@ class Window extends Component
     /**
      * Add a button to the window footer
      */
-    public function addButton(string $text, string $action, string $style = 'primary'): self
+    public function addButton(string $text, string $action, string $style = 'primary', string $loadingText = ''): self
     {
         $this->buttons[] = [
-            'text' => $text,
-            'action' => $action,
-            'style' => $style
+            'text'        => $text,
+            'action'      => $action,
+            'style'       => $style,
+            'loadingText' => $loadingText,
         ];
         return $this;
     }
@@ -294,6 +295,9 @@ class Window extends Component
                     $btnComponent->danger();
                 }
                 $btnComponent->attr('data-action', $button['action']);
+                if (!empty($button['loadingText'])) {
+                    $btnComponent->loadingText($button['loadingText']);
+                }
                 $html .= (string)$btnComponent;
             }
             $html .= '</div>';
