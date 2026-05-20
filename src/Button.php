@@ -22,6 +22,7 @@ class Button extends Component
     private bool $loading = false;
     private bool $disabled = false;
     private ?string $confirmMessage = null;
+    private ?string $loadingText = null;
 
     public function __construct(string $id, string $text, array $options = [])
     {
@@ -63,6 +64,9 @@ class Button extends Component
         }
         if (isset($options['confirm'])) {
             $this->confirmMessage = (string)$options['confirm'];
+        }
+        if (isset($options['loadingText'])) {
+            $this->loadingText = (string)$options['loadingText'];
         }
     }
 
@@ -135,6 +139,16 @@ class Button extends Component
     public function disabled(bool $disabled = true): self
     {
         $this->disabled = $disabled;
+        return $this;
+    }
+
+    /**
+     * Set the text shown inside the button while setLoading(true) is active.
+     * When setLoading(false) is called the original text is restored automatically.
+     */
+    public function loadingText(string $text): self
+    {
+        $this->loadingText = $text;
         return $this;
     }
 
@@ -224,8 +238,12 @@ class Button extends Component
             ? ' data-m-confirm="' . htmlspecialchars($this->confirmMessage, ENT_QUOTES, 'UTF-8') . '"'
             : '';
 
+        $loadingTextAttr = $this->loadingText !== null
+            ? ' data-loading-text="' . htmlspecialchars($this->loadingText, ENT_QUOTES, 'UTF-8') . '"'
+            : '';
+
         return <<<HTML
-<button id="{$this->id}" type="{$this->type}"{$nameAttr} class="{$classAttr}"{$disabledAttr}{$confirmAttr}{$eventAttrs}{$extraAttrs}>
+<button id="{$this->id}" type="{$this->type}"{$nameAttr} class="{$classAttr}"{$disabledAttr}{$confirmAttr}{$loadingTextAttr}{$eventAttrs}{$extraAttrs}>
     {$iconHtml}{$escapedText}
 </button>
 HTML;

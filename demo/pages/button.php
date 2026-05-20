@@ -18,6 +18,7 @@
     <div class="m-demo-row">
         <?= $m->button('btn-client', 'Client Button') ?>
         <?= $m->button('btn-loading', 'Loading Demo')->icon('fa-spinner') ?>
+        <?= $m->button('btn-loading-text', 'Save Changes')->primary()->icon('fa-save')->loadingText('Saving...') ?>
     </div>
     <div class="m-demo-output" id="button-output">Click a button to see output...</div>
 
@@ -60,8 +61,9 @@ m.button(\'btn-client\', {
 var btn = m.button(\'saveBtn\');
 btn.disable();
 btn.enable();
-btn.setText(\'Saving...\');
-btn.setLoading(true);
+btn.setText(\'New label\');    // update text, preserves icon
+btn.setLoading(true);       // spinner + loading text (if set) + disable
+btn.setLoading(false);      // restore original text + enable
 
 // Dynamic icon
 btn.icon(\'fa-check\', \'left\');'
@@ -76,7 +78,8 @@ btn.icon(\'fa-check\', \'left\');'
     ['->danger()', '', 'Apply danger (red) styling.'],
     ['->success()', '', 'Apply success (green) styling.'],
     ['->block()', '', 'Make the button full-width.'],
-    ['->loading()', '', 'Show a loading spinner.'],
+    ['->loading()', '', 'Render with loading spinner visible on page load.'],
+    ['->loadingText($text)', 'string', 'Text shown while <code>setLoading(true)</code> is active. Original text is restored automatically on <code>setLoading(false)</code>.'],
     ['->icon($icon)', 'string', 'Set a Font Awesome icon.'],
     ['->type($type)', 'string', 'Set the button type: <code>button</code>, <code>submit</code>, <code>reset</code>.'],
     ['->name($name)', 'string', 'Set the <code>name</code> attribute.'],
@@ -89,7 +92,7 @@ btn.icon(\'fa-check\', \'left\');'
     ['enable()', '', 'Remove the disabled state.'],
     ['disable()', '', 'Add the disabled state.'],
     ['setText(text)', 'string', 'Update button text (preserves icon).'],
-    ['setLoading(loading)', 'boolean', 'Toggle loading spinner and disable state.'],
+    ['setLoading(loading)', 'boolean', 'Toggle loading spinner and disabled state. If <code>data-loading-text</code> is set (via <code>->loadingText()</code>), the button text is swapped automatically and restored on <code>setLoading(false)</code>.'],
     ['icon(faName, position)', 'string, string', 'Set or replace the icon. Position: <code>"left"</code> or <code>"right"</code>.'],
 ]) ?>
 
@@ -146,6 +149,19 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 b.setLoading(false);
                 setOutput('button-output', '<strong>Loading complete!</strong>');
+            }, 2000);
+        });
+    }
+
+    var btnLoadingText = document.getElementById('btn-loading-text');
+    if (btnLoadingText) {
+        btnLoadingText.addEventListener('click', function() {
+            var b = m.button('btn-loading-text');
+            b.setLoading(true);
+            setOutput('button-output', '<strong>Saving...</strong> (text swapped automatically from <em>data-loading-text</em>)');
+            setTimeout(function() {
+                b.setLoading(false);
+                setOutput('button-output', '<strong>Saved!</strong> Original text restored automatically.');
             }, 2000);
         });
     }

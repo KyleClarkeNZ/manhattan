@@ -52,6 +52,20 @@
             setTimeout(() => ripple.remove(), 600);
         });
 
+        // Internal helper: set text content while preserving the icon element.
+        function _setButtonText(text) {
+            var icon = element.querySelector('.m-button-icon');
+            var iconPosition = element.getAttribute('data-icon-position') || 'left';
+            element.textContent = text;
+            if (icon) {
+                if (iconPosition === 'right') {
+                    element.appendChild(icon);
+                } else {
+                    element.insertBefore(icon, element.firstChild);
+                }
+            }
+        }
+
         return {
             element: element,
             
@@ -68,26 +82,37 @@
             },
             
             setText: function(text) {
-                const icon = element.querySelector('.m-button-icon');
-                const iconPosition = element.getAttribute('data-icon-position') || 'left';
-                element.textContent = text;
-                if (icon) {
-                    if (iconPosition === 'right') {
-                        element.appendChild(icon);
-                    } else {
-                        element.insertBefore(icon, element.firstChild);
-                    }
-                }
+                _setButtonText(text);
                 return this;
             },
 
             setLoading: function(loading) {
+                var loadingText = element.getAttribute('data-loading-text');
                 if (loading) {
+                    // Swap in loading text (and save original) only on the first setLoading(true) call.
+                    if (loadingText && element._mOriginalText === undefined) {
+                        // Capture current text nodes (exclude the icon element).
+                        var textParts = [];
+                        for (var i = 0; i < element.childNodes.length; i++) {
+                            var node = element.childNodes[i];
+                            if (node.nodeType === 3) { // TEXT_NODE
+                                var t = node.textContent.trim();
+                                if (t) { textParts.push(t); }
+                            }
+                        }
+                        element._mOriginalText = textParts.join(' ');
+                        _setButtonText(loadingText);
+                    }
                     element.classList.add('m-button-loading');
                     element.disabled = true;
                 } else {
                     element.classList.remove('m-button-loading');
                     element.disabled = false;
+                    // Restore original text if it was swapped.
+                    if (loadingText && element._mOriginalText !== undefined) {
+                        _setButtonText(element._mOriginalText);
+                        delete element._mOriginalText;
+                    }
                 }
                 return this;
             },
