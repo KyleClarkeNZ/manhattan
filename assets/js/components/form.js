@@ -295,10 +295,13 @@
 
         /**
          * Mark the form as not dirty and update the baseline to current values.
+         * Emits `m:form:clean` on the form element if the form was previously dirty.
          */
         function clearDirty() {
+            var wasDirty = isDirty;
             isDirty = false;
             dirtyBaseline = snapshotFields();
+            if (wasDirty) { utils.trigger(form, 'm:form:clean', {}); }
         }
 
         /**
@@ -343,17 +346,18 @@
                 dirtyBaseline = snapshotFields();
             }, 0);
 
-            // Mark dirty on any user input
-            form.addEventListener('input', function() {
+            // Mark dirty on any user input (native fields + RTEs).
+            // RTEs fire `m:rte:change` with bubbles:true, so it reaches the form element.
+            function onFieldChange() {
                 if (checkDirty()) {
+                    var wasClean = !isDirty;
                     isDirty = true;
+                    if (wasClean) { utils.trigger(form, 'm:form:dirty', {}); }
                 }
-            });
-            form.addEventListener('change', function() {
-                if (checkDirty()) {
-                    isDirty = true;
-                }
-            });
+            }
+            form.addEventListener('input',        onFieldChange);
+            form.addEventListener('change',       onFieldChange);
+            form.addEventListener('m:rte:change', onFieldChange);
 
             // Reset clears dirty state
             form.addEventListener('reset', function() {

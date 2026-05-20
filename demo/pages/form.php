@@ -394,6 +394,71 @@ echo $form;'
     ) ?>
 </div>
 
+<!-- ── Section 7: Dirty form events ─────────────────────────────────── -->
+<div class="m-demo-section">
+    <h3>Dirty Form Events</h3>
+    <p class="m-demo-desc">
+        Enable <code>->dirtyFormProtection()</code> to activate dirty tracking. The form emits two
+        events on the <code>&lt;form&gt;</code> element that downstream code can use to drive UI
+        state — the canonical pattern is enabling a save button only when there are unsaved changes.
+    </p>
+    <ul class="m-demo-desc" style="margin-top:0">
+        <li><strong><code>m:form:dirty</code></strong> — fired once when the form first becomes
+        dirty (any field change from the saved baseline).</li>
+        <li><strong><code>m:form:clean</code></strong> — fired when <code>clearDirty()</code> is
+        called and the form was dirty (e.g. after a successful AJAX save).</li>
+    </ul>
+    <p class="m-demo-desc">
+        Both native fields (<code>input</code>/<code>change</code>) and Manhattan RTEs
+        (<code>m:rte:change</code>, which bubbles) are tracked automatically — no manual
+        per-field listeners needed.
+    </p>
+
+    <?php
+    $dirtyDemoForm = $m->form('demoDirtyForm')
+        ->noCsrf()
+        ->dirtyFormProtection()
+        ->formAttr('onsubmit', 'return false')
+        ->field($m->textbox('df-title')->name('title')->placeholder('Edit me to activate the button…'), 'Title');
+    echo $dirtyDemoForm;
+    ?>
+    <?= $m->button('dfSaveBtn', 'Save Changes')->primary()->icon('fa-save')->disabled() ?>
+    <div class="m-demo-output" id="df-output" style="margin-top:1rem">Save button is disabled — edit the field above to enable it.</div>
+
+    <?= demoCodeTabs(
+        '// PHP — render form with dirty protection; save button starts disabled
+$form = $m->form(\'editForm\')
+    ->dirtyFormProtection()
+    ->noCsrf()
+    ->field($m->textbox(\'title\')->name(\'title\'), \'Title\');
+echo $form;
+echo $m->button(\'saveBtn\', \'Save Changes\')->primary()->icon(\'fa-save\')->disabled();',
+        'document.addEventListener(\'DOMContentLoaded\', function () {
+    var saveBtn = m.button(\'saveBtn\');
+
+    var formEl = document.getElementById(\'editForm\');
+    formEl.addEventListener(\'m:form:dirty\', function () { saveBtn.enable(); });
+    formEl.addEventListener(\'m:form:clean\', function () { saveBtn.disable(); });
+
+    document.getElementById(\'saveBtn\').addEventListener(\'click\', function () {
+        saveBtn.disable();
+        m.ajax(\'/save\', {
+            method: \'POST\',
+            data: { /* … */ },
+            success: function () {
+                m.toaster(\'appToaster\').show(\'Saved!\', \'success\');
+                m.form(\'editForm\').clearDirty(); // emits m:form:clean → disables button
+            },
+            error: function () {
+                m.toaster(\'appToaster\').show(\'Save failed\', \'error\');
+                saveBtn.enable();                // allow retry
+            },
+        });
+    });
+});'
+    ) ?>
+</div>
+
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->form($id)', 'string', 'Create a Form. The <code>$id</code> is also used as the form\'s <code>name</code> attribute.'],
     ['->action($url)', 'string', 'Form <code>action</code> URL. Defaults to empty (submits to current page).'],
@@ -410,7 +475,19 @@ echo $form;'
     ['->ajax()', '', 'Set <code>data-m-ajax="true"</code> on the form element.'],
     ['->noValidation()', '', 'Suppress the auto-generated client-side Validator.'],
     ['->noCsrf()', '', 'Suppress the automatic <code>csrf_token</code> hidden input (injected by default on POST/PUT/DELETE).'],
+    ['->dirtyFormProtection()', '', 'Enable dirty-form tracking. Emits <code>m:form:dirty</code> / <code>m:form:clean</code> on field changes. Also intercepts navigating clicks and tab-close when unsaved changes exist.'],
     ['->formAttr($name, $value)', 'string, string', 'Add an arbitrary attribute to the <code>&lt;form&gt;</code> element (e.g. <code>onsubmit</code>, <code>enctype</code>, <code>autocomplete</code>).'],
+]) ?>
+
+<?= apiTable('JS Methods', 'js', [
+    ['m.form(id)', 'string', 'Get (or create) the cached form instance.'],
+    ['isDirty()', '', 'Returns <code>true</code> if any field differs from the last saved baseline.'],
+    ['clearDirty()', '', 'Reset the dirty baseline to current values. Emits <code>m:form:clean</code> if the form was dirty.'],
+]) ?>
+
+<?= eventsTable([
+    ['m:form:dirty', '{}', 'Fired on the form element when the form transitions from clean to dirty (first change after load or after <code>clearDirty()</code>). Use this to enable a save button.'],
+    ['m:form:clean', '{}', 'Fired on the form element when <code>clearDirty()</code> is called and the form was previously dirty. Use this to disable a save button after a successful save.'],
 ]) ?>
 
 <script>
@@ -433,4 +510,27 @@ function handleEditSubmit(event) {
         'Email: <em>' + data.get('email') + '</em>');
     return false;
 }
+
+// Dirty events demo
+document.addEventListener('DOMContentLoaded', function () {
+    var dfSaveBtn = m.button('dfSaveBtn');
+    var dfFormEl  = document.getElementById('demoDirtyForm');
+    if (dfFormEl) {
+        dfFormEl.addEventListener('m:form:dirty', function () {
+            dfSaveBtn.enable();
+            setOutput('df-output', '<strong style="color:var(--m-warning,#FF9800)">Form is dirty</strong> — save button enabled.');
+        });
+        dfFormEl.addEventListener('m:form:clean', function () {
+            dfSaveBtn.disable();
+            setOutput('df-output', '<strong style="color:var(--m-success,#4CAF50)">Form is clean</strong> — save button disabled.');
+        });
+    }
+    document.getElementById('dfSaveBtn').addEventListener('click', function () {
+        dfSaveBtn.disable();
+        // Simulate a save
+        setTimeout(function () {
+            m.form('demoDirtyForm').clearDirty(); // emits m:form:clean
+        }, 600);
+    });
+});
 </script>
