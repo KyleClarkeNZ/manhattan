@@ -215,6 +215,12 @@
                 if (el.id) m.filterBar(el.id);
             });
         }
+
+        if (typeof m.reorderable === 'function') {
+            document.querySelectorAll('.m-reorderable').forEach(el => {
+                if (el.id) m.reorderable(el.id);
+            });
+        }
     });
 
 })(window);
