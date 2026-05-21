@@ -101,6 +101,27 @@ class Dropdown extends Component
         return $this;
     }
 
+    /** @var int|string|null — argument passed to ->select() */
+    private $selectArg = null;
+
+    /**
+     * Pre-select an option by 0-based ordinal position (flat data source only)
+     * or by value string.
+     *
+     * - <code>select(0)</code>         — first item in the flat data source
+     * - <code>select('medium')</code>  — select by value; equivalent to ->value()
+     *
+     * Resolved at render time, so call order relative to ->dataSource() does not matter.
+     * Note: ordinal selection applies to the flat dataSource only, not groupedDataSource.
+     *
+     * @param int|string $positionOrValue
+     */
+    public function select($positionOrValue): self
+    {
+        $this->selectArg = $positionOrValue;
+        return $this;
+    }
+
     public function name(string $name): self
     {
         $this->name = $name;
@@ -178,6 +199,18 @@ class Dropdown extends Component
 
     protected function renderHtml(): string
     {
+        // Resolve ->select() argument to an effective value (takes precedence over ->value())
+        if ($this->selectArg !== null) {
+            if (is_int($this->selectArg)) {
+                $selectItem = $this->dataSource[$this->selectArg] ?? null;
+                if ($selectItem !== null && is_array($selectItem)) {
+                    $this->value = (string)($selectItem[$this->valueField] ?? '');
+                }
+            } else {
+                $this->value = (string)$this->selectArg;
+            }
+        }
+
         $classes = array_merge(['m-dropdown'], $this->getExtraClasses());
 
         $this->data('component', 'dropdown');

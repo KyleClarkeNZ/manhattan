@@ -100,6 +100,25 @@ final class IconPicker extends Component
         return $this;
     }
 
+    /** @var int|string|null — argument passed to ->select() */
+    private $selectArg = null;
+
+    /**
+     * Pre-select an icon by 0-based ordinal position or by FA class value string.
+     *
+     * - <code>select(0)</code>           — first icon, no hardcoded value needed
+     * - <code>select('fa-star')</code>   — select by value; equivalent to ->value()
+     *
+     * Resolved at render time, so call order relative to ->icons() does not matter.
+     *
+     * @param int|string $positionOrValue
+     */
+    public function select($positionOrValue): self
+    {
+        $this->selectArg = $positionOrValue;
+        return $this;
+    }
+
     protected function getComponentType(): string
     {
         return 'iconpicker';
@@ -107,6 +126,18 @@ final class IconPicker extends Component
 
     protected function renderHtml(): string
     {
+        // Resolve ->select() argument (takes precedence over ->value())
+        if ($this->selectArg !== null) {
+            if (is_int($this->selectArg)) {
+                $selectIcon = $this->icons[$this->selectArg] ?? null;
+                if ($selectIcon !== null) {
+                    $this->value = (string)($selectIcon['value'] ?? '');
+                }
+            } else {
+                $this->value = (string)$this->selectArg;
+            }
+        }
+
         $selectedValue = $this->value ?? '';
 
         // Resolve friendly label for the current value

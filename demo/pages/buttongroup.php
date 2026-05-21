@@ -113,9 +113,53 @@ document.getElementById(\'sortGroup\')
     ) ?>
 </div>
 
+<div class="m-demo-section">
+    <h3>Select by Ordinal or Value</h3>
+    <p class="m-demo-desc">
+        <code>select()</code> activates a button by 0-based ordinal position or value string,
+        overriding any <code>'active' => true</code> set in the button definitions.
+    </p>
+    <div class="m-demo-row">
+        <?= $m->buttonGroup('demo-sel-ordinal')
+            ->buttons([
+                ['value' => 'list',  'icon' => 'fa-list-ul',     'tooltip' => 'List'],
+                ['value' => 'group', 'icon' => 'fa-layer-group', 'tooltip' => 'Group'],
+                ['value' => 'grid',  'icon' => 'fa-grip',        'tooltip' => 'Grid'],
+            ])
+            ->select(0) ?>
+        <?= $m->buttonGroup('demo-sel-value')
+            ->buttons([
+                ['value' => 'list',  'icon' => 'fa-list-ul',     'tooltip' => 'List'],
+                ['value' => 'group', 'icon' => 'fa-layer-group', 'tooltip' => 'Group'],
+                ['value' => 'grid',  'icon' => 'fa-grip',        'tooltip' => 'Grid'],
+            ])
+            ->select('grid') ?>
+    </div>
+
+<?= demoCodeTabs(
+    <<<'PHP'
+// Activate first button — no hardcoded value needed
+echo $m->buttonGroup('viewMode')
+    ->buttons([
+        ['value' => 'list',  'icon' => 'fa-list-ul',     'tooltip' => 'List'],
+        ['value' => 'group', 'icon' => 'fa-layer-group', 'tooltip' => 'Group'],
+        ['value' => 'grid',  'icon' => 'fa-grip',        'tooltip' => 'Grid'],
+    ])
+    ->select(0);
+
+// Activate by value string — overrides 'active' => true in definitions
+echo $m->buttonGroup('viewMode')->buttons([...])->select('grid');
+
+// Nullable $old fallback:
+echo $m->buttonGroup('viewMode')->buttons([...])->select($old['view'] ?? 0);
+PHP
+) ?>
+</div>
+
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->buttonGroup($id)', '',                          'Create a ButtonGroup instance.'],
     ['->buttons($arr)',      'array',                     'Define the buttons. Each item: <code>{value, icon, tooltip?, active?}</code>.'],
+    ['->select($posOrVal)',  'int|string',                'Activate by 0-based ordinal or value string; overrides per-button <code>active</code> flags. Default: <code>null</code>.'],
     ['->addClass($class)',   'string',                    'Add extra CSS classes to the group element.'],
     ['->attr($name, $val)',  'string, string',            'Set an arbitrary HTML attribute on the group element.'],
 ]) ?>

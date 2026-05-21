@@ -69,6 +69,26 @@ final class ButtonGroup extends Component
         return $this;
     }
 
+    /** @var int|string|null — argument passed to ->select() */
+    private $selectArg = null;
+
+    /**
+     * Override the active button by 0-based ordinal position or by value string.
+     * Overrides any <code>'active' => true</code> flags in the button definitions.
+     *
+     * - <code>select(0)</code>           — activates the first button
+     * - <code>select('date-desc')</code> — activates by value string
+     *
+     * Resolved at render time, so call order relative to ->buttons() does not matter.
+     *
+     * @param int|string $positionOrValue
+     */
+    public function select($positionOrValue): self
+    {
+        $this->selectArg = $positionOrValue;
+        return $this;
+    }
+
     // -------------------------------------------------------------------------
     // Component interface
     // -------------------------------------------------------------------------
@@ -96,13 +116,28 @@ final class ButtonGroup extends Component
         $extraAttrs = $this->renderAdditionalAttributes(['id', 'class', 'data-component']);
         $eventAttrs = $this->renderEventAttributes();
 
+        // Resolve ->select() argument — overrides per-button 'active' flags
+        $selectOverride = null;
+        if ($this->selectArg !== null) {
+            if (is_int($this->selectArg)) {
+                $selectBtnItem = $this->buttons[$this->selectArg] ?? null;
+                if ($selectBtnItem !== null) {
+                    $selectOverride = (string)($selectBtnItem['value'] ?? '');
+                }
+            } else {
+                $selectOverride = (string)$this->selectArg;
+            }
+        }
+
         $buttonsHtml = '';
         foreach ($this->buttons as $btn) {
             $value       = htmlspecialchars((string)($btn['value']   ?? ''), ENT_QUOTES, 'UTF-8');
             $iconRaw     = (string)($btn['icon'] ?? 'fa-circle');
             $label       = (string)($btn['label'] ?? '');
             $tooltip     = (string)($btn['tooltip'] ?? '');
-            $isActive    = !empty($btn['active']);
+            $isActive    = ($selectOverride !== null)
+                ? ((string)($btn['value'] ?? '') === $selectOverride)
+                : !empty($btn['active']);
             $activeClass = $isActive ? ' m-button-group-active' : '';
 
             // Normalise: 'fa-save' → 'fas fa-save', 'far fa-save' → unchanged

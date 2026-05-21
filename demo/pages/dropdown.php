@@ -239,6 +239,44 @@ dd.clear();'
     ) ?>
 </div>
 
+<div class="m-demo-section">
+    <h3>Select by Ordinal or Value</h3>
+    <p class="m-demo-desc">
+        <code>select()</code> pre-selects an option by 0-based ordinal position (flat data source)
+        or by value string. Useful as a clean default when the first option should be active.
+        Note: ordinal selection applies to the flat <code>dataSource</code> only, not grouped data.
+    </p>
+    <div class="m-demo-row">
+        <div class="m-demo-field">
+            <label>First option (ordinal 0):</label>
+            <?= $m->dropdown('dropdown-sel-ordinal')
+                ->name('priority_ordinal')
+                ->dataSource($priorities)
+                ->select(0) ?>
+        </div>
+        <div class="m-demo-field">
+            <label>By value string:</label>
+            <?= $m->dropdown('dropdown-sel-value')
+                ->name('priority_value')
+                ->dataSource($priorities)
+                ->select('3') ?>
+        </div>
+    </div>
+
+<?= demoCodeTabs(
+    <<<'PHP'
+// Select first option — no hardcoded value needed
+echo $m->dropdown('priority')->dataSource($options)->select(0);
+
+// Select by value string (equivalent to ->value())
+echo $m->dropdown('priority')->dataSource($options)->select('medium');
+
+// Nullable $old fallback — 0 selects first when no prior value:
+echo $m->dropdown('priority')->dataSource($options)->select($old['priority'] ?? 0);
+PHP
+) ?>
+</div>
+
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->dropdown($id)', 'string', 'Create a dropdown component.'],
     ['->dataSource($data)', 'array', 'Set local data: <code>[[\'value\' => ..., \'text\' => ...], ...]</code>.'],
@@ -247,6 +285,7 @@ dd.clear();'
     ['->groupedDataSource($groups)', 'array', 'Grouped data: <code>[[\'group\' => \'Label\', \'items\' => [...]]]</code>.'],
     ['->placeholder($text)', 'string', 'Placeholder text when nothing is selected.'],
     ['->value($value)', '?string', 'Set the initially selected value.'],
+    ['->select($posOrVal)', 'int|string', 'Pre-select by 0-based ordinal (flat data source) or value string. Default: <code>null</code>.'],
     ['->name($name)', 'string', 'Form field name attribute.'],
     ['->disabled()', '', 'Disable the dropdown.'],
     ['->remoteUrl($url)', 'string', 'Set the AJAX endpoint for remote data loading.'],

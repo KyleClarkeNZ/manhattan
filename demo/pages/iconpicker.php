@@ -87,6 +87,43 @@ PHP
 </div>
 
 <div class="m-demo-section">
+    <h3>Select by Ordinal or Value</h3>
+    <p class="m-demo-desc">
+        <code>select()</code> pre-selects by 0-based ordinal position or FA class value string —
+        useful when the first icon should be active without hardcoding its value.
+    </p>
+    <div class="m-demo-row">
+        <div class="m-demo-field">
+            <label>First icon (ordinal 0):</label>
+            <?= $m->iconPicker('iconpicker-sel-ordinal')
+                ->name('icon_ordinal')
+                ->icons($icons)
+                ->select(0) ?>
+        </div>
+        <div class="m-demo-field">
+            <label>By value string:</label>
+            <?= $m->iconPicker('iconpicker-sel-value')
+                ->name('icon_value')
+                ->icons($icons)
+                ->select('fa-lightbulb') ?>
+        </div>
+    </div>
+
+<?= demoCodeTabs(
+    <<<'PHP'
+// Select first icon — no hardcoded value needed
+echo $m->iconPicker('topicIcon')->icons($icons)->select(0);
+
+// Select by FA class value (equivalent to ->value())
+echo $m->iconPicker('topicIcon')->icons($icons)->select('fa-lightbulb');
+
+// Nullable $old fallback — 0 selects first when no prior value:
+echo $m->iconPicker('topicIcon')->icons($icons)->select($old['topic_icon'] ?? 0);
+PHP
+) ?>
+</div>
+
+<div class="m-demo-section">
     <h3>Disabled</h3>
     <p class="m-demo-desc">The picker can be disabled to prevent interaction.</p>
     <div class="m-demo-row">
@@ -153,6 +190,7 @@ JS
     ['$m->iconPicker($id)',       'IconPicker', 'Create an IconPicker instance.'],
     ['->icons(array $icons)',     'self',        'Set the icon list. Each entry: <code>[\'value\' => \'fa-star\', \'text\' => \'Label\']</code>.'],
     ['->value(?string $value)',   'self',        'Pre-select an icon by its FA class (e.g. <code>\'fa-star\'</code>). Default: <code>null</code> (none selected).'],
+    ['->select($posOrVal)',       'self',        'Pre-select by 0-based ordinal <em>or</em> FA class value string. <code>select(0)</code> always picks the first icon. Default: <code>null</code>.'],
     ['->name(string $name)',      'self',        'Form field name for the hidden input.'],
     ['->placeholder(string $p)',  'self',        'Label shown when no icon is selected. Default: <code>\'Select an icon…\'</code>.'],
     ['->disabled(bool $d)',       'self',        'Disable the picker. Default: <code>false</code>.'],
