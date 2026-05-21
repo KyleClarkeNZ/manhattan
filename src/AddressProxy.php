@@ -411,19 +411,25 @@ class AddressProxy
         foreach (array_merge($linz, $nominatim) as $item) {
             $iLat  = (float)$item['lat'];
             $iLng  = (float)$item['lng'];
-            $isDup = false;
+            $isDup    = false;
+            $dupIndex = -1;
             if ($iLat !== 0.0 || $iLng !== 0.0) {
-                foreach ($merged as $existing) {
+                foreach ($merged as $idx => $existing) {
                     if (abs($iLat - (float)$existing['lat']) < 0.001
                         && abs($iLng - (float)$existing['lng']) < 0.001
                     ) {
-                        $isDup = true;
+                        $isDup    = true;
+                        $dupIndex = $idx;
                         break;
                     }
                 }
             }
             if (!$isDup) {
                 $merged[] = $item;
+            } elseif ($dupIndex >= 0 && empty($merged[$dupIndex]['name']) && !empty($item['name'])) {
+                // Nominatim POI matched a LINZ address — inherit the POI name so venue
+                // auto-fill works when the user searches by address rather than POI name.
+                $merged[$dupIndex]['name'] = $item['name'];
             }
         }
 
