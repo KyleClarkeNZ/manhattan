@@ -118,10 +118,17 @@ class AddressProxy
                  . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%')"
                  . " AND address_lifecycle = 'Current'";
 
+            // Request only the 5 properties we use plus the geometry column (shape).
+            // Omitting other columns cuts the response payload by ~60 %.
+            // Note: postcode is not available in layer-123113 — NZ Post does not
+            // publish postcode-level data through this feed.
+            $propertyName = 'full_address,full_address_number,full_road_name,suburb_locality,town_city,shape';
+
             $linzUrl = 'https://data.linz.govt.nz/services;key=' . rawurlencode($this->linzApiKey) . '/wfs'
                 . '?service=WFS&version=2.0.0&request=GetFeature'
                 . '&typeNames=layer-123113&outputFormat=application%2Fjson'
                 . '&count=10&srsName=CRS%3A84'
+                . '&propertyName=' . rawurlencode($propertyName)
                 . '&CQL_FILTER=' . rawurlencode($cql);
 
             $chLinz = curl_init($linzUrl);
