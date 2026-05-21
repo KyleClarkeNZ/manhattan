@@ -19,6 +19,8 @@ class TextArea extends Component
     private bool $disabled = false;
     private string $resize = 'vertical'; // 'none', 'vertical', 'horizontal', 'both', 'auto'
     private ?int $charCountMax = null;
+    private ?bool $spellcheck = null;
+    private string $spellcheckLang = 'en-NZ';
 
     public function __construct(string $id, array $options = [])
     {
@@ -143,6 +145,34 @@ class TextArea extends Component
         return $this;
     }
 
+    /**
+     * Set the HTML autocomplete attribute (e.g. 'on', 'off').
+     */
+    public function autocomplete(string $value): self
+    {
+        return $this->attr('autocomplete', $value);
+    }
+
+    /**
+     * Disable browser autocomplete on this field.
+     */
+    public function noAutocomplete(): self
+    {
+        return $this->autocomplete('off');
+    }
+
+    /**
+     * Enable or disable browser spell-checking.
+     * When enabled, the lang attribute is also set so the browser uses the
+     * correct dictionary. Defaults to NZ English ('en-NZ').
+     */
+    public function spellcheck(bool $enabled = true, string $lang = 'en-NZ'): self
+    {
+        $this->spellcheck = $enabled;
+        $this->spellcheckLang = $lang;
+        return $this;
+    }
+
     protected function getComponentType(): string
     {
         return 'textarea';
@@ -185,6 +215,12 @@ class TextArea extends Component
 
         if ($this->disabled) {
             $attrs['disabled'] = 'disabled';
+        }
+        if ($this->spellcheck !== null) {
+            $attrs['spellcheck'] = $this->spellcheck ? 'true' : 'false';
+            if ($this->spellcheck && $this->spellcheckLang !== '') {
+                $attrs['lang'] = htmlspecialchars($this->spellcheckLang, ENT_QUOTES, 'UTF-8');
+            }
         }
 
         $attrString = '';

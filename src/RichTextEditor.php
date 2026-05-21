@@ -53,6 +53,8 @@ class RichTextEditor extends Component
     private ?string $uploaderStem = null;
     private bool $allowImageResize = false;
     private bool $scrollable = false;
+    private ?bool $spellcheck = null;
+    private string $spellcheckLang = 'en-NZ';
 
     /** @var string[] */
     private array $toolbar = [
@@ -277,6 +279,18 @@ class RichTextEditor extends Component
     }
 
     /**
+     * Enable or disable browser spell-checking on the editing area.
+     * When enabled, the lang attribute is also set so the browser uses the
+     * correct dictionary. Defaults to NZ English ('en-NZ').
+     */
+    public function spellcheck(bool $enabled = true, string $lang = 'en-NZ'): self
+    {
+        $this->spellcheck = $enabled;
+        $this->spellcheckLang = $lang;
+        return $this;
+    }
+
+    /**
      * Minimum number of characters required (enables char counter automatically).
      */
     public function minChars(int $n): self
@@ -401,6 +415,14 @@ class RichTextEditor extends Component
         $editableAttr = $this->readOnly ? 'false' : 'true';
         $ariaReadonlyAttr = $this->readOnly ? ' aria-readonly="true"' : '';
 
+        $spellcheckAttr = '';
+        if ($this->spellcheck !== null) {
+            $spellcheckAttr = ' spellcheck="' . ($this->spellcheck ? 'true' : 'false') . '"';
+            if ($this->spellcheck && $this->spellcheckLang !== '') {
+                $spellcheckAttr .= ' lang="' . htmlspecialchars($this->spellcheckLang, ENT_QUOTES, 'UTF-8') . '"';
+            }
+        }
+
         // Toolbar HTML
         $toolbarHtml = $this->renderToolbar();
 
@@ -445,7 +467,7 @@ class RichTextEditor extends Component
 <div id="{$id}" class="{$classAttr}" data-component="richtexteditor"{$dataAttrs}{$extraAttrs}>
     <div class="m-rte-toolbar">{$toolbarHtml}</div>
     <div class="{$bodyClass}" style="{$bodyStyle}">
-        <div class="m-rte-content m-richtext" contenteditable="{$editableAttr}" role="textbox" aria-multiline="true" aria-labelledby="{$id}_label"{$ariaPlaceholderAttr}{$ariaReadonlyAttr}{$placeholderAttr}>{$contentHtml}</div>
+        <div class="m-rte-content m-richtext" contenteditable="{$editableAttr}" role="textbox" aria-multiline="true" aria-labelledby="{$id}_label"{$ariaPlaceholderAttr}{$ariaReadonlyAttr}{$placeholderAttr}{$spellcheckAttr}>{$contentHtml}</div>
     </div>
     {$charCountHtml}{$hiddenField}{$linkDialogHtml}{$imageDialogHtml}{$youtubeDialogHtml}
 </div>
