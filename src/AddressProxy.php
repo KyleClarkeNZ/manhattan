@@ -317,6 +317,7 @@ class AddressProxy
             $suggestions[] = [
                 'text'     => (string)($props['full_address'] ?? $line1),
                 'id'       => (string)($props['id'] ?? ''),
+                'name'     => '',  // LINZ provides addresses, not named POIs
                 'line1'    => $line1,
                 'suburb'   => (string)($props['suburb_locality'] ?? ''),
                 'city'     => (string)($props['town_city']       ?? ''),
@@ -384,6 +385,7 @@ class AddressProxy
             $suggestions[] = [
                 'text'     => $text,
                 'id'       => 'osm-' . ($item['osm_id'] ?? ''),
+                'name'     => $poiName,  // Building/POI name — surfaced for venue auto-fill
                 'line1'    => $line1,
                 'suburb'   => $suburb,
                 'city'     => $city,
@@ -400,8 +402,8 @@ class AddressProxy
      * Merge LINZ and Nominatim suggestion arrays, deduplicate by proximity (~100 m),
      * rank prefix matches above substring matches, and cap at 10 results.
      *
-     * Nominatim (POIs) is prepended so it appears when it adds unique named places;
-     * LINZ (street addresses) follows as the authoritative source.
+     * LINZ (street addresses) is processed first so its data wins deduplication;
+     * Nominatim POIs that are not near a LINZ result are appended afterwards.
      *
      * @param  array<int, array<string, string>> $linz
      * @param  array<int, array<string, string>> $nominatim
@@ -410,7 +412,7 @@ class AddressProxy
     private function merge(array $linz, array $nominatim, string $query): array
     {
         $merged = [];
-        foreach (array_merge($nominatim, $linz) as $item) {
+        foreach (array_merge($linz, $nominatim) as $item) {
             $iLat  = (float)$item['lat'];
             $iLng  = (float)$item['lng'];
             $isDup = false;
