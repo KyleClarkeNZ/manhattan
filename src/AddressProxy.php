@@ -113,10 +113,8 @@ class AddressProxy
         $chNominatim = null;
 
         if ($cachedLinz === null) {
-            // Filter to current addresses only, excluding retired/historical entries.
             $cql = "(full_address ILIKE '%" . $escaped . "%'"
-                 . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%')"
-                 . " AND status = 'Current'";
+                 . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%')";
 
             // Request only the properties the parser actually uses — reduces response
             // payload from ~25 columns down to 6, cutting transfer size by ~75 %.
