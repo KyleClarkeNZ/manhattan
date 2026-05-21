@@ -113,18 +113,15 @@ class AddressProxy
         $chNominatim = null;
 
         if ($cachedLinz === null) {
+            // Filter to current addresses only, excluding retired/historical entries.
             $cql = "(full_address ILIKE '%" . $escaped . "%'"
-                 . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%')";
-
-            // Request only the properties the parser actually uses — reduces response
-            // payload from ~25 columns down to 6, cutting transfer size by ~75 %.
-            $propertyName = 'full_address,address_number,road_name,suburb_locality,town_city,postcode';
+                 . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%')"
+                 . " AND address_lifecycle = 'Current'";
 
             $linzUrl = 'https://data.linz.govt.nz/services;key=' . rawurlencode($this->linzApiKey) . '/wfs'
                 . '?service=WFS&version=2.0.0&request=GetFeature'
                 . '&typeNames=layer-123113&outputFormat=application%2Fjson'
                 . '&count=10&srsName=CRS%3A84'
-                . '&propertyName=' . rawurlencode($propertyName)
                 . '&CQL_FILTER=' . rawurlencode($cql);
 
             $chLinz = curl_init($linzUrl);
@@ -295,8 +292,10 @@ class AddressProxy
             $props = is_array($feature['properties'] ?? null) ? $feature['properties'] : [];
             $geom  = is_array($feature['geometry']   ?? null) ? $feature['geometry']   : null;
 
-            $addrNum  = trim((string)($props['address_number'] ?? ''));
-            $roadName = trim((string)($props['road_name']      ?? ''));
+            // full_address_number preserves unit/suffix (e.g. "5A", "Unit 2/10");
+            // full_road_name includes the road type (e.g. "Matipo Road" not just "Matipo").
+            $addrNum  = trim((string)($props['full_address_number'] ?? $props['address_number'] ?? ''));
+            $roadName = trim((string)($props['full_road_name']      ?? $props['road_name']      ?? ''));
             $line1    = $addrNum !== '' && $roadName !== ''
                 ? $addrNum . ' ' . $roadName
                 : trim($addrNum . $roadName);
@@ -313,15 +312,14 @@ class AddressProxy
             }
 
             $suggestions[] = [
-                'text'     => (string)($props['full_address'] ?? $line1),
-                'id'       => (string)($props['id'] ?? ''),
-                'name'     => '',  // LINZ provides addresses, not named POIs
-                'line1'    => $line1,
-                'suburb'   => (string)($props['suburb_locality'] ?? ''),
-                'city'     => (string)($props['town_city']       ?? ''),
-                'postcode' => (string)($props['postcode']         ?? ''),
-                'lat'      => $lat,
-                'lng'      => $lng,
+                'text'   => (string)($props['full_address'] ?? $line1),
+                'id'     => (string)($props['address_id']   ?? ''),
+                'name'   => '',   // LINZ provides addresses, not named POIs
+                'line1'  => $line1,
+                'suburb' => (string)($props['suburb_locality'] ?? ''),
+                'city'   => (string)($props['town_city']       ?? ''),
+                'lat'    => $lat,
+                'lng'    => $lng,
             ];
         }
 
