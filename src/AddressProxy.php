@@ -113,13 +113,20 @@ class AddressProxy
         $chNominatim = null;
 
         if ($cachedLinz === null) {
-            $cql = "full_address ILIKE '%" . $escaped . "%'"
-                 . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%'";
+            // Filter to current addresses only, excluding retired/historical entries.
+            $cql = "(full_address ILIKE '%" . $escaped . "%'"
+                 . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%')"
+                 . " AND status = 'Current'";
+
+            // Request only the properties the parser actually uses — reduces response
+            // payload from ~25 columns down to 6, cutting transfer size by ~75 %.
+            $propertyName = 'full_address,address_number,road_name,suburb_locality,town_city,postcode';
 
             $linzUrl = 'https://data.linz.govt.nz/services;key=' . rawurlencode($this->linzApiKey) . '/wfs'
                 . '?service=WFS&version=2.0.0&request=GetFeature'
                 . '&typeNames=layer-123113&outputFormat=application%2Fjson'
                 . '&count=10&srsName=CRS%3A84'
+                . '&propertyName=' . rawurlencode($propertyName)
                 . '&CQL_FILTER=' . rawurlencode($cql);
 
             $chLinz = curl_init($linzUrl);
