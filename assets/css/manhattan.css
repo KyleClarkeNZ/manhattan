@@ -3144,20 +3144,25 @@
 /* Image-in-paragraph text wrapping.
  * When an <img> shares a <p> with text, it floats left so text wraps to its right.
  * Float right instead by adding the .m-float-right class to the <img>.
- * To prevent wrapping, place the image in its own <p> (with no surrounding text). */
-p img {
+ * To prevent wrapping, place the image in its own <p> (with no surrounding text).
+ *
+ * Scoped to .m-richtext — the class the editor's content area carries and the
+ * one you wrap saved content in for display. These used to be unscoped element
+ * selectors, which restyled every <p> in the HOST page (tables, previews,
+ * anything else on screen), not just Manhattan's rich-text surfaces. */
+.m-richtext p img {
     float: left;
     max-width: 50%;
     margin: 0 1rem 0.75rem 0;
 }
 
-p img.m-float-right {
+.m-richtext p img.m-float-right {
     float: right;
     margin: 0 0 0.75rem 1rem;
 }
 
 /* Clearfix: contain floated images within their paragraph */
-p::after {
+.m-richtext p::after {
     content: '';
     display: table;
     clear: both;
