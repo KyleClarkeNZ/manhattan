@@ -126,6 +126,10 @@ final class DataGrid extends Component
      *   class      (string)       — extra CSS classes on the <td>
      *   frozen     (bool)         — stick column to the left during horizontal scroll
      *   wrap       (bool)         — allow cell text to wrap (disables nowrap/ellipsis)
+     *   actions    (bool)         — cell holds controls, not text: never truncated,
+     *                               never wrapped, never ellipsised. Use for a column
+     *                               of buttons/links, which the default
+     *                               overflow:hidden + text-overflow:ellipsis clips.
      *
      * Component config keys (column['component']):
      *   type        (string)  required — 'progressBar'|'badge'|'label'|'icon'|'checkbox'|'rating'
@@ -467,6 +471,7 @@ HTML;
                 'class'     => (string)($col['class']   ?? ''),
                 'frozen'    => (bool)($col['frozen']    ?? false),
                 'wrap'      => (bool)($col['wrap']      ?? false),
+                'actions'   => (bool)($col['actions']   ?? false),
             ];
             // Inject the column field into the component config so renderers
             // can auto-fall-back to row[field] without requiring an explicit *Bind.

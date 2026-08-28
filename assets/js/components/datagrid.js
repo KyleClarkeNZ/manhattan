@@ -818,8 +818,9 @@
             td.className = 'm-datagrid-td' + (col.class ? ' ' + col.class : '');
             if (col.align !== 'left') { td.style.textAlign = col.align; }
 
-            // Width + overflow (only when not wrapping)
-            if (col.width && !col.wrap) {
+            // Width + overflow (only when not wrapping, and never for an
+            // actions column — buttons must not be clipped or ellipsised)
+            if (col.width && !col.wrap && !col.actions) {
                 td.style.maxWidth = col.width + 'px';
                 td.style.overflow = 'hidden';
                 td.style.textOverflow = 'ellipsis';
@@ -828,6 +829,11 @@
             // Allow text wrapping
             if (col.wrap) {
                 td.classList.add('m-datagrid-td-wrap');
+            }
+
+            // Controls, not text: no truncation, no wrapping
+            if (col.actions) {
+                td.classList.add('m-datagrid-td-actions');
             }
 
             // Frozen (sticky) column

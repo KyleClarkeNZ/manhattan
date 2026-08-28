@@ -4067,6 +4067,13 @@ body::-webkit-scrollbar-thumb:hover {
 /* Table */
 .m-datagrid-table {
     width: 100%;
+    /* table-layout: fixed hands each pinned column exactly its declared width
+     * and shares out what is left. When the pinned widths already exceed the
+     * container there is nothing left, so any column without a width collapses
+     * to zero and disappears with no warning. min-width: max-content makes the
+     * table size to its content instead, so the wrapper's overflow-x scrolls
+     * and every column stays visible. */
+    min-width: max-content;
     border-collapse: collapse;
     table-layout: fixed;
 }
@@ -4361,6 +4368,16 @@ body::-webkit-scrollbar-thumb:hover {
     overflow: visible;
     text-overflow: clip;
     word-break: break-word;
+}
+
+/* ── DataGrid: action cells ──────────────────────────────────────────────────── */
+/* A column marked `'actions' => true` holds buttons and links, not text. The
+ * default .m-datagrid-td overflow:hidden + text-overflow:ellipsis clips those
+ * controls — the last button in a row simply disappears. */
+.m-datagrid-td-actions {
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 /* ── DataGrid: embedded component cells ──────────────────────────────────────── */
