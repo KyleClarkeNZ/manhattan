@@ -119,6 +119,10 @@
     }
 
     function showResults(resultsEl) {
+        // Only one popup surface open at a time across the whole page.
+        const root = resultsEl.closest('.m-address') || resultsEl;
+        utils.overlays.closeOthers(root);
+
         resultsEl.hidden = false;
         resultsEl.classList.add('m-address-results-open');
     }
@@ -432,6 +436,11 @@
                 if (!root.contains(e.target)) {
                     hideResults(results);
                 }
+            });
+
+            // Let any other overlay close the suggestion list when it opens.
+            utils.overlays.register(root, function() {
+                hideResults(results);
             });
         }
 

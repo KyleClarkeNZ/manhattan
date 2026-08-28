@@ -158,6 +158,11 @@
             }
         });
 
+        // Let any other overlay close this calendar when it opens.
+        utils.overlays.register(wrapper, function() {
+            hideCalendar(calendar);
+        });
+
         // Keyboard support
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -170,6 +175,9 @@
     }
 
     function showCalendar(input, calendar, options) {
+        // Only one popup surface open at a time across the whole page.
+        utils.overlays.closeOthers(calendar.parentElement || calendar);
+
         const currentValue = input.getAttribute('data-value');
         const displayDate = currentValue ? utils.parseDate(currentValue, options.format) : new Date();
         renderCalendar(input, calendar, displayDate, options);

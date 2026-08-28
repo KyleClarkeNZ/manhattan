@@ -57,6 +57,8 @@
         // ------------------------------------------------------------------
 
         function open() {
+            // Only one popup surface open at a time across the whole page.
+            utils.overlays.closeOthers(container);
             panel.hidden = false;
             trigger.setAttribute('aria-expanded', 'true');
         }
@@ -131,6 +133,9 @@
                 close();
             }
         });
+
+        // Let any other overlay close this panel when it opens.
+        utils.overlays.register(container, close);
 
         // Close on Escape
         document.addEventListener('keydown', function (e) {

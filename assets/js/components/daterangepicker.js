@@ -677,6 +677,8 @@
 
         function openPanel() {
             if (isOpen) { return; }
+            // Only one popup surface open at a time across the whole page.
+            utils.overlays.closeOthers(wrapper);
             // Save confirmed state so cancel can revert cleanly
             confirmedStart = startDate;
             confirmedEnd   = endDate;
@@ -793,6 +795,11 @@
             if (isOpen && !wrapper.contains(e.target)) {
                 closePanel(false);
             }
+        });
+
+        // Let any other overlay close this panel when it opens.
+        utils.overlays.register(wrapper, function() {
+            closePanel(false);
         });
 
         // ── Initial render ────────────────────────────────────────────────

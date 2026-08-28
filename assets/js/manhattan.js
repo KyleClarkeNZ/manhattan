@@ -130,6 +130,94 @@
     m.utils = utils;
 
     /**
+     * Overlay registry — "only one popup surface open at a time".
+     *
+     * Every component that opens a floating panel (dropdown list, calendar,
+     * time panel, icon grid, address suggestions, rich-text toolbar menu…)
+     * registers its root element together with a close callback, then calls
+     * `closeOthers(root)` immediately before it shows its panel.
+     *
+     * Why this has to be central: each of those components calls
+     * `e.stopPropagation()` on its own trigger so that its own
+     * "close on outside click" document listener does not immediately undo the
+     * click that opened it. That stopPropagation also prevents EVERY OTHER
+     * component's document listener from ever seeing the event, so an already
+     * open panel elsewhere on the page stays open. Components cannot solve this
+     * for themselves — dropdown.js used to scan for other `.m-dropdown-custom`
+     * elements, which fixed dropdown-versus-dropdown but left a dropdown open
+     * behind an opening datepicker, and so on for every other pairing.
+     *
+     * Nesting is respected: opening a panel that lives inside another open
+     * overlay (a dropdown inside a dialog, a datepicker inside a popover) does
+     * not close its host.
+     */
+    const overlays = {
+        _entries: [],
+
+        /**
+         * Register a closable overlay.
+         * Re-registering the same root replaces the previous close callback,
+         * so component re-initialisation does not stack duplicates.
+         *
+         * @param {Element}  root  Element containing both trigger and panel.
+         * @param {Function} close Called to close this overlay.
+         */
+        register: function(root, close) {
+            if (!root || typeof close !== 'function') return null;
+
+            for (let i = 0; i < overlays._entries.length; i++) {
+                if (overlays._entries[i].root === root) {
+                    overlays._entries[i].close = close;
+                    return overlays._entries[i];
+                }
+            }
+
+            const entry = { root: root, close: close };
+            overlays._entries.push(entry);
+            return entry;
+        },
+
+        /** Forget an overlay (e.g. its component was destroyed). */
+        unregister: function(root) {
+            overlays._entries = overlays._entries.filter(entry => entry.root !== root);
+        },
+
+        /**
+         * Close every registered overlay except `root` and its ancestors /
+         * descendants. Pass nothing to close all of them.
+         */
+        closeOthers: function(root) {
+            // Drop entries whose element has been removed from the document.
+            // Components that build rows dynamically (add/remove a repeating
+            // form row) would otherwise leak a registration per row.
+            overlays._entries = overlays._entries.filter(
+                entry => entry.root === root || document.contains(entry.root)
+            );
+
+            overlays._entries.forEach(function(entry) {
+                if (root && (entry.root === root
+                    || entry.root.contains(root)
+                    || root.contains(entry.root))) {
+                    return;
+                }
+                try {
+                    entry.close();
+                } catch (err) {
+                    console.warn('Manhattan: overlay close failed', err);
+                }
+            });
+        },
+
+        /** Close every registered overlay. */
+        closeAll: function() {
+            overlays.closeOthers(null);
+        }
+    };
+
+    m.overlays  = overlays;
+    utils.overlays = overlays;
+
+    /**
      * Icon helper
      * Returns an HTML string (for templates) for a Font Awesome icon.
      */

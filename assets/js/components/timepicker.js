@@ -377,6 +377,9 @@
         function openPanel() {
             if (trigger.classList.contains('m-disabled')) { return; }
 
+            // Only one popup surface open at a time across the whole page.
+            utils.overlays.closeOthers(wrapper);
+
             buildPanel();
             panel.style.display = 'block';
             trigger.setAttribute('aria-expanded', 'true');
@@ -409,6 +412,9 @@
         // ---------------------------------------------------------------
         // Event wiring
         // ---------------------------------------------------------------
+
+        // Let any other overlay close this panel when it opens.
+        utils.overlays.register(wrapper, closePanel);
 
         trigger.addEventListener('click', function(e) {
             e.stopPropagation();

@@ -1294,7 +1294,10 @@
                     e.stopPropagation();
                     var wasColorOpen = !colorPanel.hidden;
                     closeAllDropdowns(); // closes regular dropdowns AND color panel
-                    if (!wasColorOpen) { colorPanel.hidden = false; }
+                    if (!wasColorOpen) {
+                        utils.overlays.closeOthers(toolbar);
+                        colorPanel.hidden = false;
+                    }
                 });
 
                 // After applying a preset or auto, update the swatch indicator and close
@@ -1379,6 +1382,9 @@
             }
 
             function openDropdown(dropdown) {
+                // Only one popup surface open at a time across the whole page.
+                utils.overlays.closeOthers(toolbar);
+
                 var panel     = dropdown.querySelector('.m-rte-dropdown-panel');
                 var triggerEl = dropdown.querySelector('.m-rte-dropdown-trigger');
                 if (panel)     { panel.hidden = false; }
@@ -1410,6 +1416,9 @@
                 if (colorPanel) { colorPanel.hidden = true; }
                 activeDropdown = null;
             }
+
+            // Let any other overlay close the toolbar menus when it opens.
+            utils.overlays.register(toolbar, closeAllDropdowns);
 
             // Keyboard navigation for open dropdowns.
             // Attached to document (not toolbar) because mousedown on toolbar

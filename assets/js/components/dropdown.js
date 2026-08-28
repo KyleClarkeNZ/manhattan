@@ -553,6 +553,12 @@
             }
         });
 
+        // Let any other overlay close this one when it opens.
+        dropdown._manhattan.wrapper = wrapper;
+        utils.overlays.register(wrapper, function() {
+            closeDropdown(dropdown);
+        });
+
         // Keyboard support
         dropdown.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -572,12 +578,13 @@
     }
 
     function openDropdown(dropdown) {
-        // Close any other open dropdowns so only one can be open at a time.
-        document.querySelectorAll('.m-dropdown-custom.m-open').forEach(function(other) {
-            if (other !== dropdown) {
-                closeDropdown(other);
-            }
-        });
+        // Close every other open overlay — dropdowns, calendars, time panels —
+        // so only one popup surface is open at a time. The registry replaces an
+        // older loop over `.m-dropdown-custom.m-open`, which only ever closed
+        // other dropdowns and left a datepicker or timepicker open behind us.
+        utils.overlays.closeOthers(dropdown._manhattan && dropdown._manhattan.wrapper
+            ? dropdown._manhattan.wrapper
+            : dropdown);
 
         dropdown.classList.add('m-open');
         dropdown._manhattan.isOpen = true;
