@@ -190,6 +190,128 @@ if (strpos($uri, '/popoverContent') !== false && $method === 'GET') {
     exit;
 }
 
+// ---------------------------------------------------------------------------
+// MediaBrowser demo endpoint
+//
+// A working reference implementation of the contract in src/MediaBrowser.php.
+// Host applications should crib the shape of this — especially the folder
+// whitelist and the content-based validation — and add their own auth gate,
+// which a public demo deliberately has none of.
+// ---------------------------------------------------------------------------
+if (strpos($uri, '/mediaLibrary') !== false) {
+    header('Content-Type: application/json');
+    header('X-Content-Type-Options: nosniff');
+
+    $respond = static function (array $payload, int $status = 200): void {
+        http_response_code($status);
+        echo json_encode($payload);
+        exit;
+    };
+
+    // `folder` arrives from the browser, so it is a KEY resolved against this
+    // whitelist — never concatenated into a path.
+    $folders = [
+        'demo' => ['dir' => __DIR__ . '/data/media/', 'url' => '/demo/media/'],
+    ];
+
+    $key = isset($_REQUEST['folder']) ? (string)$_REQUEST['folder'] : '';
+    if (!isset($folders[$key])) {
+        $respond(['message' => 'Unknown folder.'], 400);
+    }
+    $dir = $folders[$key]['dir'];
+    $url = $folders[$key]['url'];
+
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+
+    $describe = static function (string $path, string $urlBase): array {
+        $entry = [
+            'name'     => basename($path),
+            'url'      => $urlBase . rawurlencode(basename($path)),
+            'size'     => (int)filesize($path),
+            'modified' => (int)filemtime($path),
+        ];
+        $info = @getimagesize($path);
+        if ($info !== false) {
+            $entry['width']  = (int)$info[0];
+            $entry['height'] = (int)$info[1];
+        }
+        return $entry;
+    };
+
+    $action = isset($_REQUEST['action']) ? (string)$_REQUEST['action'] : 'list';
+
+    // ----- upload -----
+    if ($action === 'upload' && $method === 'POST') {
+        if (!is_dir($dir) || !is_writable($dir)) {
+            $respond(['message' => 'The demo upload folder is not writable.'], 500);
+        }
+
+        $error = isset($_FILES['file']['error']) ? (int)$_FILES['file']['error'] : UPLOAD_ERR_NO_FILE;
+        $tmp   = isset($_FILES['file']['tmp_name']) ? (string)$_FILES['file']['tmp_name'] : '';
+
+        if ($error !== UPLOAD_ERR_OK || $tmp === '' || !is_uploaded_file($tmp)) {
+            $respond(['message' => 'No file was uploaded.'], 422);
+        }
+
+        // Trust the bytes, not the filename the browser supplied.
+        $info = @getimagesize($tmp);
+        $types = [
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG  => 'png',
+            IMAGETYPE_GIF  => 'gif',
+            IMAGETYPE_WEBP => 'webp',
+        ];
+        if ($info === false || !isset($types[$info[2]])) {
+            $respond(['message' => 'Only JPEG, PNG, GIF and WebP images can be uploaded.'], 422);
+        }
+        $ext = $types[$info[2]];
+
+        // Name the file ourselves; never reuse the submitted one.
+        $stem = 'demo_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3));
+        $dest = $dir . $stem . '.' . $ext;
+
+        if (!@move_uploaded_file($tmp, $dest)) {
+            $respond(['message' => 'Could not save the uploaded image.'], 500);
+        }
+        @chmod($dest, 0644);
+
+        $respond(['file' => $describe($dest, $url)]);
+    }
+
+    // ----- list -----
+    $files = [];
+    foreach (glob($dir . '*.{jpg,jpeg,png,gif,webp}', GLOB_BRACE) ?: [] as $path) {
+        if (is_file($path)) {
+            $files[] = $describe($path, $url);
+        }
+    }
+
+    usort($files, static function (array $a, array $b): int {
+        return $b['modified'] <=> $a['modified'];
+    });
+
+    $respond(['files' => $files]);
+}
+
+// Serve the demo media folder (the demo runs under `php -S`, which will not
+// route /demo/media/* on its own once index.php is the router).
+if (preg_match('#^/demo/media/([A-Za-z0-9._-]+)$#', $uri, $mediaMatch)) {
+    $path = __DIR__ . '/data/media/' . $mediaMatch[1];
+    if (is_file($path)) {
+        $info = @getimagesize($path);
+        if ($info !== false && !empty($info['mime'])) {
+            header('Content-Type: ' . $info['mime']);
+            header('Content-Length: ' . filesize($path));
+            readfile($path);
+            exit;
+        }
+    }
+    http_response_code(404);
+    exit;
+}
+
 if (strpos($uri, '/carouselData') !== false && $method === 'GET') {
     header('Content-Type: application/json');
     $seeds    = ['cs1','cs2','cs3','cs4','cs5','cs6','cs7','cs8','cs9','cs10'];
@@ -262,6 +384,7 @@ $demoNav = [
     'timepicker'  => ['TimePicker',  'fa-clock',              'Editors & Forms'],
     'address'     => ['Address',     'fa-map-marker-alt',     'Editors & Forms'],
     'iconpicker'  => ['IconPicker',  'fa-icons',              'Editors & Forms'],
+    'mediabrowser'=> ['MediaBrowser','fa-photo-film',          'Editors & Forms'],
     'richtexteditor' => ['RichTextEditor', 'fa-pen-to-square',  'Editors & Forms'],
     'codearea'    => ['CodeArea',    'fa-code',               'Editors & Forms'],
     'form'        => ['Form',        'fa-edit',               'Editors & Forms'],

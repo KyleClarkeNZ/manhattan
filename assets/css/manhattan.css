@@ -9041,3 +9041,293 @@ textarea.m-wizard-field-error {
     color: var(--m-text, #555);
     background: var(--m-surface-hover, #f0f2f5);
 }
+
+/* ===================================================================
+   MediaBrowser
+   Modal image picker — browse a folder, upload, choose one file.
+   =================================================================== */
+
+.m-mediabrowser {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.m-mediabrowser[hidden] {
+    display: none;
+}
+
+.m-mediabrowser.m-mediabrowser-active {
+    opacity: 1;
+}
+
+.m-mediabrowser-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.m-mediabrowser-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 760px;
+    max-height: 100%;
+    background: var(--m-bg, #fff);
+    border-radius: var(--m-radius, 12px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    transform: translateY(8px);
+    transition: transform 0.18s ease;
+}
+
+.m-mediabrowser-active .m-mediabrowser-panel {
+    transform: translateY(0);
+}
+
+/* ----- Header ----- */
+
+.m-mediabrowser-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--m-border, #e0e0e0);
+}
+
+.m-mediabrowser-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--m-text, #333);
+}
+
+.m-mediabrowser-title i {
+    margin-right: 8px;
+    color: var(--m-primary, #2196F3);
+}
+
+.m-mediabrowser-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    line-height: 1;
+    border-radius: 4px;
+    color: var(--m-text-muted, #888);
+    transition: color 0.13s, background 0.13s;
+}
+
+.m-mediabrowser-close:hover {
+    color: var(--m-text, #333);
+    background: var(--m-surface-hover, #f0f2f5);
+}
+
+/* ----- Toolbar ----- */
+
+.m-mediabrowser-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--m-border, #e0e0e0);
+}
+
+.m-mediabrowser-filter {
+    flex: 1 1 auto;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--m-text, #333);
+    background: var(--m-bg, #fff);
+    border: 1px solid var(--m-border, #d0d5dd);
+    border-radius: var(--m-radius-sm, 6px);
+}
+
+.m-mediabrowser-filter:focus {
+    outline: none;
+    border-color: var(--m-primary, #2196F3);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+}
+
+/* ----- Body ----- */
+
+.m-mediabrowser-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 220px;
+    overflow-y: auto;
+    padding: 16px 18px;
+    background: var(--m-bg-alt, #f8f9fa);
+}
+
+.m-mediabrowser-body:focus {
+    outline: none;
+}
+
+.m-mediabrowser-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 180px;
+    text-align: center;
+    color: var(--m-text-muted, #888);
+    font-size: 0.875rem;
+}
+
+.m-mediabrowser-status[hidden] {
+    display: none;
+}
+
+.m-mediabrowser-status i {
+    font-size: 1.75rem;
+    opacity: 0.5;
+}
+
+.m-mediabrowser-status p {
+    margin: 0;
+}
+
+.m-mediabrowser-error {
+    color: var(--m-danger, #d32f2f);
+}
+
+.m-mediabrowser-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.m-mediabrowser-grid[hidden] {
+    display: none;
+}
+
+/* ----- Item ----- */
+
+.m-mediabrowser-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    text-align: left;
+    background: var(--m-bg, #fff);
+    border: 1px solid var(--m-border, #e0e0e0);
+    border-radius: var(--m-radius-sm, 8px);
+    cursor: pointer;
+    font: inherit;
+    transition: border-color 0.13s, box-shadow 0.13s;
+}
+
+.m-mediabrowser-item:hover {
+    border-color: var(--m-primary, #2196F3);
+}
+
+.m-mediabrowser-item:focus-visible {
+    outline: 2px solid var(--m-primary, #2196F3);
+    outline-offset: 2px;
+}
+
+.m-mediabrowser-item-selected {
+    border-color: var(--m-primary, #2196F3);
+    box-shadow: 0 0 0 2px var(--m-primary, #2196F3) inset;
+}
+
+.m-mediabrowser-thumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 96px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--m-bg-alt, #f0f2f5);
+}
+
+.m-mediabrowser-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.m-mediabrowser-name {
+    font-size: 0.75rem;
+    color: var(--m-text, #333);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.m-mediabrowser-meta {
+    font-size: 0.6875rem;
+    color: var(--m-text-muted, #888);
+}
+
+/* ----- Dropzone ----- */
+
+.m-mediabrowser-dropzone {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--m-primary, #2196F3);
+    background: rgba(33, 150, 243, 0.08);
+    border: 2px dashed var(--m-primary, #2196F3);
+    border-radius: var(--m-radius-sm, 8px);
+    pointer-events: none;
+}
+
+.m-mediabrowser-dropzone[hidden] {
+    display: none;
+}
+
+.m-mediabrowser-dropzone i {
+    font-size: 1.5rem;
+}
+
+/* ----- Footer ----- */
+
+.m-mediabrowser-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--m-border, #e0e0e0);
+}
+
+.m-mediabrowser-selected {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.8125rem;
+    color: var(--m-text-muted, #888);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.m-mediabrowser-actions {
+    display: flex;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+/* Stop the page behind the modal scrolling with it. */
+body.m-mediabrowser-open {
+    overflow: hidden;
+}

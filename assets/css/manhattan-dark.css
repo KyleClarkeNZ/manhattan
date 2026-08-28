@@ -2959,3 +2959,85 @@ body.theme-dark .m-cal-pop-close:hover {
     color: rgba(255, 255, 255, 0.65);
     background: rgba(255, 255, 255, 0.07);
 }
+
+/* ===================================================================
+   MediaBrowser
+   =================================================================== */
+
+body.m-dark .m-mediabrowser-panel,
+body.theme-dark .m-mediabrowser-panel {
+    background: #1e242b;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+body.m-dark .m-mediabrowser-header,
+body.theme-dark .m-mediabrowser-header,
+body.m-dark .m-mediabrowser-toolbar,
+body.theme-dark .m-mediabrowser-toolbar,
+body.m-dark .m-mediabrowser-footer,
+body.theme-dark .m-mediabrowser-footer {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.m-dark .m-mediabrowser-title,
+body.theme-dark .m-mediabrowser-title,
+body.m-dark .m-mediabrowser-name,
+body.theme-dark .m-mediabrowser-name {
+    color: #e6e6e6;
+}
+
+body.m-dark .m-mediabrowser-close,
+body.theme-dark .m-mediabrowser-close,
+body.m-dark .m-mediabrowser-status,
+body.theme-dark .m-mediabrowser-status,
+body.m-dark .m-mediabrowser-meta,
+body.theme-dark .m-mediabrowser-meta,
+body.m-dark .m-mediabrowser-selected,
+body.theme-dark .m-mediabrowser-selected {
+    color: #a7b0bb;
+}
+
+body.m-dark .m-mediabrowser-close:hover,
+body.theme-dark .m-mediabrowser-close:hover {
+    color: #e6e6e6;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+body.m-dark .m-mediabrowser-body,
+body.theme-dark .m-mediabrowser-body {
+    background: #161b22;
+}
+
+body.m-dark .m-mediabrowser-filter,
+body.theme-dark .m-mediabrowser-filter {
+    background: #161b22;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e6e6e6;
+}
+
+body.m-dark .m-mediabrowser-item,
+body.theme-dark .m-mediabrowser-item {
+    background: #1e242b;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.m-dark .m-mediabrowser-item:hover,
+body.theme-dark .m-mediabrowser-item:hover {
+    border-color: #64b5f6;
+}
+
+body.m-dark .m-mediabrowser-item-selected,
+body.theme-dark .m-mediabrowser-item-selected {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 2px #64b5f6 inset;
+}
+
+body.m-dark .m-mediabrowser-thumb,
+body.theme-dark .m-mediabrowser-thumb {
+    background: #121418;
+}
+
+body.m-dark .m-mediabrowser-error,
+body.theme-dark .m-mediabrowser-error {
+    color: #ef9a9a;
+}

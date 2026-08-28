@@ -642,6 +642,27 @@ class HtmlHelper
     }
 
     /**
+     * Create a MediaBrowser component — modal picker for a server-side image folder.
+     *
+     * Lists the files already in a folder, uploads new ones, and writes the
+     * chosen file's URL into a form field (->target()) or hands it to a JS
+     * callback. Manhattan renders the interface only: the host application
+     * supplies the endpoint, which owns authorisation, the folder whitelist and
+     * upload validation. See src/MediaBrowser.php for the request/response
+     * contract and the security notes.
+     *
+     * @param string $id      Unique identifier for the media browser
+     * @param array  $options Configuration options (endpoint, folder, title, trigger,
+     *                        target, accept, allowUpload, showFilter, maxBytes,
+     *                        emptyMessage, selectLabel)
+     * @return MediaBrowser
+     */
+    public function mediaBrowser(string $id, array $options = []): MediaBrowser
+    {
+        return new MediaBrowser($id, $options);
+    }
+
+    /**
      * Create a SplitPane component — two panels with a draggable divider.
      */
     public function splitPane(string $id, array $options = []): SplitPane
@@ -747,6 +768,7 @@ class HtmlHelper
 <script src="{$js}/components/pagination.js" defer></script>
 <script src="{$js}/components/filterbar.js" defer></script>
 <script src="{$js}/components/iconpicker.js" defer></script>
+<script src="{$js}/components/mediabrowser.js" defer></script>
 <script src="{$js}/components/splitpane.js" defer></script>
 <script src="{$js}/components/lightbox.js" defer></script>
 <script src="{$js}/components/imageviewer.js" defer></script>

@@ -7,6 +7,41 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- **`MediaBrowser` component** — a modal image picker: browse the files already in a
+  server-side folder, upload new ones, and hand the chosen file's URL back to a form
+  field. Deliberately minimal (one flat folder, pick or upload; no rename, move or
+  delete), intended to replace heavyweight legacy file managers such as KCFinder and
+  CKFinder for applications that only ever used those two features.
+  - `src/MediaBrowser.php`, `assets/js/components/mediabrowser.js`, styles in
+    `manhattan.css` / `manhattan-dark.css`, `HtmlHelper::mediaBrowser()`.
+  - Builders: `endpoint()`, `folder()`, `title()`, `trigger()`, `target()`, `accept()`,
+    `allowUpload()`, `showFilter()`, `maxBytes()`, `emptyMessage()`, `selectLabel()`.
+  - JS API: `m.mediaBrowser(id)` → `open(callback?)`, `close()`, `refresh()`,
+    `getSelected()`, `setFolder(key)`. Events: `m:mediabrowser:open` / `:select` /
+    `:upload` / `:close`.
+  - Declarative mode needs no JavaScript: `trigger()` binds a button via a delegated
+    listener (so the trigger may be injected later), and `target()` writes the chosen
+    URL into an input and fires a bubbling native `change`, so existing form logic and
+    live previews react as they would to a typed value.
+  - The modal reparents itself to `<body>` on init, escaping clipping ancestors
+    (`overflow: hidden` cards) and lifting its file input out of any surrounding
+    `<form>`.
+  - Filter box, drag-and-drop upload, and a client-side `maxBytes` guard.
+  - **Manhattan ships the interface only.** The host application supplies the endpoint,
+    because only it knows who may browse and upload, and where files live. The contract
+    is two JSON requests — `GET ?action=list&folder=<key>` → `{"files":[…]}` and a
+    multipart `POST action=upload` → `{"file":{…}}`, errors as 4xx/5xx with
+    `{"message":"…"}`. `folder` is a **key** the endpoint resolves against a whitelist,
+    never a path. Documented in the class docblock and on the demo page.
+- Demo page `demo/pages/mediabrowser.php`, plus `/demo/mediaLibrary` in `demo/index.php`
+  — a working reference endpoint (whitelisted folder, content-based image validation,
+  server-chosen filenames) host authors can crib from.
+
+---
+
 ## [1.3.0] — 2026-07-10
 
 ### Added
