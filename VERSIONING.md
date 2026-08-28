@@ -2,15 +2,23 @@
 
 ## How It Works
 
-Manhattan now uses **automated git tag-based versioning** instead of a VERSION file.
+Manhattan uses **automated git tag-based versioning**. There is no VERSION file,
+and — deliberately — **no `version` field in `composer.json`**.
+
+> **Do not reintroduce `"version"` into `composer.json`.**
+> Composer's VCS driver prefers that field over the git tag it found, so every
+> tag reports whatever the field says. A stale field silently republished tags
+> v1.34.0 – v1.52.2 as "1.33.0", and downstream projects could not resolve any
+> version above it — they had to pin `dev-master` instead of using `^1.x`.
+> Composer's own guidance is to omit `version` for VCS-hosted packages and let
+> the tags speak for themselves.
 
 ### Automatic Versioning (GitHub Actions)
 
 When you push commits to the `master` branch, a GitHub Actions workflow automatically:
 1. Detects the commit type based on the commit message
 2. Calculates the next version number
-3. Updates `composer.json` with the new version
-4. Creates and pushes a git tag
+3. Creates and pushes a git tag
 
 ### Commit Message Format
 
@@ -29,20 +37,13 @@ Use **conventional commits** to control version bumping:
 If you prefer manual control or GitHub Actions didn't run:
 
 ```bash
-# 1. Update composer.json version
-vim composer.json  # Change "version": "1.3.10" to "1.3.11"
-
-# 2. Commit the version change
-git add composer.json
-git commit -m "chore: bump version to 1.3.11 [skip ci]"
-
-# 3. Create annotated tag
+# 1. Create annotated tag (nothing to edit — composer.json carries no version)
 git tag -a v1.3.11 -m "Release v1.3.11
 
 - Fix: radio button centering
 - Improve: demo examples"
 
-# 4. Push everything
+# 2. Push everything
 git push origin master
 git push origin v1.3.11
 ```
@@ -58,20 +59,13 @@ The build script (`./build.sh`) now only:
 
 ## Version Synchronization
 
-The version in `composer.json` should always match the latest git tag:
-- Git tag: `v1.3.11`
-- Composer.json: `"version": "1.3.11"`
-
-The GitHub Actions workflow keeps these in sync automatically.
+Nothing to synchronise — the git tag is the single source of truth.
 
 ## Checking Current Version
 
 ```bash
-# Latest git tag
+# Latest git tag — this IS the version
 git describe --tags --abbrev=0
-
-# Composer.json version
-grep '"version"' composer.json
 ```
 
 ## Troubleshooting
@@ -83,20 +77,14 @@ Check the Actions tab on GitHub for errors. Common issues:
 - Insufficient permissions (needs `contents: write`)
 - Tag already exists
 
-### Version out of sync
+### A downstream project cannot see recent versions
 
-If `composer.json` and git tags get out of sync, manually fix:
+Check that `composer.json` still has no `version` field. If one has been added
+back, remove it and re-tag — until then Composer reports every tag as that
+field's value.
 
 ```bash
-# Check latest tag
-LATEST_TAG=$(git describe --tags --abbrev=0)
-
-# Update composer.json to match
-# Edit "version" field to match (without 'v' prefix)
-
-git add composer.json
-git commit -m "chore: sync version with tags [skip ci]"
-git push origin master
+grep '"version"' composer.json   # should print nothing
 ```
 
 ## For Downstream Projects (CallSheet, etc.)

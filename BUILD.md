@@ -30,18 +30,12 @@ This will:
 Manhattan uses **git tags** for version management:
 - Versions follow semantic versioning: `vX.Y.Z`
 - Tag releases manually or use GitHub Actions
-- Update `composer.json` version when tagging
+- `composer.json` carries **no** `version` field — see VERSIONING.md for why
+  adding one back breaks downstream resolution
 
 ### Manual Tagging
 
 ```bash
-# Update version in composer.json
-vim composer.json  # Edit version field
-
-# Commit the version bump
-git add composer.json
-git commit -m "Bump version to 1.3.11"
-
 # Create tag
 git tag -a v1.3.11 -m "Release v1.3.11"
 
@@ -215,18 +209,15 @@ Then visit: http://localhost:8080/demo/
 
 ## Version History
 
-The `VERSION` file tracks the build version. Format: `major.minor.patch`
+Git tags track the version. Format: `vmajor.minor.patch`
 
 - **Major**: Breaking changes to component APIs
 - **Minor**: New components or significant features
 - **Patch**: Bug fixes, documentation, demo updates
 
-Example: `1.3.02` = version 1.3, patch level 2
-
 ## Related Files
 
 - `build.sh` - Build automation script
-- `VERSION` - Current build version
 - `composer.json` - Dependency manifest
 - `.htaccess` - Production web server config
 - `demo/index.php` - Demo bootstrap
