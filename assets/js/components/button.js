@@ -159,7 +159,34 @@
     };
 
     /**
-     * Custom DatePicker Component with fully custom calendar
+     * Delegated handler for Button->confirm() / ['confirm' => ...].
+     *
+     * Button.php renders the message as data-m-confirm, but nothing read the
+     * attribute, so the confirmation silently never happened and the action ran
+     * regardless.
+     *
+     * Bound at the document level in the CAPTURE phase so it runs before any
+     * listener the page attached to the button itself — cancelling must stop
+     * those too, not just the default action. On confirm the event is left
+     * completely alone rather than re-dispatched, so a submit button still
+     * submits, an onclick still fires, and a programmatic .click() still works
+     * (HTMLElement.click() refuses to re-enter on the same element, which a
+     * re-dispatch would trip over).
+     *
+     * Delegation also means buttons added to the DOM after load are covered
+     * without re-initialising anything.
      */
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest ? e.target.closest('[data-m-confirm]') : null;
+        if (!target) return;
+
+        const message = target.getAttribute('data-m-confirm');
+        if (!message) return;
+
+        if (!window.confirm(message)) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
 
 })(window);
