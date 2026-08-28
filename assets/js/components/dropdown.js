@@ -734,44 +734,14 @@
      * smaller than the viewport (meaning the list can genuinely be clipped).
      * Returns null when none is found (list is safe to use absolute positioning).
      */
+    // Both helpers now live in the core (m.utils) so dropdown, datepicker and
+    // timepicker share one definition instead of three drifting copies.
     function getClippingParent(el) {
-        var vw = window.innerWidth  || document.documentElement.clientWidth;
-        var vh = window.innerHeight || document.documentElement.clientHeight;
-        var p  = el.parentElement;
-
-        while (p && p !== document.body && p !== document.documentElement) {
-            var style    = window.getComputedStyle(p);
-            var overflow = (style.overflow || '') + ' ' + (style.overflowY || '') + ' ' + (style.overflowX || '');
-
-            if (/(auto|scroll|hidden)/.test(overflow)) {
-                var rect = p.getBoundingClientRect();
-                // Only treat as clipping if the element is actually smaller than
-                // the viewport on at least one axis
-                if (rect.height < vh || rect.width < vw) {
-                    return p;
-                }
-            }
-            p = p.parentElement;
-        }
-        return null;
+        return utils.getClippingParent(el);
     }
 
     function getBoundaryRect(el) {
-        var vh = window.innerHeight || document.documentElement.clientHeight;
-        var vw = window.innerWidth  || document.documentElement.clientWidth;
-
-        var p = el.parentElement;
-        while (p && p !== document.body) {
-            var style    = window.getComputedStyle(p);
-            var overflow = (style.overflowY || '') + ' ' + (style.overflowX || '');
-
-            if (/(auto|scroll|hidden)/.test(overflow)) {
-                return p.getBoundingClientRect();
-            }
-            p = p.parentElement;
-        }
-
-        return { top: 0, left: 0, right: vw, bottom: vh };
+        return utils.getBoundaryRect(el);
     }
 
     function setDropdownValue(dropdown, value, options) {

@@ -384,24 +384,39 @@
             panel.style.display = 'block';
             trigger.setAttribute('aria-expanded', 'true');
 
-            // Viewport positioning — identical logic to datepicker
+            // Viewport positioning — identical logic to datepicker.
+            // Drop any fixed coordinates left by a previous open before measuring.
+            utils.unpin(panel);
             wrapper.classList.remove('m-open-up', 'm-align-right');
             var trigRect  = trigger.getBoundingClientRect();
             var panelRect = panel.getBoundingClientRect();
             var vw = window.innerWidth  || document.documentElement.clientWidth;
             var vh = window.innerHeight || document.documentElement.clientHeight;
 
-            if ((vh - trigRect.bottom) < panelRect.height && trigRect.top > (vh - trigRect.bottom)) {
+            var openUp = (vh - trigRect.bottom) < panelRect.height && trigRect.top > (vh - trigRect.bottom);
+            if (openUp) {
                 wrapper.classList.add('m-open-up');
             }
-            if ((trigRect.left + panelRect.width) > vw) {
+            var alignRight = (trigRect.left + panelRect.width) > vw;
+            if (alignRight) {
                 wrapper.classList.add('m-align-right');
             }
+
+            // If an ancestor clips overflow — a card, a scrollable modal body —
+            // the absolutely-positioned panel would be cut off at its edge.
+            // Switch to fixed coordinates so it escapes the container.
+            utils.pinToTrigger(panel, trigger, {
+                openUp: openUp,
+                alignRight: alignRight,
+                onScroll: closePanel
+            });
         }
 
         function closePanel() {
             if (panel.style.display === 'none') { return; }
             panel.style.display = 'none';
+            utils.unpin(panel);
+            wrapper.classList.remove('m-open-up', 'm-align-right');
             trigger.setAttribute('aria-expanded', 'false');
         }
 

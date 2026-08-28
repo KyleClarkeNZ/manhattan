@@ -118,6 +118,132 @@
             return el;
         },
 
+        /**
+         * Nearest ancestor that would clip an absolutely-positioned panel —
+         * a scroll container, a modal body, or any card with overflow:hidden.
+         * Returns null when nothing between `el` and the body clips.
+         */
+        getClippingParent: function(el) {
+            const vw = window.innerWidth  || document.documentElement.clientWidth;
+            const vh = window.innerHeight || document.documentElement.clientHeight;
+            let p = el.parentElement;
+
+            while (p && p !== document.body && p !== document.documentElement) {
+                const style    = window.getComputedStyle(p);
+                const overflow = (style.overflow || '') + ' ' + (style.overflowY || '') + ' ' + (style.overflowX || '');
+
+                if (/(auto|scroll|hidden|clip)/.test(overflow)) {
+                    const rect = p.getBoundingClientRect();
+                    // Only clipping if it is actually smaller than the viewport
+                    // on at least one axis.
+                    if (rect.height < vh || rect.width < vw) {
+                        return p;
+                    }
+                }
+                p = p.parentElement;
+            }
+            return null;
+        },
+
+        /**
+         * The rect a popup should be positioned within — the nearest
+         * overflow-constrained ancestor, else the viewport.
+         */
+        getBoundaryRect: function(el) {
+            const vh = window.innerHeight || document.documentElement.clientHeight;
+            const vw = window.innerWidth  || document.documentElement.clientWidth;
+
+            let p = el.parentElement;
+            while (p && p !== document.body) {
+                const style    = window.getComputedStyle(p);
+                const overflow = (style.overflowY || '') + ' ' + (style.overflowX || '');
+
+                if (/(auto|scroll|hidden|clip)/.test(overflow)) {
+                    return p.getBoundingClientRect();
+                }
+                p = p.parentElement;
+            }
+
+            return { top: 0, left: 0, right: vw, bottom: vh };
+        },
+
+        /**
+         * Escape an overflow-clipping ancestor by switching `panel` to fixed
+         * positioning derived from `trigger`'s bounding rect.
+         *
+         * Without this, a calendar or time panel opened inside a card
+         * (.m-card-default is overflow: hidden, to clip content to its rounded
+         * corners) or inside a scrollable modal body is cut off at the
+         * container edge. Consumers used to have to set overflow: visible on
+         * the container, which gave up the rounded-corner clipping.
+         *
+         * No-op — returns false — when nothing clips, so the normal
+         * absolutely-positioned path (and its CSS animations) is kept.
+         *
+         * @param {Element}  panel
+         * @param {Element}  trigger
+         * @param {Object}   [options] openUp, alignRight, matchWidth, onScroll
+         * @returns {boolean} whether the panel was pinned
+         */
+        pinToTrigger: function(panel, trigger, options) {
+            options = options || {};
+
+            const clipper = utils.getClippingParent(trigger);
+            if (!clipper) return false;
+
+            const rect = trigger.getBoundingClientRect();
+            const vw = window.innerWidth  || document.documentElement.clientWidth;
+            const vh = window.innerHeight || document.documentElement.clientHeight;
+
+            panel.style.position = 'fixed';
+            panel.style.zIndex   = '99999';
+            if (options.matchWidth) {
+                panel.style.width = rect.width + 'px';
+            }
+
+            if (options.openUp) {
+                panel.style.top    = 'auto';
+                panel.style.bottom = (vh - rect.top) + 'px';
+            } else {
+                panel.style.top    = rect.bottom + 'px';
+                panel.style.bottom = 'auto';
+            }
+
+            if (options.alignRight) {
+                panel.style.left  = 'auto';
+                panel.style.right = (vw - rect.right) + 'px';
+            } else {
+                panel.style.left  = rect.left + 'px';
+                panel.style.right = 'auto';
+            }
+
+            // Fixed coordinates go stale the moment the container scrolls.
+            if (typeof options.onScroll === 'function' && !panel._mPinScroll) {
+                panel._mPinScroll   = options.onScroll;
+                panel._mPinScroller = clipper;
+                clipper.addEventListener('scroll', panel._mPinScroll, { passive: true });
+            }
+
+            return true;
+        },
+
+        /** Undo pinToTrigger, restoring the panel's stylesheet positioning. */
+        unpin: function(panel) {
+            panel.style.position = '';
+            panel.style.zIndex   = '';
+            panel.style.width    = '';
+            panel.style.top      = '';
+            panel.style.bottom   = '';
+            panel.style.left     = '';
+            panel.style.right    = '';
+
+            if (panel._mPinScroll && panel._mPinScroller) {
+                panel._mPinScroller.removeEventListener('scroll', panel._mPinScroll);
+                panel._mPinScroll   = null;
+                panel._mPinScroller = null;
+            }
+        },
+
         ready: function(callback) {
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', callback);

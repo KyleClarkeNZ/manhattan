@@ -186,6 +186,9 @@
         // Choose direction (down vs up) within nearest scroll container / viewport
         const wrapper = calendar.parentElement;
         if (wrapper) {
+            // Drop any fixed coordinates left by a previous open before measuring.
+            utils.unpin(calendar);
+
             wrapper.classList.remove('m-open-up');
             wrapper.classList.remove('m-align-right');
 
@@ -198,44 +201,42 @@
             const spaceAbove = triggerRect.top - boundary.top;
             const needed = calRect.height;
 
-            if (spaceBelow < needed && spaceAbove > spaceBelow) {
+            const openUp = spaceBelow < needed && spaceAbove > spaceBelow;
+            if (openUp) {
                 wrapper.classList.add('m-open-up');
             }
 
             // Horizontal positioning (check right edge)
             const spaceRight = boundary.right - triggerRect.left;
-            if (spaceRight < calRect.width) {
+            const alignRight = spaceRight < calRect.width;
+            if (alignRight) {
                 wrapper.classList.add('m-align-right');
             }
+
+            // If an ancestor clips overflow — a card, a scrollable modal body —
+            // the absolutely-positioned calendar would be cut off at its edge.
+            // Switch to fixed coordinates so it escapes the container.
+            utils.pinToTrigger(calendar, input, {
+                openUp: openUp,
+                alignRight: alignRight,
+                onScroll: function() { hideCalendar(calendar); }
+            });
         }
     }
 
     function hideCalendar(calendar) {
         calendar.style.display = 'none';
+        utils.unpin(calendar);
         const wrapper = calendar.parentElement;
         if (wrapper) {
             wrapper.classList.remove('m-open-up');
+            wrapper.classList.remove('m-align-right');
         }
     }
 
+    // Shared with dropdown and timepicker via the core.
     function getBoundaryRect(el) {
-        const vh = window.innerHeight || document.documentElement.clientHeight;
-        const vw = window.innerWidth || document.documentElement.clientWidth;
-
-        let p = el.parentElement;
-        while (p && p !== document.body) {
-            const style = window.getComputedStyle(p);
-            const overflowY = style.overflowY;
-            const overflowX = style.overflowX;
-            const overflow = (overflowY || '') + ' ' + (overflowX || '');
-
-            if (/(auto|scroll|hidden)/.test(overflow)) {
-                return p.getBoundingClientRect();
-            }
-            p = p.parentElement;
-        }
-
-        return { top: 0, left: 0, right: vw, bottom: vh };
+        return utils.getBoundaryRect(el);
     }
 
     function renderCalendar(input, calendar, displayDate, options) {
