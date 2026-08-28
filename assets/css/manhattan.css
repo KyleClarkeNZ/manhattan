@@ -2039,6 +2039,7 @@
 .m-datepicker-input {
     position: relative;
     display: flex;
+    box-sizing: border-box;
     align-items: center;
     justify-content: space-between;
     width: 100%;
@@ -2620,6 +2621,7 @@
 .m-timepicker-input {
     position: relative;
     display: flex;
+    box-sizing: border-box;
     align-items: center;
     justify-content: space-between;
     width: 100%;
@@ -2839,6 +2841,7 @@
 
 .m-dropdown-header {
     display: flex;
+    box-sizing: border-box;
     align-items: center;
     justify-content: space-between;
     padding: 10px 35px 10px 12px;
