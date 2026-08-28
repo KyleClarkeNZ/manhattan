@@ -23,6 +23,7 @@ class Button extends Component
     private bool $disabled = false;
     private ?string $confirmMessage = null;
     private ?string $loadingText = null;
+    private ?bool $iconOnly = null;
 
     public function __construct(string $id, string $text, array $options = [])
     {
@@ -67,6 +68,9 @@ class Button extends Component
         }
         if (isset($options['loadingText'])) {
             $this->loadingText = (string)$options['loadingText'];
+        }
+        if (isset($options['iconOnly'])) {
+            $this->iconOnly = (bool)$options['iconOnly'];
         }
     }
 
@@ -171,6 +175,20 @@ class Button extends Component
     }
 
     /**
+     * Render as a square icon-only button (.m-button-icon-only): no label, the
+     * icon's trailing margin removed and the padding made symmetric.
+     *
+     * A button with an icon and an empty label is treated as icon-only
+     * automatically; call this to force the behaviour either way. Give such a
+     * button a title or aria-label — the icon carries no accessible name.
+     */
+    public function iconOnly(bool $iconOnly = true): self
+    {
+        $this->iconOnly = $iconOnly;
+        return $this;
+    }
+
+    /**
      * Set button type (button, submit, reset)
      */
     public function type(string $type): self
@@ -217,6 +235,13 @@ class Button extends Component
         }
         if ($this->loading) {
             $classes[] = 'm-button-loading';
+        }
+
+        $isIconOnly = $this->iconOnly !== null
+            ? $this->iconOnly
+            : ($this->icon !== null && trim($this->text) === '');
+        if ($isIconOnly) {
+            $classes[] = 'm-button-icon-only';
         }
         
         $classAttr = implode(' ', $classes);
