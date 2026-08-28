@@ -632,19 +632,13 @@
         // If the dropdown is inside an overflow-clipping ancestor (e.g. a modal
         // window or a scrollable panel), the absolutely-positioned list will be
         // clipped.  Switch to fixed positioning so the list escapes the container.
-        var clippingParent = getClippingParent(dropdown);
-        if (clippingParent) {
-            applyFixedListPosition(dropdown, list, headerRect, vw, vh);
-
-            // Close if the clipping container scrolls (position would be stale)
-            if (!dropdown._manhattan._scrollHandler) {
-                dropdown._manhattan._scrollHandler = function() {
-                    closeDropdown(dropdown);
-                };
-                clippingParent.addEventListener('scroll', dropdown._manhattan._scrollHandler, { passive: true });
-                dropdown._manhattan._clippingParent = clippingParent;
-            }
-        }
+        // Shared with datepicker and timepicker via the core.
+        utils.pinToTrigger(list, header, {
+            openUp:     dropdown.classList.contains('m-open-up'),
+            alignRight: dropdown.classList.contains('m-align-right'),
+            matchWidth: true,
+            onScroll:   function() { closeDropdown(dropdown); }
+        });
 
         // If searchable: clear any previous filter and focus the search input
         var opts = dropdown._manhattan && dropdown._manhattan.options;
@@ -671,34 +665,6 @@
         }
     }
 
-    /**
-     * Position the dropdown list using fixed coordinates derived from the
-     * header's bounding rect, so it escapes any overflow-clipping ancestor.
-     */
-    function applyFixedListPosition(dropdown, list, headerRect, vw, vh) {
-        list.style.position = 'fixed';
-        list.style.width    = headerRect.width + 'px';
-        list.style.zIndex   = '99999';
-
-        // Vertical: open down by default, up if .m-open-up was set
-        if (dropdown.classList.contains('m-open-up')) {
-            list.style.top    = 'auto';
-            list.style.bottom = (vh - headerRect.top) + 'px';
-        } else {
-            list.style.top    = headerRect.bottom + 'px';
-            list.style.bottom = 'auto';
-        }
-
-        // Horizontal: left-align by default, right-align if .m-align-right was set
-        if (dropdown.classList.contains('m-align-right')) {
-            list.style.left  = 'auto';
-            list.style.right = (vw - headerRect.right) + 'px';
-        } else {
-            list.style.left  = headerRect.left + 'px';
-            list.style.right = 'auto';
-        }
-    }
-
     function closeDropdown(dropdown) {
         dropdown.classList.remove('m-open');
         dropdown.classList.remove('m-open-up');
@@ -706,26 +672,13 @@
 
         if (dropdown._manhattan) {
             dropdown._manhattan.isOpen = false;
-
-            // Remove scroll-to-close handler if one was attached
-            if (dropdown._manhattan._scrollHandler && dropdown._manhattan._clippingParent) {
-                dropdown._manhattan._clippingParent.removeEventListener('scroll', dropdown._manhattan._scrollHandler);
-                dropdown._manhattan._scrollHandler = null;
-                dropdown._manhattan._clippingParent = null;
-            }
         }
 
         var list = dropdown.querySelector('.m-dropdown-list');
         if (list) {
             list.style.display = 'none';
-            // Reset any fixed-position overrides
-            list.style.position = '';
-            list.style.width    = '';
-            list.style.left     = '';
-            list.style.right    = '';
-            list.style.top      = '';
-            list.style.bottom   = '';
-            list.style.zIndex   = '';
+            // Drop any fixed-position overrides and the scroll-to-close handler
+            utils.unpin(list);
         }
     }
 
@@ -734,12 +687,8 @@
      * smaller than the viewport (meaning the list can genuinely be clipped).
      * Returns null when none is found (list is safe to use absolute positioning).
      */
-    // Both helpers now live in the core (m.utils) so dropdown, datepicker and
-    // timepicker share one definition instead of three drifting copies.
-    function getClippingParent(el) {
-        return utils.getClippingParent(el);
-    }
-
+    // Lives in the core (m.utils) so dropdown, datepicker and timepicker share
+    // one definition instead of three drifting copies.
     function getBoundaryRect(el) {
         return utils.getBoundaryRect(el);
     }

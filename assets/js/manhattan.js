@@ -217,11 +217,13 @@
                 panel.style.right = 'auto';
             }
 
-            // Fixed coordinates go stale the moment the container scrolls.
+            // Fixed coordinates go stale the moment ANYTHING scrolls — the
+            // clipping container, an outer scroll pane, or the window itself.
+            // Listening on window in the capture phase catches all of them,
+            // since scroll does not bubble but does capture.
             if (typeof options.onScroll === 'function' && !panel._mPinScroll) {
-                panel._mPinScroll   = options.onScroll;
-                panel._mPinScroller = clipper;
-                clipper.addEventListener('scroll', panel._mPinScroll, { passive: true });
+                panel._mPinScroll = options.onScroll;
+                window.addEventListener('scroll', panel._mPinScroll, { passive: true, capture: true });
             }
 
             return true;
@@ -237,10 +239,9 @@
             panel.style.left     = '';
             panel.style.right    = '';
 
-            if (panel._mPinScroll && panel._mPinScroller) {
-                panel._mPinScroller.removeEventListener('scroll', panel._mPinScroll);
-                panel._mPinScroll   = null;
-                panel._mPinScroller = null;
+            if (panel._mPinScroll) {
+                window.removeEventListener('scroll', panel._mPinScroll, { capture: true });
+                panel._mPinScroll = null;
             }
         },
 
