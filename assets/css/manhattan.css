@@ -2935,6 +2935,11 @@
 .m-dropdown-list {
     display: none;
     position: absolute;
+    /* When the list escapes a clipping ancestor it is switched to fixed
+     * positioning with an explicit width copied from the trigger; on
+     * content-box the 1px side borders make it 2px wider than the control it
+     * is supposed to line up under. */
+    box-sizing: border-box;
     top: 100%;
     left: 0;
     right: 0;
