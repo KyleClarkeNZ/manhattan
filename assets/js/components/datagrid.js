@@ -399,6 +399,27 @@
         return zone;
     };
 
+    // ─── Table intrinsic min-width ───────────────────────────────────────────
+    //
+    // table-layout:fixed hands each pinned column exactly its declared width
+    // and shares out what is left, so a column with no declared width can be
+    // squeezed to nothing once the pinned widths exceed the container. A CSS
+    // min-width:max-content on the <table> used to guard against that, but
+    // engines disagree on whether that keyword applies to a table box under
+    // table-layout:fixed — Chromium expands the table to fit; Firefox falls
+    // back to treating it as auto, so the guard silently does nothing there
+    // and the unsized column collapses (see
+    // https://github.com/w3c/csswg-drafts/issues/121). A concrete pixel value
+    // sidesteps the disagreement entirely.
+    DataGrid.prototype._updateTableMinWidth = function () {
+        var UNSIZED_MIN = 140; // px reserved for a column with no declared width
+        var total = 0;
+        this.columns.forEach(function (col) {
+            total += col.width ? col.width : UNSIZED_MIN;
+        });
+        this._dom.table.style.minWidth = total + 'px';
+    };
+
     // ─── Frozen column offsets ────────────────────────────────────────────────
     //
     // Returns { offsets: {field: leftPx}, lastField: string|null }
@@ -504,6 +525,8 @@
 
         thead.appendChild(tr);
         this._dom.headerRow = tr;
+
+        this._updateTableMinWidth();
     };
 
     // ─── Sort ─────────────────────────────────────────────────────────────────
@@ -570,6 +593,7 @@
             tds.forEach(function (td) {
                 td.style.maxWidth = newW + 'px';
             });
+            self._updateTableMinWidth();
         }
 
         function onMouseUp() {

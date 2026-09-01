@@ -4075,10 +4075,14 @@ body::-webkit-scrollbar-thumb:hover {
     /* table-layout: fixed hands each pinned column exactly its declared width
      * and shares out what is left. When the pinned widths already exceed the
      * container there is nothing left, so any column without a width collapses
-     * to zero and disappears with no warning. min-width: max-content makes the
-     * table size to its content instead, so the wrapper's overflow-x scrolls
-     * and every column stays visible. */
-    min-width: max-content;
+     * to zero and disappears with no warning. DataGrid._updateTableMinWidth()
+     * (datagrid.js) sets an explicit pixel min-width here — summing pinned
+     * column widths plus a reserved minimum per unsized column — so the
+     * wrapper's overflow-x scrolls instead of squeezing a column to nothing.
+     * A CSS min-width: max-content used to do this, but Chromium and Firefox
+     * disagree on whether that keyword applies to a table-layout:fixed table
+     * (https://github.com/w3c/csswg-drafts/issues/121), so it silently did
+     * nothing in Firefox. A concrete pixel value works the same everywhere. */
     border-collapse: collapse;
     table-layout: fixed;
 }

@@ -40,6 +40,20 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   — a working reference endpoint (whitelisted folder, content-based image validation,
   server-chosen filenames) host authors can crib from.
 
+### Fixed
+- **DataGrid: an unsized column collapsed toward zero in Firefox specifically.**
+  `.m-datagrid-table` relied on `min-width: max-content` to stop a column with no
+  declared width from being squeezed out once the pinned columns' widths exceeded
+  the container. Chromium and Firefox disagree on whether that intrinsic-sizing
+  keyword applies to a `table-layout: fixed` table
+  ([w3c/csswg-drafts#121](https://github.com/w3c/csswg-drafts/issues/121)) — Chromium
+  expands the table to fit; Firefox falls back to `auto`, so the guard did nothing
+  there and the original collapse-to-zero bug reappeared in that one engine.
+  `DataGrid._updateTableMinWidth()` (`datagrid.js`) now sets an explicit pixel
+  `min-width` — pinned column widths summed, plus a reserved 140px per unsized
+  column — which every engine honours the same way. Recalculated on header render
+  and on column resize.
+
 ---
 
 ## [1.3.0] — 2026-07-10
