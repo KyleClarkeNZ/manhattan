@@ -217,12 +217,30 @@
                 panel.style.right = 'auto';
             }
 
-            // Fixed coordinates go stale the moment ANYTHING scrolls — the
+            // Fixed coordinates go stale the moment an ANCESTOR scrolls — the
             // clipping container, an outer scroll pane, or the window itself.
             // Listening on window in the capture phase catches all of them,
             // since scroll does not bubble but does capture.
+            //
+            // A scroll that STARTS INSIDE the panel must be ignored: a time
+            // picker's hour and minute columns, a long option list and a
+            // searchable dropdown's scroller are all scroll containers in their
+            // own right, and scrolling one of them does not move the panel. The
+            // window capture listener sees those events too, so without this
+            // test the first turn of the wheel over a column closed the very
+            // panel the user was scrolling — and any panel that scrolls its
+            // selected value into view on open closed itself immediately,
+            // because that scrollTop assignment fires a scroll event as well.
             if (typeof options.onScroll === 'function' && !panel._mPinScroll) {
-                panel._mPinScroll = options.onScroll;
+                const onScroll = options.onScroll;
+                panel._mPinScroll = function(e) {
+                    const target = e.target;
+                    if (target === panel ||
+                        (target && target.nodeType === 1 && panel.contains(target))) {
+                        return;
+                    }
+                    onScroll(e);
+                };
                 window.addEventListener('scroll', panel._mPinScroll, { passive: true, capture: true });
             }
 

@@ -269,16 +269,27 @@
                 footerHtml;
 
             bindPanelEvents();
-            scrollToSelected(panel.querySelector('.m-tp-hours'));
-            scrollToSelected(panel.querySelector('.m-tp-minutes'));
         }
 
+        /**
+         * Centre a column on its selected item.
+         *
+         * MUST be called with the panel visible: a display:none panel has no
+         * layout, so clientHeight and offsetTop are both 0 and the assignment
+         * silently does nothing — which is why openPanel does this after
+         * showing the panel rather than buildPanel doing it inline.
+         *
+         * offsetTop is measured from the panel (the nearest positioned
+         * ancestor), not the column, so the column's own offset comes back off
+         * again before it is used as a scrollTop.
+         */
         function scrollToSelected(col) {
-            if (!col) { return; }
+            if (!col || !col.clientHeight) { return; }
             var sel = col.querySelector('.m-tp-selected');
-            if (sel) {
-                col.scrollTop = sel.offsetTop - (col.clientHeight / 2) + (sel.clientHeight / 2);
-            }
+            if (!sel) { return; }
+            var top = (sel.offsetTop - col.offsetTop) -
+                      ((col.clientHeight - sel.offsetHeight) / 2);
+            col.scrollTop = top > 0 ? top : 0;
         }
 
         function getSelectedHour() {
@@ -410,6 +421,13 @@
                 alignRight: alignRight,
                 onScroll: closePanel
             });
+
+            // Now that the panel has layout, bring the selected hour and minute
+            // into view. Without this the columns open at 00:00 and a late time
+            // — anything past the ~6 rows a column shows — looked unselected
+            // and had to be hunted for by scrolling.
+            scrollToSelected(panel.querySelector('.m-tp-hours'));
+            scrollToSelected(panel.querySelector('.m-tp-minutes'));
         }
 
         function closePanel() {

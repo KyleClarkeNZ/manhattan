@@ -41,6 +41,25 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   server-chosen filenames) host authors can crib from.
 
 ### Fixed
+- **A pinned popup closed itself when the user scrolled INSIDE it.** The
+  scroll-to-close guard added for pinned panels listens on `window` in the capture
+  phase, which sees scroll events from every element on the page — including the
+  panel's own scroll containers. So a TimePicker's hour and minute columns, a long
+  dropdown list and a searchable dropdown's scroller all closed the panel on the
+  first turn of the wheel, and the page scrolled underneath instead. Worse, any
+  panel that scrolls its selected value into view on open closed itself
+  immediately, because that `scrollTop` assignment fires a scroll event too: a
+  dropdown whose selected option sat past the fold never appeared at all.
+  `m.utils.pinToTrigger()` now wraps the `onScroll` callback and ignores events
+  whose target is the panel or inside it; scrolling an ancestor still closes the
+  panel, which is what the guard was for.
+- **TimePicker never scrolled the selected time into view.** `scrollToSelected()`
+  ran from `buildPanel()`, while the panel was still `display: none` — a hidden
+  element has no layout, so `offsetTop` and `clientHeight` were both 0 and the
+  assignment was a no-op. Every panel opened at `00:00`, so an existing value like
+  `19:00` looked unset and had to be found by scrolling (which, per the bug above,
+  closed the panel). It now runs from `openPanel()` once the panel is visible, and
+  measures the item's offset relative to its column rather than to the panel.
 - **DataGrid: an unsized column collapsed toward zero in Firefox specifically.**
   `.m-datagrid-table` relied on `min-width: max-content` to stop a column with no
   declared width from being squeezed out once the pinned columns' widths exceeded
