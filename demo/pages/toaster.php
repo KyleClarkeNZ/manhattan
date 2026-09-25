@@ -18,8 +18,7 @@
         <?= $m->button('demo-toast-clear', 'Clear All')->icon('fa-times') ?>
     </div>
 
-    <?php // Render a demo toaster (in a real app, one is in the shared layout) ?>
-    <?= $m->toaster('demoToaster')->position('top-right') ?>
+    <?php // The demo layout already renders the 'demoToaster' container. ?>
 
     <?= demoCodeTabs(
         '// PHP: Render the toaster container (typically once in layout)

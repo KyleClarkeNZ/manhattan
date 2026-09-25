@@ -57,24 +57,20 @@
         '// onSubmit fires only when all fields pass
 function handleSubmit(event) {
     event.preventDefault();
-    var data = new FormData(event.target);
-    console.log(\'Valid form submitted\', Object.fromEntries(data));
+    console.log(\'Valid\', Object.fromEntries(new FormData(event.target)));
 }
 
-// JS validation rules reference:
-// Flag rules (plain strings):
-//   \'required\'   — must not be empty
-//   \'email\'      — valid email format
-//   \'integer\'    — whole number
-//   \'positive\'   — number > 0
-//
-// Value rules (single-key array in PHP → object in JS config):
-//   [\'minLength\' => 5]          → {minLength: 5}
-//   [\'maxLength\' => 200]        → {maxLength: 200}
-//   [\'min\' => 0]                → {min: 0}
-//   [\'max\' => 100]              → {max: 100}
-//   [\'pattern\' => \'^[a-z]+$\']  → {pattern: \'^[a-z]+$\'}
-//   [\'custom\' => fn]            → {custom: function(value, input) { return true; }}'
+// Validate programmatically (e.g. before an AJAX save)
+var v = document.getElementById(\'myForm\')._mValidatorInstance;
+if (v.validateAll()) { /* save */ }
+v.reset(); // clear all inline errors
+
+// Or create one entirely in JS
+m.validator({
+    formId: \'myForm\',
+    fields: { email: { message: \'Valid email required\', rules: [\'required\', \'email\'] } },
+    validateOnInput: true
+});'
     ) ?>
 </div>
 
@@ -86,7 +82,15 @@ function handleSubmit(event) {
     ['->validateOnInput($enabled)', 'bool', 'Validate fields in real-time on each keystroke (default: false).'],
 ]) ?>
 
-<?= apiTable('JS Validation Rules', 'js', [
+<?= apiTable('JS Methods', 'js', [
+    ['m.validator(config)', '{formId, fields, onSubmit, validateOnBlur, validateOnInput}', 'Create a validator in JS. The PHP helper emits this call for you.'],
+    ['form._mValidatorInstance', '', 'The validator attached to a form element.'],
+    ['.validateAll()', '', 'Validate every field, show inline errors, return <code>true</code> if all pass.'],
+    ['.validateField(name)', 'string', 'Validate one field; returns <code>bool</code>.'],
+    ['.reset()', '', 'Clear all inline error messages.'],
+]) ?>
+
+<?= apiTable('Validation Rules', 'js', [
     ['required', '', 'Field must have a non-empty value.'],
     ['email', '', 'Value must be a valid email address.'],
     ['minLength', 'int', 'Minimum string length.'],

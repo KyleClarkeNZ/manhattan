@@ -3,23 +3,15 @@
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-comment-alt') ?> Popover</h2>
     <p class="m-demo-desc">
-        A floating panel anchored to a trigger element. Supports static HTML content or remote AJAX
-        content, hover (default) or click triggers, and smart viewport-aware placement.
-        The popover is rendered to <code>&lt;body&gt;</code> and uses <code>position: absolute</code>
-        so it scrolls naturally with the document — no JavaScript scroll tracking needed.
-        When the popover is clamped near a viewport edge the arrow always adjusts to keep pointing
-        at the trigger element. Popovers are ideal for contextual info cards, user profile previews,
-        and rich tooltips.
+        A floating panel anchored to a trigger, with static or AJAX content, hover or click triggers and
+        viewport-aware placement. Good for info cards, profile previews and rich tooltips.
     </p>
 
     <!-- ================================================================
          1. Basic Hover Popover
          ================================================================ -->
     <h3>Basic Hover Popover</h3>
-    <p class="m-demo-desc">
-        Default behaviour: shows on hover with a short delay, hides when the mouse leaves the
-        trigger or the popover itself. Placement defaults to <code>auto</code> (prefers bottom).
-    </p>
+    <p class="m-demo-desc">Shows on hover after a short delay; placement defaults to <code>auto</code> (prefers bottom).</p>
     <div class="m-demo-row">
         <?= $m->button('demo-pop-trigger-1', 'Hover over me')->icon('fa-info-circle') ?>
     </div>
@@ -33,10 +25,7 @@
          2. Click Popover
          ================================================================ -->
     <h3>Click Trigger</h3>
-    <p class="m-demo-desc">
-        Use <code>->triggerOn('click')</code> for click-to-toggle behaviour.
-        Clicking outside the popover or pressing Escape dismisses it.
-    </p>
+    <p class="m-demo-desc"><code>->triggerOn('click')</code> toggles on click; clicking outside or Escape closes it.</p>
     <div class="m-demo-row">
         <?= $m->button('demo-pop-trigger-2', 'Click to toggle')->secondary()->icon('fa-mouse-pointer') ?>
     </div>
@@ -52,10 +41,6 @@
          3. Placement variants
          ================================================================ -->
     <h3>Placement</h3>
-    <p class="m-demo-desc">
-        Explicit <code>top</code>, <code>bottom</code>, <code>left</code>, and <code>right</code>
-        placements, plus <code>auto</code> (default — flips to top when near the bottom edge).
-    </p>
     <div class="m-demo-row" style="gap:0.75rem; flex-wrap:wrap; justify-content:center; padding:2rem 0;">
         <?= $m->button('demo-pop-top',    'Top')->icon('fa-arrow-up') ?>
         <?= $m->button('demo-pop-bottom', 'Bottom')->icon('fa-arrow-down') ?>
@@ -87,11 +72,7 @@
          4. Remote / AJAX content
          ================================================================ -->
     <h3>Remote Content (AJAX)</h3>
-    <p class="m-demo-desc">
-        Use <code>->remote(url)</code> to load the popover body from an endpoint on first show.
-        Responses are cached per URL by default — set <code>->cache(false)</code> to always
-        re-fetch. A spinner is shown while loading.
-    </p>
+    <p class="m-demo-desc"><code>->remote($url)</code> loads the body on first show and caches it (<code>->cache(false)</code> to re-fetch).</p>
     <div class="m-demo-row">
         <?= $m->button('demo-pop-trigger-remote', 'Hover for remote content')->primary()->icon('fa-cloud-download-alt') ?>
     </div>
@@ -105,18 +86,13 @@
     <!-- ================================================================
          5. Shared popover — multiple triggers via CSS selector
          ================================================================ -->
-    <h3>Shared Popover — User Profile Cards</h3>
+    <h3>Shared Popover (Many Triggers)</h3>
     <p class="m-demo-desc">
-        A single popover instance can serve many triggers via <code>->triggerSelector()</code>.
-        Each trigger passes per-trigger overrides using <code>data-popover-title</code> and
-        <code>data-popover-content</code> (or <code>data-popover-url</code> for AJAX overrides).
-        This is the recommended pattern for <em>user profile cards</em> on a username list.
+        One popover can serve every element matching <code>->triggerSelector()</code>. Each trigger overrides
+        content with <code>data-popover-title</code> and <code>data-popover-content</code> or <code>data-popover-url</code>.
     </p>
 <?php
-    // Build profile card HTML in PHP variables so inner HTML can be safely
-    // htmlspecialchars()'d into data attributes without breaking attribute parsing.
-    // Using single-quoted class attributes on the <i> tag avoids conflicts with
-    // the outer double-quoted data attribute.
+    // Card HTML is escaped into data-popover-content below.
     $mapIcon = "<i class='fas fa-map-marker-alt'></i>";
     $demoProfiles = [
         ['initials' => 'AJ', 'title' => 'Alice Johnson', 'role' => 'Senior Developer',  'location' => 'Wellington, NZ'],
@@ -154,80 +130,30 @@
     <div class="m-demo-output" id="pop-output">Interact with the examples above to see events here…</div>
 
     <?= demoCodeTabs(
-        '// Static content, single trigger (hover by default)
-<?= $m->popover(\'info-pop\')
+        '<?= $m->popover(\'info-pop\')
       ->trigger(\'info-btn\')
       ->title(\'Quick Info\')
       ->content(\'<p>Details here.</p>\')
-      ->placement(\'bottom\') ?>
+      ->placement(\'bottom\')   // top | bottom | left | right | auto
+      ->triggerOn(\'click\')    // default: hover
+?>
 
-// Click trigger
-<?= $m->popover(\'click-pop\')
-      ->trigger(\'click-btn\')
-      ->title(\'Click Popover\')
-      ->triggerOn(\'click\')
-      ->content(\'<p>Click outside to close.</p>\') ?>
+<?= $m->popover(\'remote-pop\')->trigger(\'remote-btn\')->remote(\'/api/user/card?id=42\') ?>
 
-// Remote / AJAX content
-<?= $m->popover(\'remote-pop\')
-      ->trigger(\'remote-btn\')
-      ->title(\'User Profile\')
-      ->remote(\'/api/user/card?id=42\')
-      ->width(\'280px\') ?>
-
-// Shared popover for multiple triggers (user profile cards)
+// One popover, many triggers
 <?= $m->popover(\'profile-pop\')
       ->triggerSelector(\'.username-link\')
-      ->placement(\'bottom\')
-      ->delay(150, 300)
-      ->width(\'260px\') ?>
-
-// Each trigger carries per-trigger overrides:
-<a class="username-link"
-   data-popover-title="Jane Smith"
-   data-popover-url="/profile/card?id=5">@jane</a>
-
-// Or inline content override:
-<a class="username-link"
-   data-popover-title="Jane Smith"
-   data-popover-content="<p>Inline content</p>">@jane</a>
-
-// Programmatic binding for dynamically added triggers:
-document.querySelectorAll(\'.new-link\').forEach(function(el) {
-    m.popover(\'profile-pop\').bindTrigger(el);
-});',
-        '// Get the popover API
-var pop = m.popover(\'my-pop\');
-
-// Show anchored to any element
-pop.show(document.getElementById(\'my-btn\'));
-
-// Hide
-pop.hide();
-
-// Toggle for a trigger element
-pop.toggle(document.getElementById(\'my-btn\'));
-
-// Update content on demand
-pop.setContent(\'<p>New content</p>\');
+      ->delay(150, 300) ?>
+<a class="username-link" data-popover-title="Jane Smith" data-popover-url="/profile/card?id=5">@jane</a>',
+        'var pop = m.popover(\'my-pop\');
+pop.show(document.getElementById(\'my-btn\'));  // also hide(), toggle(el)
 pop.setTitle(\'New title\');
-
-// Load content from a URL
+pop.setContent(\'<p>New content</p>\');
 pop.loadContent(\'/api/details\');
+pop.bindTrigger(newElement);  // or refresh() to re-scan the selector
 
-// Manually bind a new trigger (after dynamic DOM insertion)
-pop.bindTrigger(someNewElement);
-
-// Re-scan DOM for triggers added after init
-pop.refresh();
-
-// Listen for events
-document.getElementById(\'my-pop\').addEventListener(\'m:popover:show\', function(e) {
-    console.log(\'shown for trigger\', e.detail.trigger);
-});
-
-document.getElementById(\'my-pop\').addEventListener(\'m:popover:content-loaded\', function(e) {
-    console.log(\'loaded from\', e.detail.url);
+document.getElementById(\'my-pop\').addEventListener(\'m:popover:show\', function (e) {
+    console.log(e.detail.trigger);
 });'
     ) ?>
 </div>

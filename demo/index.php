@@ -106,14 +106,12 @@ if (strpos($uri, '/handleButtonClick') !== false && $method === 'POST') {
 
 if (strpos($uri, '/getDropdownData') !== false) {
     header('Content-Type: application/json');
+    // Dropdown remoteUrl expects a bare JSON array of {value, text}.
     echo json_encode([
-        'success' => true,
-        'data' => [
-            ['value' => 'opt1', 'text' => 'Dynamic Option 1'],
-            ['value' => 'opt2', 'text' => 'Dynamic Option 2'],
-            ['value' => 'opt3', 'text' => 'Dynamic Option 3'],
-            ['value' => 'opt4', 'text' => 'Dynamic Option 4'],
-        ]
+        ['value' => 'opt1', 'text' => 'Dynamic Option 1'],
+        ['value' => 'opt2', 'text' => 'Dynamic Option 2'],
+        ['value' => 'opt3', 'text' => 'Dynamic Option 3'],
+        ['value' => 'opt4', 'text' => 'Dynamic Option 4'],
     ]);
     exit;
 }

@@ -128,6 +128,8 @@ document.getElementById(\'myWin\')
     ['->minWidth($w)', 'string', 'Minimum width.'],
     ['->minHeight($h)', 'string', 'Minimum height.'],
     ['->addButton($text, $action, $style, $loadingText)', 'string×4', 'Add a footer button. Style: <code>primary</code>, <code>secondary</code>, <code>danger</code>. Optional <code>$loadingText</code> sets <code>data-loading-text</code> so <code>m.button(id).setLoading(true)</code> works on it. Button ID: <code>{windowId}_btn_{index}</code>.'],
+    ['->footer($html)', 'string', 'Raw footer HTML, for full control instead of <code>addButton()</code>.'],
+    ['->closeOnEsc($enabled)', 'bool', 'Close when Escape is pressed (default: <code>true</code>).'],
     ['->visible($vis)', 'bool', 'Show the window on page load.'],
 ]) ?>
 

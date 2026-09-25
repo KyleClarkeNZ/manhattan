@@ -2,10 +2,10 @@
 
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-calendar-week') ?> DateRangePicker</h2>
-    <p class="m-demo-desc">Dual-calendar date-range selector with range highlighting, optional preset shortcuts, single-day selection, and keyboard support. Two hidden inputs hold the start and end values for form submission.</p>
+    <p class="m-demo-desc">Two-month range selector with presets and keyboard support. Start and end are submitted as two hidden inputs.</p>
 
     <h3>Basic Range Picker</h3>
-    <p class="m-demo-desc">Click the trigger to open the two-month calendar. Click a start date, then an end date. The same day can be clicked twice for a single-day selection.</p>
+    <p class="m-demo-desc">Click a start date, then an end date (the same day twice selects one day).</p>
     <div class="m-demo-row">
         <div class="m-demo-field" style="max-width:420px">
             <?= $m->daterangepicker('demo-drp-basic')
@@ -114,102 +114,25 @@
     </div>
 
     <?= demoCodeTabs(
-        '// Basic — two hidden inputs, single trigger
-<?= $m->daterangepicker(\'bookingDates\')
-    ->startName(\'start\')
-    ->endName(\'end\')
-    ->placeholder(\'Select date range…\') ?>
-
-// With default preset shortcuts
-<?= $m->daterangepicker(\'reportDates\')
+        '<?= $m->daterangepicker(\'reportDates\')
     ->startName(\'from\')
     ->endName(\'to\')
-    ->showPresets() ?>
-
-// Auto-close after second date click
-<?= $m->daterangepicker(\'eventDates\')
-    ->autoApply()
-    ->showPresets() ?>
-
-// Pre-populated + constrained to current year
-<?= $m->daterangepicker(\'period\')
     ->startValue(date(\'Y-m-01\'))
     ->endValue(date(\'Y-m-d\'))
     ->min(date(\'Y\') . \'-01-01\')
-    ->max(date(\'Y\') . \'-12-31\') ?>
-
-// Single-month calendar
-<?= $m->daterangepicker(\'compactRange\')
+    ->showPresets()        // or ->presets([[\'label\' => \'Q1\', \'start\' => \'2025-01-01\', \'end\' => \'2025-03-31\']])
+    ->autoApply()          // close on second click
     ->singleMonth()
-    ->autoApply() ?>
-
-// Custom presets (e.g. financial quarters)
-<?= $m->daterangepicker(\'quarter\')
-    ->presets([
-        [\'label\' => \'Q1\', \'start\' => \'2025-01-01\', \'end\' => \'2025-03-31\'],
-        [\'label\' => \'Q2\', \'start\' => \'2025-04-01\', \'end\' => \'2025-06-30\'],
-    ]) ?>
-
-// Week starts Monday
-<?= $m->daterangepicker(\'campaign\')
-    ->weekStartsMonday()
-    ->showPresets() ?>
-
-// With label
-<?= $m->daterangepicker(\'trip\')
-    ->label(\'Travel Dates\')
-    ->labelRequired()
-    ->labelIcon(\'fa-plane\') ?>
-
-// Disabled
-<?= $m->daterangepicker(\'locked\')
-    ->startValue(\'2025-03-01\')
-    ->endValue(\'2025-03-31\')
-    ->disabled() ?>',
-        '// Get/set range
-var drp = m.daterangepicker(\'bookingDates\');
-
-// Getter — returns { start: \'2025-01-01\', end: \'2025-01-31\' }
-var range = drp.value();
-console.log(range.start, range.end);
-
-// Setter
+    ->weekStartsMonday() ?>',
+        'var drp = m.daterangepicker(\'reportDates\');
+drp.value();                                        // { start, end }
 drp.value({ start: \'2025-06-01\', end: \'2025-06-30\' });
+drp.start(\'2025-07-01\');                           // or end(); both also get
+drp.min(\'2025-01-01\');                             // max()
+drp.clear();                                        // also open(), close(), enable(), disable()
 
-// Individual start/end getters + setters
-var s = drp.start();          // get
-drp.start(\'2025-07-01\');    // set (keeps existing end)
-var e = drp.end();
-drp.end(\'2025-07-31\');
-
-// Clear selection
-drp.clear();
-
-// Constraints
-drp.min(\'2025-01-01\');
-drp.max(\'2025-12-31\');
-
-// Open/close programmatically
-drp.open();
-drp.close();
-
-// Enable / disable
-drp.enable();
-drp.disable();
-
-// Listen for confirmed range
-document.getElementById(\'bookingDates\').addEventListener(\'m:daterangepicker:change\', function(e) {
-    console.log(\'Start:\', e.detail.start, \'End:\', e.detail.end);
-});
-
-// Listen for start-date selection
-document.getElementById(\'bookingDates\').addEventListener(\'m:daterangepicker:start\', function(e) {
-    console.log(\'Start selected:\', e.detail.start);
-});
-
-// Listen for clear
-document.getElementById(\'bookingDates\').addEventListener(\'m:daterangepicker:clear\', function() {
-    console.log(\'Range cleared\');
+document.getElementById(\'reportDates\').addEventListener(\'m:daterangepicker:change\', function (e) {
+    console.log(e.detail.start, e.detail.end);
 });'
     ) ?>
 </div>

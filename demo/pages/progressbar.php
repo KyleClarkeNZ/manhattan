@@ -150,6 +150,7 @@ document.getElementById(\'myProgress\')
     ['->success()', '', 'Shorthand for <code>->variant(\'success\')</code>.'],
     ['->warning()', '', 'Shorthand for <code>->variant(\'warning\')</code>.'],
     ['->danger()', '', 'Shorthand for <code>->variant(\'danger\')</code>.'],
+    ['->purple()', '', 'Shorthand for <code>->variant(\'purple\')</code>.'],
     ['->striped($s)', 'bool', 'Add diagonal stripe pattern.'],
     ['->animated($a)', 'bool', 'Animate stripes (requires <code>->striped()</code>).'],
     ['->segments($segs)', 'array', 'Array of segments: <code>[[\'value\' => 30, \'variant\' => \'success\', \'label\' => \'Done\'], ...]</code>'],

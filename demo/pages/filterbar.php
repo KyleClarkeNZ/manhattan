@@ -58,119 +58,61 @@ $movies = [
 $moviesJson = json_encode($movies);
 
 $phpCodeBasic = <<<'PHP'
-// Search only
+// Include any combination of search, sort and group
 echo $m->filterBar('myFilter')
-    ->search('Search…');
-
-// Sort buttons only
-echo $m->filterBar('myFilter')
+    ->search('Search…')
     ->sort([
         ['value' => 'desc', 'icon' => 'fa-arrow-down-wide-short', 'tooltip' => 'Newest first', 'active' => true],
         ['value' => 'asc',  'icon' => 'fa-arrow-up-short-wide',   'tooltip' => 'Oldest first'],
-    ]);
-
-// Full FilterBar with search, sort, group, and linked pager
-echo $m->filterBar('myFilter')
-    ->search('Search titles…')
-    ->sort([
-        ['value' => 'desc', 'icon' => 'fa-arrow-down-wide-short', 'tooltip' => 'Descending', 'active' => true],
-        ['value' => 'asc',  'icon' => 'fa-arrow-up-short-wide',   'tooltip' => 'Ascending'],
     ])
     ->group([
-        ['value' => 'year',  'icon' => 'fa-calendar',    'tooltip' => 'Group by year',  'active' => true],
-        ['value' => 'genre', 'icon' => 'fa-film',        'tooltip' => 'Group by genre'],
-        ['value' => 'none',  'icon' => 'fa-list',        'tooltip' => 'No grouping'],
-    ])
-    ->pager('myPager');
+        ['value' => 'all',    'label' => 'All', 'active' => true],
+        ['value' => 'active', 'label' => 'Active'],
+    ]);
 PHP;
 
 $jsCodeBasic = <<<'JS'
-document.addEventListener('DOMContentLoaded', function () {
-    var fb = m.filterBar('myFilter');
-
-    document.getElementById('myFilter').addEventListener('m:filterbar:change', function (e) {
-        console.log(e.detail); // { search: '...', sort: '...', group: '...' }
-        // Re-render your list using e.detail
-    });
+document.getElementById('myFilter').addEventListener('m:filterbar:change', function (e) {
+    render(e.detail); // { search, sort, group }
 });
+
+m.filterBar('myFilter').setState({ sort: 'asc' }); // silent: no event
 JS;
 
 $phpCodeGroupPaging = <<<'PHP'
 echo $m->filterBar('moviesFilter')
     ->search('Search titles…')
-    ->sort([
-        ['value' => 'desc', 'icon' => 'fa-arrow-down-wide-short', 'tooltip' => 'Descending', 'active' => true],
-        ['value' => 'asc',  'icon' => 'fa-arrow-up-short-wide',   'tooltip' => 'Ascending'],
-    ])
     ->group([
-        ['value' => 'year',  'icon' => 'fa-calendar', 'tooltip' => 'Group by year',  'active' => true],
+        ['value' => 'year',  'icon' => 'fa-calendar', 'tooltip' => 'Group by year', 'active' => true],
         ['value' => 'genre', 'icon' => 'fa-film',     'tooltip' => 'Group by genre'],
-        ['value' => 'none',  'icon' => 'fa-list',     'tooltip' => 'No grouping'],
     ])
-    ->pager('moviesPager');
+    ->pager('moviesPager');   // pager resets to page 1 on every change
 
-echo $m->pagination('moviesPager')
-    ->showInfo(true)
-    ->align('center');
+echo $m->pagination('moviesPager')->showInfo(true);
 PHP;
 
 $jsCodeGroupPaging = <<<'JS'
-document.addEventListener('DOMContentLoaded', function () {
-    var allMovies = /* PHP JSON */ [];
-    var pageIndex = 0;
-    var perPage   = 6;
+var fb    = m.filterBar('moviesFilter');
+var pager = m.pagination('moviesPager');
 
-    var fb    = m.filterBar('moviesFilter');
-    var pager = m.pagination('moviesPager');
-
-    document.getElementById('moviesFilter').addEventListener('m:filterbar:change', function () {
-        pageIndex = 0; // reset on filter change (pager already reset to page 1 by FilterBar)
-        render();
+function render() {
+    var state    = fb.getState();
+    var filtered = allMovies.filter(function (x) {
+        return x.title.toLowerCase().indexOf(state.search.toLowerCase()) >= 0;
     });
+    var keyFn = function (x) { return state.group === 'genre' ? x.genre : String(x.year); };
+    var page  = pager.getState();
 
-    document.getElementById('moviesPager').addEventListener('m:pagination:change', function (e) {
-        pageIndex = e.detail.page - 1;
-        render();
-    });
+    // Packs whole groups into pages; a group is never split
+    var sortFn = function (keys) { return keys.sort(); };
+    var result = fb.groupSlice(filtered, keyFn, sortFn, page.perPage, page.page - 1);
+    pager.setTotalAndPages(filtered.length, result.totalPages);
+    draw(result.keys, result.groups);
+}
 
-    function render() {
-        var state    = fb.getState();
-        var filtered = allMovies.filter(function (m) {
-            return m.title.toLowerCase().indexOf(state.search.toLowerCase()) >= 0;
-        });
-
-        // Sort filtered items first
-        filtered.sort(function (a, b) {
-            return state.sort === 'asc' ? a.year - b.year : b.year - a.year;
-        });
-
-        var result;
-
-        if (state.group === 'none') {
-            // Ungrouped: use standard slice, then display as flat list
-            var total = filtered.length;
-            var slice = filtered.slice(pageIndex * perPage, (pageIndex + 1) * perPage);
-            pager.setTotal(total);
-            // displayFlat(slice); ...
-        } else {
-            // Grouped: use groupSlice — never splits a group across pages
-            var keyFn  = state.group === 'genre'
-                ? function (m) { return m.genre; }
-                : function (m) { return String(m.year); };
-            var sortFn = function (keys) {
-                return keys.sort(state.sort === 'asc' ? undefined
-                    : function (a, b) { return b.localeCompare(a); });
-            };
-
-            result = fb.groupSlice(filtered, keyFn, sortFn, perPage, pageIndex);
-            pager.setTotal(filtered.length);
-            pager.setTotalPages(result.totalPages);   // <-- correct page count for groups
-            // displayGroups(result.keys, result.groups); ...
-        }
-    }
-
-    render();
-});
+document.getElementById('moviesFilter').addEventListener('m:filterbar:change', render);
+document.getElementById('moviesPager').addEventListener('m:pagination:change', render);
+render();
 JS;
 
 ?>
@@ -178,30 +120,17 @@ JS;
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-filter') ?> FilterBar</h2>
     <p class="m-demo-desc">
-        A unified search+sort+group toolbar. Any combination of controls can be included.
-        Fires a single <code>m:filterbar:change</code> event with the full filter state
-        whenever any control changes. When linked to a Pagination instance via <code>->pager()</code>,
-        the pager is automatically reset to page 1 on each change.
-        The JS instance provides <code>groupSlice()</code> — a <strong>group-aware pagination</strong>
-        utility that packs complete groups into pages so no group is ever split across a page boundary.
+        A search / sort / group toolbar that fires one <code>m:filterbar:change</code> event with the full state.
+        Link a Pagination with <code>->pager()</code> to reset it to page 1 on each change.
     </p>
 
-    <!-- ================================================================
-         1. Search only
-         ================================================================ -->
-    <h3>Search Only</h3>
-    <p class="m-demo-desc">The simplest configuration — a search box that fires <code>m:filterbar:change</code> on every keystroke (debounced 200 ms).</p>
+    <h3>Controls</h3>
+    <p class="m-demo-desc">Search is debounced (200 ms). Sort and group are exclusive button groups using icons, labels or both.</p>
 
     <div class="m-demo-row">
         <?= $m->filterBar('demo-search-only')->search('Search anything…') ?>
     </div>
     <div class="m-demo-output" id="demo-search-output">Type to see state…</div>
-
-    <!-- ================================================================
-         2. Sort buttons only
-         ================================================================ -->
-    <h3>Sort Buttons Only</h3>
-    <p class="m-demo-desc">Button groups for sort or view-mode switching. Buttons are mutually exclusive within a group.</p>
 
     <div class="m-demo-row">
         <?= $m->filterBar('demo-sort-only')->sort([
@@ -210,12 +139,6 @@ JS;
         ]) ?>
     </div>
     <div class="m-demo-output" id="demo-sort-output">Click a sort button…</div>
-
-    <!-- ================================================================
-         3. Full toolbar with labels
-         ================================================================ -->
-    <h3>Sort + Group with Labels</h3>
-    <p class="m-demo-desc">Mix icons and labels in the same button group. Useful when the distinction between options needs to be clear.</p>
 
     <div class="m-demo-row">
         <?= $m->filterBar('demo-labels')->group([
@@ -226,21 +149,15 @@ JS;
     </div>
     <div class="m-demo-output" id="demo-labels-output">Click a group button…</div>
 
+    <?= demoCodeTabs($phpCodeBasic, $jsCodeBasic) ?>
+
     <!-- ================================================================
          4. Group-aware pagination demo
          ================================================================ -->
     <h3>Group-Aware Pagination</h3>
     <p class="m-demo-desc">
-        The classic pagination bug: slicing items <em>before</em> grouping splits groups across page
-        boundaries. <code>groupSlice(items, keyFn, sortFn, perPage, pageIndex)</code> solves this by
-        packing complete groups into pages greedily — a group is never split.
-        Changing any control below updates the page count and resets to page 1 automatically.
-    </p>
-    <p class="m-demo-desc" style="color: var(--m-text-muted); font-size: 0.85rem;">
-        <?= $m->icon('fa-circle-info') ?>
-        <strong><?= count($movies) ?> films</strong> across multiple years and genres.
-        Set per-page to a small number (e.g. 6) to observe that changing the group dimension
-        never leaves a partial group at the end of a page.
+        Slicing before grouping splits groups across pages. <code>groupSlice()</code> packs whole groups into pages instead.
+        Try a small page size with <?= count($movies) ?> films.
     </p>
 
     <?= $m->filterBar('demo-gp-filter')
@@ -263,15 +180,7 @@ JS;
         ->showSizeSelector([3, 6, 10, 15])
         ->align('center') ?>
 
-    <?php $phpCodeGroupPagingEcho = $phpCodeGroupPaging; ?>
-    <?= demoCodeTabs($phpCodeGroupPagingEcho, $jsCodeGroupPaging) ?>
-
-    <!-- ================================================================
-         Basic usage code tabs
-         ================================================================ -->
-    <h3>Basic Usage</h3>
-    <?= demoCodeTabs($phpCodeBasic, $jsCodeBasic) ?>
-
+    <?= demoCodeTabs($phpCodeGroupPaging, $jsCodeGroupPaging) ?>
 </div>
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
@@ -280,8 +189,6 @@ JS;
     ['->sort($options)', 'self', 'Add a mutually-exclusive sort button group. Each option: <code>[\'value\', \'icon\', \'label\', \'tooltip\', \'active\']</code>. Default: omitted.'],
     ['->group($options)', 'self', 'Add a mutually-exclusive group/view button group. Same option shape as sort. Default: omitted.'],
     ['->pager($pagerId)', 'self', 'Link to a Pagination element (by id). The pager resets to page 1 on every filter change. Default: omitted (no linked pager).'],
-    ['->addClass($class)', 'self', 'Append extra CSS class(es) to the root element.'],
-    ['->attr($name, $val)', 'self', 'Add an arbitrary HTML attribute to the root element.'],
 ]) ?>
 
 <?= apiTable('JS Methods', 'js', [

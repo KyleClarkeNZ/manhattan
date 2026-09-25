@@ -40,7 +40,27 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   — a working reference endpoint (whitelisted folder, content-based image validation,
   server-chosen filenames) host authors can crib from.
 
+### Changed
+- **Demo pages reviewed for coverage and length.** Every public PHP builder and JS
+  method now appears on its component's page. Newly documented: Validator's JS API
+  (`validateAll()`, `validateField()`, `reset()`, `form._mValidatorInstance`), Rating
+  `aggregate()` / `getUserValue()` / `setAggregate()`, Pagination `hideIfSingle()`,
+  `scrollOnPage()`, `setTotalAndPages()`, `setTotalPages()`, Address `setValue()` /
+  `getCoordinates()`, Carousel `goToPage()` / `currentPage()` / `pageCount()`, Button
+  `disabled()` / `iconOnly()`, Window `footer()` / `closeOnEsc()`, and the remaining
+  variant, spellcheck and autocomplete shorthands. The overview page gains a Setup
+  section plus the shared component methods and `m.ajax()`.
+  Long pages were cut back to one demo and one short snippet per feature
+  (RichTextEditor, Form, Carousel, CarouselBanner, Popover, FilterBar, Wizard,
+  Dropdown, DateRangePicker, Pagination); repeated prose and comment-only "code"
+  tabs were removed. MediaBrowser's API tables now use the same format as other pages.
+
 ### Fixed
+- **Demo: TimePicker page rendered twice** (a stale second copy with duplicate IDs),
+  **the Pagination "Label Position" section appeared twice**, and **the Toaster page
+  rendered a second `demoToaster`** alongside the layout's.
+- **Demo: the remote Dropdown example never populated.** `/getDropdownData` returned
+  `{success, data}`, but `remoteUrl` expects a bare JSON array.
 - **A pinned popup closed itself when the user scrolled INSIDE it.** The
   scroll-to-close guard added for pinned panels listens on `window` in the capture
   phase, which sees scroll events from every element on the page — including the
