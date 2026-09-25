@@ -47,6 +47,7 @@
     ['->warning()', '', 'Apply warning colour.'],
     ['->danger()', '', 'Apply danger colour.'],
     ['->purple()', '', 'Apply purple colour.'],
+    ['->secondary()', '', 'Apply secondary (grey) colour.'],
     ['->delta($text)', 'string', 'Set delta text (e.g. <code>"+5 today"</code>, <code>"-2%"</code>).'],
     ['->deltaUp()', '', 'Show green up-arrow indicator.'],
     ['->deltaDown()', '', 'Show red down-arrow indicator.'],

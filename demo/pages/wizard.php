@@ -3,21 +3,16 @@
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-layer-group') ?> Wizard</h2>
     <p class="m-demo-desc">
-        A multi-step form wizard with a visual step-progress strip, per-step validation,
-        skippable steps, remote data binding, and structured AJAX submission.
-        All field values are collected across steps and submitted as a single payload
-        that includes a <code>_wizard</code> metadata block.
+        A multi-step form with a progress strip, per-step validation, skippable steps, remote pre-fill and
+        AJAX submission. Values from every step are posted as one JSON payload with a <code>_wizard</code> metadata block.
     </p>
 
     <!-- =====================================================================
          Example 1 – Registration wizard (validation + skip)
     ====================================================================== -->
-    <h3>Registration Wizard (validation &amp; skip)</h3>
+    <h3>Validation &amp; Skippable Steps</h3>
     <p class="m-demo-desc">
-        Three-step registration flow.  The <em>Account</em> step requires a username
-        and e-mail before you can continue.  The <em>Profile</em> step is optional and
-        can be skipped.  The <em>Confirmation</em> step shows a review panel and
-        triggers AJAX submission.
+        <em>Account</em> must pass its Validator before continuing; <em>Profile</em> can be skipped.
     </p>
 
     <?php
@@ -83,38 +78,25 @@
     <div class="m-demo-output" id="wizard-output">Wizard output will appear here after submission&hellip;</div>
 
     <?= demoCodeTabs(
-        '// Build step content using Manhattan Form + Validator
-// The Form component handles layout; Validator handles inline field errors.
-
-$step1Form = $m->form(\'reg-step1-form\')
-    ->noCsrf()           // Wizard handles CSRF via X-CSRF-Token header
-    ->noValidation()     // Validator is attached manually below
-    ->formAttr(\'onsubmit\', \'return false\')  // Prevent Enter-key submission
-    ->field($m->textbox(\'reg-username\')->name(\'username\'), \'Username\')
-    ->field($m->textbox(\'reg-email\'   )->name(\'email\'),    \'Email Address\')
-    ->field($m->textbox(\'reg-password\')->name(\'password\')->attr(\'type\', \'password\'), \'Password\');
-
-$step1Validator = $m->validator(\'reg-step1-form\')
-    ->field(\'reg-username\', \'Username is required.\',                    [\'required\'])
-    ->field(\'reg-email\',    \'Please enter a valid email address.\',      [\'required\', \'email\'])
-    ->field(\'reg-password\', \'Password must be at least 8 characters.\',  [\'required\', [\'minLength\' => 8]]);
-
-$step1 = (string)$step1Form . (string)$step1Validator;
+        '// Step content is any HTML. Here: a Form (noValidation) plus its own Validator.
+$step1 = (string)$m->form(\'reg-step1-form\')->noCsrf()->noValidation()
+        ->field($m->textbox(\'reg-email\')->name(\'email\'), \'Email Address\')
+    . (string)$m->validator(\'reg-step1-form\')
+        ->field(\'reg-email\', \'Please enter a valid email address.\', [\'required\', \'email\']);
 
 echo $m->wizard(\'regWizard\')
     ->step(\'account\', \'Account\')
         ->icon(\'fa-user\')
         ->content($step1)
-        ->useValidator(\'reg-step1-form\')   // delegate validation to Validator
+        ->useValidator(\'reg-step1-form\')
         ->validationMessage(\'Please fill in all required fields.\')
     ->step(\'profile\', \'Profile\')
         ->icon(\'fa-id-card\')
         ->content($profileContent)
         ->skippable()
     ->step(\'confirm\', \'Confirm\')
-        ->icon(\'fa-check-circle\')
         ->content($confirmContent)
-    ->submitUrl(\'/orders/create\')
+    ->submitUrl(\'/account/create\')
     ->submitText(\'Create Account\')
     ->onComplete(\'handleComplete\')
     ->onStepChange(\'handleStepChange\');',
@@ -124,21 +106,13 @@ echo $m->wizard(\'regWizard\')
 }
 
 function regWizardStepChange(event) {
-    // event = { from, to, direction, wizard }
-    // return false to cancel navigation
+    // { from, to, direction, wizard } — return false to cancel
     return true;
 }
 
-// Programmatic control
 var wiz = m.wizard(\'regWizard\');
-wiz.next();              // validate then advance
-wiz.prev();              // go back
-wiz.skip();              // skip current step (if skippable)
-wiz.goTo(2);             // jump to step index 2 (click completed step circle to go back)
-wiz.submit();            // trigger final submission
-wiz.reset();             // back to step 0, clear data + reset all validators
-wiz.getCurrentStep();    // → { index, key, title, skippable, validateFields, validatorFormId, … }
-wiz.getData();           // → full payload including _wizard meta-block'
+wiz.next();   // validates first; also prev(), skip(), goTo(i), submit(), reset()
+wiz.getData(); // full payload including _wizard'
     ) ?>
 </div>
 
@@ -146,12 +120,10 @@ wiz.getData();           // → full payload including _wizard meta-block'
      Example 2 – Order wizard (remote data source)
 ====================================================================== -->
 <div class="m-demo-section">
-    <h3>Order Wizard (remote data source)</h3>
+    <h3>Remote Pre-fill &amp; Payload</h3>
     <p class="m-demo-desc">
-        Demonstrates <code>->dataUrl()</code>: on initialisation the wizard fetches
-        data from the server and pre-populates fields.  The submit payload mirrors
-        the structured <code>_wizard</code> metadata so the server knows exactly which
-        steps were completed, skipped, and what data was entered at each step.
+        <code>->dataUrl()</code> fetches values on load and fills matching fields. Steps can also validate
+        a list of field IDs with <code>->validateFields()</code> instead of a Validator.
     </p>
 
     <?php
@@ -241,8 +213,7 @@ wiz.getData();           // → full payload including _wizard meta-block'
     <div class="m-demo-output" id="order-wizard-output">Order wizard output will appear here&hellip;</div>
 
     <?= demoCodeTabs(
-        '// Order wizard with 4 steps and remote data source
-echo $m->wizard(\'orderWizard\')
+        'echo $m->wizard(\'orderWizard\')
     ->step(\'customer\', \'Customer\')
         ->icon(\'fa-user-tie\')
         ->content($customerContent)
@@ -263,17 +234,13 @@ echo $m->wizard(\'orderWizard\')
     ->submitText(\'Place Order\')
     ->onComplete(\'orderWizardComplete\');',
 
-        '// Server response from dataUrl:
-// { "success": true, "data": { "ord-customer": "Acme Corp", ... } }
-// Fields are populated by matching keys to element IDs / name attributes.
+        '// dataUrl response (keys match field IDs or names):
+// { "success": true, "data": { "ord-customer": "Acme Corp" } }
 
-// Submission payload sent to submitUrl (JSON):
+// Payload POSTed to submitUrl:
 // {
 //   "customer_name": "Acme Corp",
-//   "customer_email": "acme@example.com",
 //   "product": "widget-a",
-//   "quantity": "2",
-//   "delivery_date": "2026-04-01",
 //   "_wizard": {
 //     "id": "orderWizard",
 //     "currentStep": "review",
@@ -281,12 +248,7 @@ echo $m->wizard(\'orderWizard\')
 //     "completedSteps": ["customer", "items", "delivery", "review"],
 //     "skippedSteps": [],
 //     "totalSteps": 4,
-//     "stepData": {
-//       "customer": { "customer_name": "Acme Corp", ... },
-//       "items":    { "product": "widget-a", ... },
-//       "delivery": { ... },
-//       "review":   {}
-//     }
+//     "stepData": { "customer": { ... }, "items": { ... } }
 //   }
 // }
 

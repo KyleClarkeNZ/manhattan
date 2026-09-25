@@ -139,19 +139,14 @@ for ($j = 1; $j <= 18; $j++) {
         ->showFirstLast(true)
         ->showInfo(true) ?>
 
-    <!-- ================================================================
-         5. Label Position
-         ================================================================ -->
     <h3>Label Position</h3>
     <p class="m-demo-desc">
-        The <code>-&gt;labelPosition()</code> method controls where the "Showing X&ndash;Y of Z" label
-        appears relative to the page buttons. Accepted values:
-        <code>'left'</code> (default), <code>'right'</code>, <code>'above'</code>,
-        <code>'below'</code>, and <code>'none'</code>.
-        Calling this method automatically shows the label &mdash; no separate <code>-&gt;showInfo()</code> call is needed.
+        <code>-&gt;labelPosition()</code> places the "Showing X&ndash;Y of Z" label:
+        <code>'left'</code> (default), <code>'right'</code>, <code>'above'</code>, <code>'below'</code> or <code>'none'</code>.
+        It implies <code>-&gt;showInfo()</code>.
     </p>
 
-    <p class="m-demo-desc"><strong>above</strong> &mdash; label row above the buttons</p>
+    <p class="m-demo-desc"><strong>above</strong></p>
     <?= $m->pagination('demo-pager-label-above')
         ->total(128)
         ->perPage(15)
@@ -160,16 +155,7 @@ for ($j = 1; $j <= 18; $j++) {
         ->url('/items?page={page}')
         ->labelPosition('above') ?>
 
-    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>below</strong> &mdash; label row below the buttons</p>
-    <?= $m->pagination('demo-pager-label-below')
-        ->total(128)
-        ->perPage(15)
-        ->currentPage(3)
-        ->mode('server')
-        ->url('/items?page={page}')
-        ->labelPosition('below') ?>
-
-    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>right</strong> &mdash; label on the right, controls centred</p>
+    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>right</strong></p>
     <?= $m->pagination('demo-pager-label-right')
         ->total(128)
         ->perPage(15)
@@ -177,153 +163,45 @@ for ($j = 1; $j <= 18; $j++) {
         ->mode('server')
         ->url('/items?page={page}')
         ->labelPosition('right') ?>
-
-    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>none</strong> &mdash; label hidden, controls centred</p>
-    <?= $m->pagination('demo-pager-label-none')
-        ->total(128)
-        ->perPage(15)
-        ->currentPage(3)
-        ->mode('server')
-        ->url('/items?page={page}')
-        ->labelPosition('none') ?>
-
-    <!-- ================================================================
-         5. Label Position
-         ================================================================ -->
-    <h3>Label Position</h3>
-    <p class="m-demo-desc">
-        The <code>->labelPosition()</code> method controls where the "Showing X&ndash;Y of Z" label
-        appears relative to the page buttons. Accepted values:
-        <code>'left'</code> (default), <code>'right'</code>, <code>'above'</code>,
-        <code>'below'</code>, and <code>'none'</code>.
-        Calling this method automatically shows the label; no separate <code>->showInfo()</code> call is needed.
-    </p>
-
-    <p class="m-demo-desc"><strong>above</strong> — label row above the buttons</p>
-    <?= $m->pagination('demo-pager-label-above')
-        ->total(128)
-        ->perPage(15)
-        ->currentPage(3)
-        ->mode('server')
-        ->url('/items?page={page}')
-        ->labelPosition('above') ?>
-
-    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>below</strong> — label row below the buttons</p>
-    <?= $m->pagination('demo-pager-label-below')
-        ->total(128)
-        ->perPage(15)
-        ->currentPage(3)
-        ->mode('server')
-        ->url('/items?page={page}')
-        ->labelPosition('below') ?>
-
-    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>right</strong> — label on the right side (controls centred)</p>
-    <?= $m->pagination('demo-pager-label-right')
-        ->total(128)
-        ->perPage(15)
-        ->currentPage(3)
-        ->mode('server')
-        ->url('/items?page={page}')
-        ->labelPosition('right') ?>
-
-    <p class="m-demo-desc" style="margin-top:1.2rem"><strong>none</strong> — label hidden, controls centred</p>
-    <?= $m->pagination('demo-pager-label-none')
-        ->total(128)
-        ->perPage(15)
-        ->currentPage(3)
-        ->mode('server')
-        ->url('/items?page={page}')
-        ->labelPosition('none') ?>
 
     <div class="m-demo-output" id="pag-output">Interact with the client or AJAX pager above to see events here…</div>
 
     <?= demoCodeTabs(
-        '// --- CLIENT MODE (simplest) ---
-// All items in DOM. Total auto-detected from child count.
-<?= $m->list(\'taskList\')->items($listItems) ?>
+        '// Client: items already in the DOM (direct children of target,
+// or marked data-pagination-item). Total is counted automatically.
 <?= $m->pagination(\'taskPager\')
       ->target(\'taskList\')
       ->perPage(10)
-      ->showInfo(true)
-      ->showSizeSelector([5, 10, 25]) ?>
+      ->showSizeSelector([5, 10, 25])
+      ->hideIfSingle() ?>
 
-// Items need data-pagination-item, or be direct children of target.
-// Add it via attrs when building items:
-[\'html\' => \'...\', \'attrs\' => [\'data-pagination-item\' => \'\']]
-
-// --- SERVER MODE ---
-// Controller passes total/page from DB query:
-$total = $model->count();
-$items = $model->paginate($page, $perPage);
-// View:
+// Server: real links, full page reload
 <?= $m->pagination(\'pager\')
-      ->total($total)
-      ->perPage($perPage)
-      ->currentPage($page)
       ->mode(\'server\')
+      ->total($total)->perPage($perPage)->currentPage($page)
       ->url(\'/tasks?page={page}&perPage={perPage}\')
-      ->showInfo(true)
       ->showFirstLast(true) ?>
 
-// --- AJAX MODE ---
-// Fetches URL on each page change, injects response into target.
-// Response: plain HTML  OR  JSON { html: string, total: int }
+// AJAX: response is HTML, or JSON { html, total }
 <?= $m->pagination(\'pager\')
       ->mode(\'ajax\')
       ->url(\'/api/tasks?page={page}&perPage={perPage}\')
       ->target(\'taskList\')
       ->total($initialTotal)
-      ->perPage(10)
-      ->showInfo(true)
-      ->autoLoad(true) ?>   // auto-fetch page 1 on init
+      ->autoLoad(true) ?>',
+        'var pager = m.pagination(\'my-pager\');
 
-// Variants:
-->compact()
-->large()
-->align(\'left\')   // \'center\' (default) | \'left\' | \'right\'
-->showFirstLast(true)
-->maxButtons(9)',
-        '// Get pagination instance (auto-inited on DOMContentLoaded)
-var pager = m.pagination(\'my-pager\');
-
-// Navigate programmatically
-pager.goTo(3);
-pager.next();
-pager.prev();
-pager.first();
-pager.last();
-
-// Update total (after AJAX fetch returns a count)
+pager.goTo(3);          // also next(), prev(), first(), last()
 pager.setTotal(200);
-
-// Change per-page size
 pager.setPerPage(25);
+var s = pager.getState(); // { page, perPage, total, totalPages, offset, limit }
 
-// Read current state
-var s = pager.getState();
-// { page, perPage, total, totalPages, offset, limit }
-console.log(\'Fetching:\', s.offset, \'+\', s.limit);
-
-// Refresh client-mode items after DOM mutation
-pager.refresh();
-
-// External trigger elements (e.g. custom Next button elsewhere in page)
-// Just add data attributes — no JS needed:
-// <button data-m-pagination="my-pager" data-page="5">Go to 5</button>
-
-// Listen to page changes
-document.getElementById(\'my-pager\').addEventListener(\'m:pagination:change\', function(e) {
-    var d = e.detail;
-    console.log(\'Page\', d.page, \'of\', d.totalPages,
-                \'| offset:\', d.offset, \'limit:\', d.limit);
-    // Example: re-fetch a custom component
-    m.list(\'taskList\').refresh(\'/tasks?offset=\' + d.offset + \'&limit=\' + d.limit);
+document.getElementById(\'my-pager\').addEventListener(\'m:pagination:change\', function (e) {
+    load(e.detail.offset, e.detail.limit);
 });
 
-// Ajax-loaded event
-document.getElementById(\'my-pager\').addEventListener(\'m:pagination:loaded\', function(e) {
-    console.log(\'Loaded page\', e.detail.page, \'from\', e.detail.url);
-});'
+// No-JS trigger anywhere on the page:
+// <button data-m-pagination="my-pager" data-page="5">Go to 5</button>'
     ) ?>
 </div>
 
@@ -344,6 +222,8 @@ document.getElementById(\'my-pager\').addEventListener(\'m:pagination:loaded\', 
     ['->compact()', 'self', 'Use smaller buttons.'],
     ['->large()', 'self', 'Use larger buttons.'],
     ['->autoLoad()', 'self', 'Ajax mode: fetch page 1 automatically on init. Default: false.'],
+    ['->hideIfSingle()', 'self', 'Hide the control when there is only one page. Default: false.'],
+    ['->scrollOnPage($scroll)', 'self', 'Scroll the pager into view on page change. Default: true.'],
 ]) ?>
 
 <?= apiTable('JS Methods', 'js', [
@@ -351,6 +231,8 @@ document.getElementById(\'my-pager\').addEventListener(\'m:pagination:loaded\', 
     ['p.goTo(n)', '', 'Navigate to page n.'],
     ['p.next() / p.prev() / p.first() / p.last()', '', 'Navigate relative pages.'],
     ['p.setTotal(n)', '', 'Update total item count and re-render controls.'],
+    ['p.setTotalAndPages(total, pages)', 'int, int', 'Set total and an explicit page count in one render (e.g. group-aware paging with FilterBar).'],
+    ['p.setTotalPages(n)', 'int', 'Override the page count only. Call after <code>setTotal()</code>.'],
     ['p.setPerPage(n)', '', 'Change per-page size and navigate to page 1.'],
     ['p.getState()', 'object', 'Returns <code>{ page, perPage, total, totalPages, offset, limit }</code>.'],
     ['p.refresh()', '', 'Re-discover items in target (client mode) and re-scan external triggers.'],

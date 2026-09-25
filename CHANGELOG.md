@@ -77,6 +77,21 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   `tileUrl()` when pointing at a tile provider other than OpenStreetMap; custom tiles no
   longer get the OpenStreetMap credit by default.
 
+### Changed
+- **Demo pages reviewed for coverage and length.** Every public PHP builder and JS
+  method now appears on its component's page. Newly documented: Validator's JS API
+  (`validateAll()`, `validateField()`, `reset()`, `form._mValidatorInstance`), Rating
+  `aggregate()` / `getUserValue()` / `setAggregate()`, Pagination `hideIfSingle()`,
+  `scrollOnPage()`, `setTotalAndPages()`, `setTotalPages()`, Address `setValue()` /
+  `getCoordinates()`, Carousel `goToPage()` / `currentPage()` / `pageCount()`, Button
+  `disabled()` / `iconOnly()`, Window `footer()` / `closeOnEsc()`, and the remaining
+  variant, spellcheck and autocomplete shorthands. The overview page gains a Setup
+  section plus the shared component methods and `m.ajax()`.
+  Long pages were cut back to one demo and one short snippet per feature
+  (RichTextEditor, Form, Carousel, CarouselBanner, Popover, FilterBar, Wizard,
+  Dropdown, DateRangePicker, Pagination); repeated prose and comment-only "code"
+  tabs were removed. MediaBrowser's API tables now use the same format as other pages.
+
 ### Fixed
 - **Map: no flag in the Leaflet attribution.** Leaflet 1.8+ puts a flag emoji in front of
   its "Leaflet" credit. The component now replaces that prefix with a plain "Leaflet" link.
@@ -90,6 +105,11 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 - **Map:** default OpenStreetMap tiles now use `tile.openstreetmap.org` (OSM no longer
   recommends the `{s}` subdomains), and the JS default provider is `leaflet` to match PHP.
 - Map demo page no longer says a Google Maps API key is required.
+- **Demo: TimePicker page rendered twice** (a stale second copy with duplicate IDs),
+  **the Pagination "Label Position" section appeared twice**, and **the Toaster page
+  rendered a second `demoToaster`** alongside the layout's.
+- **Demo: the remote Dropdown example never populated.** `/getDropdownData` returned
+  `{success, data}`, but `remoteUrl` expects a bare JSON array.
 - **A pinned popup closed itself when the user scrolled INSIDE it.** The
   scroll-to-close guard added for pinned panels listens on `window` in the capture
   phase, which sees scroll events from every element on the page — including the
