@@ -83,8 +83,11 @@ final class Address extends Component
             ->label('Overseas Address')
             ->checked($this->mode === 'overseas');
 
+        // 'id' is the upstream address id; re-resolve it server-side with
+        // AddressProxy::lookup() rather than trusting the other posted fields.
         $nzHidden = [
             'country' => 'NZ',
+            'id' => '',
             'line1' => '',
             'line2' => '',
             'suburb' => '',
@@ -106,6 +109,7 @@ final class Address extends Component
         $overseasPanelHidden = $this->mode !== 'overseas' ? ' m-hidden' : '';
 
         $searchId = htmlspecialchars($this->id . '_nz_search', ENT_QUOTES, 'UTF-8');
+        $resultsId = htmlspecialchars($this->id . '_nz_results', ENT_QUOTES, 'UTF-8');
 
         // Manhattan Icon for the search affix
         $searchIconHtml = Icon::html('fa-search', ['ariaHidden' => true]);
@@ -114,6 +118,10 @@ final class Address extends Component
         $nzSearchInput = (string)(new TextBox($this->id . '_nz_search'))
             ->addClass('m-address-search')
             ->attr('autocomplete', 'off')
+            ->attr('role', 'combobox')
+            ->attr('aria-autocomplete', 'list')
+            ->attr('aria-expanded', 'false')
+            ->attr('aria-controls', $this->id . '_nz_results')
             ->attr('placeholder', 'Start typing an NZ address...');
 
         $overseasPrefix = $this->namePrefix . '[overseas]';
@@ -155,7 +163,7 @@ final class Address extends Component
                 {$nzSearchInput}
                 <span class="m-address-search-affix" aria-hidden="true">{$searchIconHtml}</span>
             </div>
-            <div class="m-address-results" role="listbox" aria-label="Address suggestions" hidden></div>
+            <div class="m-address-results" id="{$resultsId}" role="listbox" aria-label="Address suggestions" hidden></div>
             <div class="m-address-help" data-role="help" hidden></div>
         </div>
         {$nzHiddenHtml}

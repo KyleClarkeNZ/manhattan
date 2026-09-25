@@ -70,6 +70,9 @@ document.getElementById(\'deliveryAddress\')
     ['m.address(id, opts)', 'string, ?object', 'Get or create address instance.'],
     ['setMode(mode)', 'string', 'Switch between <code>nz</code> and <code>overseas</code>.'],
     ['clear()', '', 'Clear all address fields.'],
+    ['setValue(text)', 'string', 'Show a saved address (e.g. on edit pages) in the confirmed state, without searching.'],
+    ['isConfirmed()', '', 'Whether the text is an address picked from the list (or set via <code>setValue</code>). False once the user edits it.'],
+    ['getCoordinates()', '', 'The selected address as <code>{lat, lng}</code>, or <code>null</code>.'],
 ]) ?>
 
 <?= apiTable('JS Options', 'js', [
@@ -82,7 +85,16 @@ document.getElementById(\'deliveryAddress\')
 <?= eventsTable([
     ['m:address:mode', '{mode}', 'Fired when the address mode changes between NZ and overseas.'],
     ['m:address:select', '{suggestion, ...fields}', 'Fired when an NZ address suggestion is selected.'],
+    ['m:address:clear', '{}', 'Fired when the user edits a selected address, which clears the selection.'],
 ]) ?>
+
+<h3>Server-side verification</h3>
+<p>The selected address is posted in hidden fields under <code>{namePrefix}[nz][…]</code>, including <code>id</code>. Those fields can be edited by the client, so re-resolve the id on submit rather than trusting them:</p>
+<pre><code>$proxy   = new \Manhattan\AddressProxy($linzApiKey, 'MyApp/1.0 (https://example.com)');
+$address = $proxy->lookup($_POST['deliveryAddress']['nz']['id'] ?? '');
+if ($address === null) {
+    // Not a known address (or the lookup failed) — ask the user to pick again.
+}</code></pre>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

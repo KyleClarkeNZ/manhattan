@@ -9,7 +9,41 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **Address autocomplete (`AddressProxy`, `address.js`)** — correctness and performance fixes:
+  - Distinct LINZ addresses are no longer merged when within ~100 m of each other, so
+    every unit in a building and neighbouring house numbers are selectable. A Nominatim
+    POI now only merges into (and names) a LINZ row for the same street address.
+  - Queries are matched word by word at word boundaries, so "1 queen st auckland" finds
+    "1 Queen Street, Auckland Central, Auckland" (no commas or exact format needed),
+    "1 Queen" no longer matches "21 Queen", and "2/10", "flat 2 10" and "10-12" work.
+    Street-type abbreviations (St, Rd, Ave, …) match their full form, and trailing
+    postcodes and RD numbers (not in LINZ) are ignored.
+  - Doubled vowels ("Aatatu") still match macronised names, without breaking real
+    double vowels ("Queen", "Wood").
+  - LINZ results are fetched as a wider page and ranked locally, so the exact address
+    is no longer lost among 10 arbitrary substring matches.
+  - `%` and `_` typed by the user no longer act as wildcards in the LINZ filter.
+  - Failed upstream responses (timeouts, 429, 5xx, bad JSON) are no longer cached as
+    "no results" for 24 hours. Cache files are written atomically.
+  - `address_id` is now requested from LINZ, so suggestions carry a real `id`.
+  - Nominatim is throttled to one request per second per server (its usage policy);
+    LINZ-only results are returned while it is throttled.
+  - Client: an HTTP or network error now hides the "Searching…" loader and shows the
+    error message, instead of spinning forever.
+  - Client: a cached result can no longer be overwritten by an older in-flight response.
+  - Client: editing the text clears the selected address immediately, so a form can't
+    submit a previously selected address alongside different visible text.
+  - Client: combobox ARIA (`aria-expanded`, `aria-controls`, `aria-activedescendant`),
+    and the list closes when focus leaves the search box.
+
 ### Added
+- `AddressProxy::lookup($id)` — re-resolve a submitted suggestion id server-side
+  instead of trusting the posted hidden fields.
+- Address component: hidden `id` field, `isConfirmed()` JS method and
+  `m:address:clear` event. Suggestion rows include `source` (`linz`/`osm`), and LINZ
+  rows include an empty `postcode` for a consistent shape. OSM ids are now
+  `osm-{N|W|R}{id}` so they can be looked up.
 - **`MediaBrowser` component** — a modal image picker: browse the files already in a
   server-side folder, upload new ones, and hand the chosen file's URL back to a form
   field. Deliberately minimal (one flat folder, pick or upload; no rename, move or
