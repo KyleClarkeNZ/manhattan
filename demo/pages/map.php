@@ -3,18 +3,14 @@
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-map-marked-alt') ?> Map</h2>
     <p class="m-demo-desc">
-        Embeds a <a href="https://developers.google.com/maps/documentation/javascript" target="_blank" rel="noopener">Google Maps</a>
-        instance for displaying GPS coordinates as pins. Accepts coordinates directly from the Address component's
-        <code>getCoordinates()</code> API or any other source. The two components are intentionally independent —
+        Embeds an interactive map for displaying GPS coordinates as pins. The default provider is
+        <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a> with
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> tiles &mdash;
+        free, open source, and no API key required. Google Maps is available via <code>->provider('google')</code>
+        with an API key. Accepts coordinates directly from the Address component's
+        <code>getCoordinates()</code> API or any other source. The two components are intentionally independent &mdash;
         wiring them together is done in application-level JS.
     </p>
-
-    <div class="m-demo-callout" style="background:var(--m-warning-bg,#fff8e1);border-left:4px solid #f9a825;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.88rem;">
-        <?= $m->icon('fa-key') ?>
-        <strong>API Key required.</strong> A Google Maps JavaScript API key must be provided via <code>->apiKey()</code>.
-        The demos below will show a placeholder until a valid key is configured.
-        <a href="https://developers.google.com/maps/documentation/javascript/get-api-key" target="_blank" rel="noopener">Get an API key →</a>
-    </div>
 
     <h3>Static Map with Marker</h3>
     <p class="m-demo-desc">Pre-set centre and a marker via PHP fluent API. Renders immediately on page load.</p>
@@ -28,7 +24,6 @@
 
     <?= demoCodeTabs(
         '<?= $m->map(\'venueMap\')
-    ->apiKey($_ENV[\'GOOGLE_MAPS_KEY\'])
     ->center(-36.8485, 174.7633)
     ->zoom(13)
     ->marker(-36.8485, 174.7633, \'Auckland CBD\')
@@ -68,7 +63,6 @@ document.getElementById(\'venueMap\')
 
     <?= demoCodeTabs(
         '<?= $m->map(\'nzCitiesMap\')
-    ->apiKey($_ENV[\'GOOGLE_MAPS_KEY\'])
     ->center(-41.2865, 174.7762)
     ->zoom(5)
     ->markers([
@@ -114,7 +108,6 @@ var pins = map.getMarkers(); // [{lat, lng, title, marker}, ...]'
 
     <?= demoCodeTabs(
         '<?= $m->map(\'myMap\')
-    ->apiKey($_ENV[\'GOOGLE_MAPS_KEY\'])
     ->center(-41.2865, 174.7762)
     ->zoom(5)
     ->height(\'350px\') ?>',
@@ -152,7 +145,6 @@ var pins = map.getMarkers(); // [{lat, lng, title, marker}, ...]'
     ->mode(\'nz\') ?>
 
 <?= $m->map(\'deliveryMap\')
-    ->apiKey($_ENV[\'GOOGLE_MAPS_KEY\'])
     ->height(\'350px\') ?>',
         'document.addEventListener(\'DOMContentLoaded\', function() {
     var addr = m.address(\'deliveryAddress\');
@@ -211,6 +203,8 @@ map.recenter();   // snaps back to original centre + zoom'
     ['$m->map($id)', 'string', 'Create a map component.'],
     ['->provider($name)', 'string', 'Map provider: <code>\'leaflet\'</code> (default, free) or <code>\'google\'</code>.'],
     ['->apiKey($key)', 'string', 'Google Maps JavaScript API key. Required when provider = <code>\'google\'</code>.'],
+    ['->tileUrl($url)', 'string', 'Leaflet only. Use a different tile server, e.g. CARTO or a self-hosted server. Default: OpenStreetMap.'],
+    ['->attribution($html)', 'string', 'Leaflet only. Credit line for the tile layer. Set this whenever <code>->tileUrl()</code> points at another provider.'],
     ['->center($lat, $lng)', 'float, float', 'Default map centre coordinates. Defaults to Wellington, NZ if not set.'],
     ['->zoom($zoom)', 'int', 'Initial zoom level (1–21). Default: <code>14</code>.'],
     ['->height($css)', 'string', 'Container height as a CSS value. Default: <code>\'400px\'</code>.'],
@@ -235,7 +229,7 @@ map.recenter();   // snaps back to original centre + zoom'
 ]) ?>
 
 <?= eventsTable([
-    ['m:map:ready', '{map}', 'Fired once Google Maps has initialised. <code>detail.map</code> is the raw <code>google.maps.Map</code> instance.'],
+    ['m:map:ready', '{map}', 'Fired once the map has initialised. <code>detail.map</code> is the raw <code>L.Map</code> (Leaflet) or <code>google.maps.Map</code> instance. Calls made before this are queued and applied automatically.'],
     ['m:map:markeradded', '{lat, lng, title}', 'Fired after each <code>addMarker()</code> call.'],
     ['m:map:markerscleared', '{}', 'Fired after <code>clearMarkers()</code>.'],
 ]) ?>
