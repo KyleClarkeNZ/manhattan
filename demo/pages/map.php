@@ -210,6 +210,7 @@ map.recenter();   // snaps back to original centre + zoom'
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->map($id)', 'string', 'Create a map component.'],
     ['->provider($name)', 'string', 'Map provider: <code>\'leaflet\'</code> (default, free) or <code>\'google\'</code>.'],
+    ['->tileUrl($url)', 'string', 'Leaflet tile URL template (default: OpenStreetMap), e.g. <code>https://{s}.tile.example.com/{z}/{x}/{y}.png</code>.'],
     ['->apiKey($key)', 'string', 'Google Maps JavaScript API key. Required when provider = <code>\'google\'</code>.'],
     ['->center($lat, $lng)', 'float, float', 'Default map centre coordinates. Defaults to Wellington, NZ if not set.'],
     ['->zoom($zoom)', 'int', 'Initial zoom level (1–21). Default: <code>14</code>.'],

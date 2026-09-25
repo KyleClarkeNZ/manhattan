@@ -90,9 +90,9 @@ $groupedRegions = [
 
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-chevron-circle-down') ?> Dropdown</h2>
-    <p class="m-demo-desc">Custom select dropdown with keyboard navigation, grouped options, remote data loading, and search filtering.</p>
+    <p class="m-demo-desc">Custom select with keyboard navigation, grouped options, search filtering and remote data.</p>
 
-    <h3>Basic</h3>
+    <h3>Basic &amp; Grouped</h3>
     <div class="m-demo-row">
         <div class="m-demo-field">
             <label>Priority:</label>
@@ -102,12 +102,8 @@ $groupedRegions = [
             <label>Category (custom fields):</label>
             <?= $m->dropdown('dropdown-category', ['textField' => 'name', 'valueField' => 'id', 'placeholder' => 'Select category...', 'name' => 'category'])->dataSource($categories) ?>
         </div>
-    </div>
-
-    <h3>Grouped Options</h3>
-    <div class="m-demo-row">
         <div class="m-demo-field">
-            <label>Category:</label>
+            <label>Grouped:</label>
             <?= $m->dropdown('dropdown-grouped')
                 ->groupedDataSource($groupedCategories)
                 ->placeholder('Select category...')
@@ -115,11 +111,39 @@ $groupedRegions = [
         </div>
     </div>
 
+    <div class="m-demo-output" id="dropdown-output">Select an option to see output...</div>
+
+    <?= demoCodeTabs(
+        '<?= $m->dropdown(\'priority\')
+    ->dataSource([[\'value\' => \'1\', \'text\' => \'Low\'], [\'value\' => \'2\', \'text\' => \'Medium\']])
+    ->value(\'2\')
+    ->placeholder(\'Select...\')
+    ->name(\'priority\') ?>
+
+// Map your own keys
+<?= $m->dropdown(\'category\')->textField(\'name\')->valueField(\'id\')->dataSource($rows) ?>
+
+<?= $m->dropdown(\'grouped\')
+    ->groupedDataSource([
+        [\'group\' => \'Work\', \'items\' => [[\'value\' => \'1\', \'text\' => \'Meetings\']]],
+    ]) ?>',
+        'document.getElementById(\'priority\').addEventListener(\'m:dropdown:change\', function (e) {
+    console.log(e.detail.value, e.detail.text);
+});
+
+var dd = m.dropdown(\'priority\');
+dd.value();       // get; dd.value(\'3\') to set
+dd.text();
+dd.clear();
+dd.disable();     // enable()
+dd.dataSource([{ value: \'x\', text: \'New list\' }]);'
+    ) ?>
+
     <h3>Searchable</h3>
-    <p class="m-demo-desc">Add <code>->searchable()</code> to any dropdown with a long list. A live-filter input pins above the options; typing narrows results instantly. Grouped options are also supported — group headings hide automatically when all items in the group are filtered out.</p>
+    <p class="m-demo-desc"><code>->searchable()</code> adds a live filter above the options. Empty groups hide automatically.</p>
     <div class="m-demo-row">
         <div class="m-demo-field">
-            <label>Country (flat, searchable):</label>
+            <label>Country:</label>
             <?= $m->dropdown('dropdown-search-flat')
                 ->dataSource($countries)
                 ->placeholder('Select country...')
@@ -127,7 +151,7 @@ $groupedRegions = [
                 ->name('country') ?>
         </div>
         <div class="m-demo-field">
-            <label>City (grouped, searchable):</label>
+            <label>City (grouped):</label>
             <?= $m->dropdown('dropdown-search-grouped')
                 ->groupedDataSource($groupedRegions)
                 ->placeholder('Select city...')
@@ -140,29 +164,15 @@ $groupedRegions = [
     <div class="m-demo-output" id="dropdown-search-output">Select a country or city...</div>
 
     <?= demoCodeTabs(
-        '// Searchable flat list
-<?= $m->dropdown(\'country\')
-    ->dataSource($countries)
-    ->placeholder(\'Select country...\')
-    ->searchable() ?>
-
-// Searchable with grouped options + custom placeholder
-<?= $m->dropdown(\'city\')
-    ->groupedDataSource($groupedRegions)
-    ->placeholder(\'Select city...\')
+        '<?= $m->dropdown(\'city\')
+    ->groupedDataSource($regions)
     ->searchable()
     ->searchPlaceholder(\'Search cities...\') ?>',
-        '// No extra JS needed — searchable is fully automatic.
-// The change event works identically to a standard dropdown.
-document.getElementById(\'country\').addEventListener(\'m:dropdown:change\', function(e) {
-    console.log(e.detail.value, e.detail.text);
-});
-
-// You can also enable searchable at runtime via configure():
-m.dropdown(\'myDd\').configure({ searchable: true });'
+        'm.dropdown(\'myDd\').configure({ searchable: true }); // at runtime'
     ) ?>
 
-    <h3>Dynamic AJAX Data</h3>
+    <h3>Remote Data</h3>
+    <p class="m-demo-desc">The endpoint returns a JSON array: <code>[ {"value": "…", "text": "…"}, … ]</code>.</p>
     <div class="m-demo-row">
         <div class="m-demo-field">
             <label>Remote Options:</label>
@@ -176,75 +186,16 @@ m.dropdown(\'myDd\').configure({ searchable: true });'
         </div>
     </div>
 
-    <div class="m-demo-output" id="dropdown-output">Select an option to see output...</div>
-
     <?= demoCodeTabs(
-        '// Basic dropdown
-<?= $m->dropdown(\'priority\')
-    ->dataSource($priorities)
-    ->value(\'2\')
-    ->placeholder(\'Select...\')
-    ->name(\'priority\') ?>
-
-// Custom text/value fields
-<?= $m->dropdown(\'category\', [
-    \'textField\'  => \'name\',
-    \'valueField\' => \'id\',
-])->dataSource($items) ?>
-
-// Grouped options
-<?= $m->dropdown(\'grouped\')
-    ->groupedDataSource([
-        [\'group\' => \'Work\', \'items\' => [
-            [\'value\' => \'1\', \'text\' => \'Meetings\'],
-        ]],
-    ])
-    ->placeholder(\'Select category...\') ?>
-
-// Remote AJAX data
-<?= $m->dropdown(\'remote\')
+        '<?= $m->dropdown(\'remote\')
     ->remoteUrl(\'/api/options\')
     ->loaderText(\'Loading...\') ?>',
-        '// Listen for changes (addEventListener on the element)
-document.getElementById(\'priority\').addEventListener(\'m:dropdown:change\', function(e) {
-    console.log(e.detail.value, e.detail.text);
-});
-
-// Legacy callback (options.events.change) — still supported
-m.dropdown(\'priority\', {
-    events: {
-        change: function(data) {
-            console.log(data.value, data.text);
-        }
-    }
-});
-
-// Get/set value
-var dd = m.dropdown(\'priority\');
-dd.value();           // get
-dd.value(\'3\');        // set
-
-// Get text
-dd.text();
-
-// Reload remote data
-dd.reload();
-
-// Enable/disable
-dd.enable();
-dd.disable();
-
-// Clear selection
-dd.clear();'
+        'm.dropdown(\'remote\').reload().then(function () { /* refreshed */ });'
     ) ?>
-</div>
 
-<div class="m-demo-section">
     <h3>Select by Ordinal or Value</h3>
     <p class="m-demo-desc">
-        <code>select()</code> pre-selects an option by 0-based ordinal position (flat data source)
-        or by value string. Useful as a clean default when the first option should be active.
-        Note: ordinal selection applies to the flat <code>dataSource</code> only, not grouped data.
+        <code>->select()</code> takes a 0-based position (flat data only) or a value &mdash; handy for defaulting to the first option.
     </p>
     <div class="m-demo-row">
         <div class="m-demo-field">
@@ -263,18 +214,9 @@ dd.clear();'
         </div>
     </div>
 
-<?= demoCodeTabs(
-    <<<'PHP'
-// Select first option — no hardcoded value needed
-echo $m->dropdown('priority')->dataSource($options)->select(0);
-
-// Select by value string (equivalent to ->value())
-echo $m->dropdown('priority')->dataSource($options)->select('medium');
-
-// Nullable $old fallback — 0 selects first when no prior value:
-echo $m->dropdown('priority')->dataSource($options)->select($old['priority'] ?? 0);
-PHP
-) ?>
+    <?= demoCodeTabs(
+        '<?= $m->dropdown(\'priority\')->dataSource($options)->select($old[\'priority\'] ?? 0) ?>'
+    ) ?>
 </div>
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [

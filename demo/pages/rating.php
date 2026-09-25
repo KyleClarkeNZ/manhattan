@@ -28,6 +28,13 @@
         <?= $m->rating('demo-rating-success')->value(4)->max(5)->readonly()->color('success')->label('Success') ?>
     </div>
 
+    <h3>Aggregate (Community Average)</h3>
+    <p class="m-demo-desc">Shows the average until the user hovers, then lets them set their own rating. Update the label yourself.</p>
+    <div class="m-demo-row" style="gap:1rem; align-items:center;">
+        <?= $m->rating('demo-rating-agg')->aggregate(4.3, 128)->max(5) ?>
+        <span style="font-size:13px; color:#888;">4.3 (128 ratings)</span>
+    </div>
+
     <div class="m-demo-output" id="rating-output">Click a star to rate...</div>
 
     <?= demoCodeTabs(
@@ -47,9 +54,8 @@
 <?= $m->rating(\'sm\')->value(3)->max(5)->sm() ?>
 <?= $m->rating(\'lg\')->value(3)->max(5)->lg() ?>
 
-// Colour variant
-<?= $m->rating(\'r\')->value(2)->max(5)
-    ->color(\'danger\')->readonly() ?>',
+// Community average; hover to rate
+<?= $m->rating(\'avgRating\')->aggregate(4.3, 128) ?>',
         '// Get rating instance  
 var r = m.rating(\'myRating\');
 
@@ -57,8 +63,9 @@ var r = m.rating(\'myRating\');
 var val = r.getValue();
 r.setValue(4);
 
-// Destroy
-r.destroy();
+// Aggregate mode: the user\'s own pick, and a refreshed average
+r.getUserValue();
+r.setAggregate(4.4, 129);
 
 // Listen for changes
 document.getElementById(\'myRating\')
@@ -84,6 +91,7 @@ function handleRating(value, element) {
     ['->sm()', '', 'Small size shorthand.'],
     ['->lg()', '', 'Large size shorthand.'],
     ['->color($c)', 'string', 'Colour: <code>primary</code>, <code>warning</code>, <code>danger</code>, <code>success</code>, <code>purple</code>.'],
+    ['->aggregate($avg, $count)', 'float, int', 'Display a community average; hovering lets the user set their own rating. Value text is suppressed.'],
     ['->onChange($callback)', 'string', 'JS function name or expression called with <code>(value, element)</code>.'],
 ]) ?>
 
@@ -91,6 +99,8 @@ function handleRating(value, element) {
     ['m.rating(id, overrides)', 'string, ?object', 'Get or create rating instance.'],
     ['getValue()', '', 'Returns the current rating value.'],
     ['setValue(value)', 'number', 'Set the rating value.'],
+    ['getUserValue()', '', 'Aggregate mode: the user\'s own rating (0 if none).'],
+    ['setAggregate(avg, count)', 'number, int', 'Aggregate mode: update the average after a submission.'],
     ['destroy()', '', 'Clean up event listeners.'],
 ]) ?>
 

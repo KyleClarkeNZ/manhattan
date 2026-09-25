@@ -3,18 +3,11 @@
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-film') ?> Carousel</h2>
     <p class="m-demo-desc">
-        A tile-based horizontal scroll carousel with CSS <code>scroll-snap</code>, prev/next navigation buttons,
-        and optional dot indicators. Each click of Next/Prev snaps to the adjacent tile.
-        Supports server-rendered tiles (PHP array) or client-side loading from a remote JSON endpoint.
-    </p>
-    <p class="m-demo-desc">
-        <strong>Dot placement</strong> defaults to <code>'below'</code>. Use <code>->dots('above')</code>
-        or <code>->dots('none')</code> to change or remove them.
+        A horizontal tile carousel with scroll-snap, prev/next buttons and optional dots.
+        Tiles are rendered server-side or loaded from a JSON endpoint. With a single tile, buttons and dots are hidden.
     </p>
 
-    <!-- ── Example 1: Dots below (default) ─────────────────────────────── -->
-    <h3>Default — dots below</h3>
-    <p class="m-demo-desc">Server-rendered tiles, dot indicators positioned below the carousel.</p>
+    <h3>Default</h3>
     <div class="m-demo-row">
         <?php
         $tiles1 = [
@@ -27,27 +20,26 @@
             ['title' => 'Coral Reef',     'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/c7/320/240', 'caption' => 'Underwater'],
             ['title' => 'Aurora Borealis','href' => '#', 'imageUrl' => 'https://picsum.photos/seed/c8/320/240', 'caption' => 'Night Sky'],
         ];
-        echo $m->carousel('demoCarousel1')
-            ->tiles($tiles1)
-            ->dots('below');
+        echo $m->carousel('demoCarousel1')->tiles($tiles1);
         ?>
     </div>
 
     <?= demoCodeTabs(
         '$tiles = [
-    [\'title\' => \'Ocean Sunset\',  \'href\' => \'/photos/1\', \'imageUrl\' => \'/assets/ocean.jpg\',  \'caption\' => \'Photography\'],
-    [\'title\' => \'City Lights\',   \'href\' => \'/photos/2\', \'imageUrl\' => \'/assets/city.jpg\',   \'caption\' => \'Urban\'],
-    [\'title\' => \'Forest Path\',   \'href\' => \'/photos/3\', \'imageUrl\' => \'/assets/forest.jpg\', \'caption\' => \'Nature\'],
-    // ...
+    [\'title\' => \'Ocean Sunset\', \'href\' => \'/photos/1\', \'imageUrl\' => \'/img/ocean.jpg\', \'caption\' => \'Photography\'],
+    [\'title\' => \'City Lights\',  \'href\' => \'/photos/2\', \'imageUrl\' => \'/img/city.jpg\',  \'caption\' => \'Urban\'],
 ];
-echo $m->carousel(\'myCarousel\')
-    ->tiles($tiles)
-    ->dots(\'below\');   // default'
+echo $m->carousel(\'myCarousel\')->tiles($tiles);
+
+// Or one at a time: tile($title, $href, $imageUrl, $caption, $chip, $chipVariant)
+echo $m->carousel(\'one\')->tile(\'Only Item\', \'/link\', \'/img.jpg\', \'Subtitle\');'
     ) ?>
 
-    <!-- ── Example 2: Dots above ────────────────────────────────────────── -->
-    <h3>Dots above</h3>
-    <p class="m-demo-desc">Navigate with dots placed above the carousel. Use a wider tile width.</p>
+    <h3>Dots, Width &amp; Placeholders</h3>
+    <p class="m-demo-desc">
+        <code>->dots()</code> takes <code>'below'</code> (default), <code>'above'</code> or <code>'none'</code>.
+        Tiles without an <code>imageUrl</code> show a placeholder icon.
+    </p>
     <div class="m-demo-row">
         <?php
         $tiles2 = [
@@ -63,58 +55,6 @@ echo $m->carousel(\'myCarousel\')
             ->dots('above');
         ?>
     </div>
-
-    <?= demoCodeTabs(
-        'echo $m->carousel(\'topDotsCarousel\')
-    ->tiles($tiles)
-    ->tileWidth(\'200px\')
-    ->dots(\'above\');'
-    ) ?>
-
-    <!-- ── Example 3: No dots ───────────────────────────────────────────── -->
-    <h3>No dots</h3>
-    <p class="m-demo-desc">Carousel with only prev/next buttons — no dot indicators.</p>
-    <div class="m-demo-row">
-        <?php
-        $tiles3 = [
-            ['title' => 'Prop: Helmet',  'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/p1/320/240', 'caption' => 'Props'],
-            ['title' => 'Prop: Shield',  'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/p2/320/240', 'caption' => 'Props'],
-            ['title' => 'Prop: Sword',   'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/p3/320/240', 'caption' => 'Props'],
-            ['title' => 'Prop: Armour',  'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/p4/320/240', 'caption' => 'Props'],
-            ['title' => 'Prop: Bow',     'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/p5/320/240', 'caption' => 'Props'],
-        ];
-        echo $m->carousel('demoCarousel3')
-            ->tiles($tiles3)
-            ->dots('none');
-        ?>
-    </div>
-
-    <?= demoCodeTabs(
-        'echo $m->carousel(\'noDots\')
-    ->tiles($tiles)
-    ->dots(\'none\');'
-    ) ?>
-
-    <!-- ── Example 4: Single tile (no duplicates) ───────────────────────── -->
-    <h3>Single tile — buttons / dots hidden</h3>
-    <p class="m-demo-desc">When only one tile exists, navigation buttons and dots are automatically hidden.</p>
-    <div class="m-demo-row">
-        <?php
-        echo $m->carousel('demoCarousel4')
-            ->tile('Only Item', '#', 'https://picsum.photos/seed/s1/320/240', 'Standalone')
-            ->dots('below');
-        ?>
-    </div>
-
-    <?= demoCodeTabs(
-        'echo $m->carousel(\'oneTile\')
-    ->tile(\'Only Item\', \'/link\', \'/assets/img.jpg\', \'Subtitle\')
-    ->dots(\'below\');'
-    ) ?>
-
-    <!-- ── Example 5: No images (empty state tiles) ─────────────────────── -->
-    <h3>Tiles without images</h3>
-    <p class="m-demo-desc">When no <code>imageUrl</code> is provided, a placeholder icon is shown.</p>
     <div class="m-demo-row">
         <?php
         $tiles5 = [
@@ -127,92 +67,19 @@ echo $m->carousel(\'myCarousel\')
         echo $m->carousel('demoCarousel5')
             ->tiles($tiles5)
             ->tileWidth('140px')
-            ->dots('below');
+            ->dots('none');
         ?>
     </div>
 
     <?= demoCodeTabs(
-        'echo $m->carousel(\'noImages\')
-    ->tiles([
-        [\'title\' => \'Item Alpha\', \'href\' => \'/item/1\', \'caption\' => \'Category A\'],
-        [\'title\' => \'Item Beta\',  \'href\' => \'/item/2\', \'caption\' => \'Category B\'],
-    ])
-    ->tileWidth(\'140px\')
-    ->dots(\'below\');'
+        'echo $m->carousel(\'topDots\')->tiles($tiles)->tileWidth(\'200px\')->dots(\'above\');
+echo $m->carousel(\'noDots\')->tiles($tiles)->tileWidth(\'140px\')->tileGap(8)->dots(\'none\');'
     ) ?>
 
-    <!-- ── Example 6: Remote / Client-side datasource ───────────────────── -->
-    <h3>Remote datasource (client-side)</h3>
+    <h3>Chips</h3>
     <p class="m-demo-desc">
-        Pass <code>->remoteUrl()</code> instead of <code>->tiles()</code> to load tiles
-        client-side on page load. The endpoint should return
-        <code>{ "tiles": [ {title, href, imageUrl, caption}, … ] }</code>.
-        A <code>perPage</code> query param is appended when set via <code>->perPage()</code>.
-    </p>
-    <div class="m-demo-row">
-        <?php
-        // Demo: uses the local demo API endpoint below (served by demo/index.php)
-        echo $m->carousel('demoCarousel6')
-            ->remoteUrl('/demo/carouselData')
-            ->perPage(8)
-            ->dots('below');
-        ?>
-    </div>
-    <div class="m-demo-output" id="demoCarouselRemoteOut">
-        <small>Tiles load automatically from <code>/demo/carouselData</code> on page load.</small>
-    </div>
-
-    <?= demoCodeTabs(
-        'echo $m->carousel(\'ajaxCarousel\')
-    ->remoteUrl(\'/api/carousel-tiles\')
-    ->perPage(8)
-    ->dots(\'below\');',
-        '// Endpoint response format:
-// GET /api/carousel-tiles?perPage=8
-// {
-//   "tiles": [
-//     { "title": "...", "href": "...", "imageUrl": "...", "caption": "..." },
-//     ...
-//   ]
-// }
-
-// JS API (after DOMContentLoaded):
-document.addEventListener(\'DOMContentLoaded\', function () {
-    var c = m.carousel(\'ajaxCarousel\');
-
-    // Navigate programmatically
-    c.next();
-    c.prev();
-    c.goTo(3);
-
-    // Inspect state
-    console.log(c.current()); // current tile index (0-based)
-    console.log(c.count());   // total tiles
-
-    // Reload from a different URL
-    c.reload(\'/api/other-tiles\', 10);
-});
-
-// Listen for change events
-document.getElementById(\'ajaxCarousel\')
-    .addEventListener(\'m:carousel:change\', function (e) {
-        console.log(\'Active tile:\', e.detail.index);
-    });
-
-// Listen for remote load completion
-document.getElementById(\'ajaxCarousel\')
-    .addEventListener(\'m:carousel:loaded\', function (e) {
-        console.log(\'Loaded tiles:\', e.detail.count);
-    });'
-    ) ?>
-
-    <!-- ── Example 7: Tiles with chips ─────────────────────────────────── -->
-    <h3>Tiles with chips</h3>
-    <p class="m-demo-desc">
-        Pass an optional <code>chip</code> (and optional <code>chipVariant</code>) per tile to show a coloured
-        chip label overlaid in the top-right corner of the tile image.
-        Variants: <code>primary</code>, <code>success</code>, <code>warning</code>, <code>danger</code>,
-        <code>purple</code>, <code>secondary</code> (default), <code>info</code>.
+        Add <code>chip</code> and optional <code>chipVariant</code> to a tile for a corner label
+        (<code>primary</code>, <code>success</code>, <code>warning</code>, <code>danger</code>, <code>purple</code>, <code>info</code>, <code>secondary</code> default).
     </p>
     <div class="m-demo-row">
         <?php
@@ -226,32 +93,35 @@ document.getElementById(\'ajaxCarousel\')
         ];
         echo $m->carousel('demoCarouselChips')
             ->tiles($tilesChip)
-            ->tileWidth('180px')
-            ->dots('below');
+            ->tileWidth('180px');
         ?>
     </div>
 
     <?= demoCodeTabs(
-        '// Via ->tiles() array — include chip and optional chipVariant:
-$tiles = [
-    [\'title\' => \'Featured\', \'href\' => \'/1\', \'imageUrl\' => \'/img.jpg\', \'chip\' => \'Featured\', \'chipVariant\' => \'primary\'],
-    [\'title\' => \'Draft\',    \'href\' => \'/2\', \'imageUrl\' => \'/img2.jpg\', \'chip\' => \'Draft\',   \'chipVariant\' => \'warning\'],
-    [\'title\' => \'Normal\',   \'href\' => \'/3\', \'imageUrl\' => \'/img3.jpg\'],   // no chip
+        '$tiles = [
+    [\'title\' => \'Featured\', \'href\' => \'/1\', \'imageUrl\' => \'/a.jpg\', \'chip\' => \'Featured\', \'chipVariant\' => \'primary\'],
+    [\'title\' => \'Normal\',   \'href\' => \'/2\', \'imageUrl\' => \'/b.jpg\'],
 ];
-echo $m->carousel(\'chipDemo\')->tiles($tiles)->dots(\'below\');
-
-// Or via ->tile() directly (chip is 5th param, chipVariant is 6th):
-echo $m->carousel(\'chipDemo\')
-    ->tile(\'Featured Item\', \'/link\', \'/img.jpg\', \'Category\', \'Featured\', \'primary\')
-    ->tile(\'Draft Item\',    \'/link\', \'/img2.jpg\', null, \'Draft\', \'warning\')
-    ->tile(\'Normal Tile\',   \'/link\', \'/img3.jpg\');
-
-// chipVariant: primary | success | warning | danger | purple | secondary (default) | info'
+echo $m->carousel(\'chipDemo\')->tiles($tiles);'
     ) ?>
 
-    <!-- ── Example 8: JS API demo ────────────────────────────────────────── -->
+    <h3>Remote Data</h3>
+    <p class="m-demo-desc">
+        <code>->remoteUrl()</code> loads tiles in the browser. The endpoint returns <code>{ "tiles": [ … ] }</code>
+        using the same keys as <code>->tiles()</code>; <code>->perPage()</code> appends <code>?perPage=N</code>.
+    </p>
+    <div class="m-demo-row">
+        <?= $m->carousel('demoCarousel6')->remoteUrl('/demo/carouselData')->perPage(8) ?>
+    </div>
+    <div class="m-demo-output" id="demoCarouselRemoteOut">Loading tiles from <code>/demo/carouselData</code>…</div>
+
+    <?= demoCodeTabs(
+        'echo $m->carousel(\'ajaxCarousel\')
+    ->remoteUrl(\'/api/carousel-tiles\')
+    ->perPage(8);'
+    ) ?>
+
     <h3>JS API</h3>
-    <p class="m-demo-desc">Control the carousel programmatically using <code>m.carousel(id)</code>.</p>
     <div class="m-demo-row">
         <?php
         $tiles7 = [
@@ -261,9 +131,7 @@ echo $m->carousel(\'chipDemo\')
             ['title' => 'Slide 4', 'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/js4/320/240'],
             ['title' => 'Slide 5', 'href' => '#', 'imageUrl' => 'https://picsum.photos/seed/js5/320/240'],
         ];
-        echo $m->carousel('demoCarousel7')
-            ->tiles($tiles7)
-            ->dots('below');
+        echo $m->carousel('demoCarousel7')->tiles($tiles7);
         ?>
     </div>
     <div class="m-demo-row" style="gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;">
@@ -272,6 +140,19 @@ echo $m->carousel(\'chipDemo\')
         <?= $m->button('cJsGo2', 'Go to #3')->primary()->icon('fa-crosshairs') ?>
     </div>
     <div class="m-demo-output" id="cJsOut">Current tile: —</div>
+
+    <?= demoCodeTabs(
+        null,
+        'var c = m.carousel(\'myCarousel\');
+c.next();              // next page of tiles; prev() goes back
+c.goTo(2);             // tile index (0-based)
+c.current();           // current tile index
+c.reload(\'/api/other-tiles\', 10);
+
+document.getElementById(\'myCarousel\').addEventListener(\'m:carousel:change\', function (e) {
+    console.log(\'Active tile:\', e.detail.index);
+});'
+    ) ?>
 </div>
 
 <?= apiTable('PHP Methods (Fluent)', 'php', [
@@ -288,10 +169,11 @@ echo $m->carousel(\'chipDemo\')
 <?= apiTable('JS Methods', 'js', [
     ['m.carousel(id)', 'string|Element', 'Get the Carousel API for the given element ID or DOM element.'],
     ['c.goTo(idx)', 'number', 'Navigate to tile at zero-based <code>idx</code>.'],
-    ['c.next()', '', 'Navigate to the next tile.'],
-    ['c.prev()', '', 'Navigate to the previous tile.'],
+    ['c.next() / c.prev()', '', 'Scroll one page (a viewport of tiles) forward or back.'],
+    ['c.goToPage(idx)', 'number', 'Navigate to page at zero-based <code>idx</code>.'],
     ['c.current()', '', 'Returns the current tile index (0-based).'],
     ['c.count()', '', 'Returns the total number of tiles.'],
+    ['c.currentPage() / c.pageCount()', '', 'Current page index (0-based) and total page count.'],
     ['c.reload(url?, perPage?)', '', 'Reload tiles from a remote URL. Defaults to configured <code>remoteUrl</code>/<code>perPage</code>.'],
 ]) ?>
 

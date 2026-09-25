@@ -70,6 +70,8 @@ document.getElementById(\'deliveryAddress\')
     ['m.address(id, opts)', 'string, ?object', 'Get or create address instance.'],
     ['setMode(mode)', 'string', 'Switch between <code>nz</code> and <code>overseas</code>.'],
     ['clear()', '', 'Clear all address fields.'],
+    ['setValue(text)', 'string', 'Pre-fill the search box without searching (e.g. restoring a saved address) and show it as confirmed.'],
+    ['getCoordinates()', '', 'Returns <code>{lat, lng}</code> of the selected NZ address, or <code>null</code>.'],
 ]) ?>
 
 <?= apiTable('JS Options', 'js', [

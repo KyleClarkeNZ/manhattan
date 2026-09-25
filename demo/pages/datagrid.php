@@ -149,6 +149,7 @@ grid.destroy();'
     ['->remoteUrl($url, $method)', 'string, string', 'Fetch data from a remote URL. Expected response: <code>{data: [], total: N}</code>.'],
     ['->remoteHeaders($headers)', 'array', 'Extra HTTP headers for remote requests.'],
     ['->pageable($pageSize, $mode)', 'int, string', 'Enable pagination. Mode: <code>local</code> or <code>remote</code>.'],
+    ['->scrollOnPage($scroll)', 'bool', 'Scroll the grid into view on page change (default: <code>true</code>).'],
     ['->sortable()', '', 'Enable column sorting.'],
     ['->resizable()', '', 'Enable column resize.'],
     ['->reorderable()', '', 'Enable column drag-reorder.'],

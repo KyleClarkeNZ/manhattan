@@ -80,105 +80,11 @@ echo $form;'
 
 <!-- ── Section 2: Cancel & Reset buttons ─────────────────────────────── -->
 <div class="m-demo-section">
-    <h3>Cancel &amp; Reset Buttons</h3>
+    <h3>Action Buttons</h3>
     <p class="m-demo-desc">
-        <code>->cancel($text, $href, $icon)</code> adds a secondary action button rendered as an
-        anchor link (when <code>$href</code> is given) or a <code>history.back()</code> button
-        when no href is supplied. <code>->reset($text, $icon)</code> adds a
-        <code>type="reset"</code> button that clears all fields to their initial DOM values.
-        Both methods return the Form for chaining. Action buttons render in the order:
-        <em>submit &rarr; cancel &rarr; reset</em>.
-    </p>
-
-    <?php
-    $cancelForm = $m->form('demoCancelForm')
-        ->noCsrf()
-        ->formAttr('onsubmit', 'return false')
-        ->field(
-            $m->textbox('cc-title')->name('title')->placeholder('Post title…'),
-            'Title',
-            ['required']
-        )
-        ->field(
-            $m->textarea('cc-body')->name('body')->placeholder('Write your post…')->rows(3),
-            'Body',
-            ['required']
-        )
-        ->cancel('Cancel', '/discuss');
-    $cancelForm->submit('Publish Post', 'fa-paper-plane')->primary();
-    echo $cancelForm;
-    ?>
-
-    <?= demoCodeTabs(
-        '// ->cancel() returns the Form for chaining.
-// Supply a $href to render as an anchor link; omit it for history.back().
-<?php
-$form = $m->form(\'newPostForm\')
-    ->action(\'/posts/create\')
-    ->field($m->textbox(\'title\')->name(\'title\'), \'Title\', [\'required\'])
-    ->field($m->textarea(\'body\' )->name(\'body\'),  \'Body\',  [\'required\'])
-    ->cancel(\'Cancel\', \'/posts\');     // href → renders as <a href="/posts">
-$form->submit(\'Publish Post\', \'fa-paper-plane\')->primary();
-echo $form;
-
-// Without href — renders as onclick="window.history.back()"
-$form = $m->form(\'editForm\')
-    ->action(\'/posts/update\')
-    ->field(...)
-    ->cancel();                        // defaults: "Cancel", history.back(), fa-times
-$form->submit(\'Save Changes\', \'fa-save\')->primary();
-echo $form;'
-    ) ?>
-
-    <h3>Reset Button</h3>
-    <p class="m-demo-desc">
-        Use <code>->reset()</code> on filter or data-entry forms where users may want to clear all
-        inputs. No JavaScript needed — the browser handles it via <code>type="reset"</code>.
-    </p>
-
-    <?php
-    $filterForm = $m->form('demoFilterForm')
-        ->noCsrf()
-        ->noValidation()
-        ->formAttr('onsubmit', 'return false')
-        ->layout('inline')
-        ->field(
-            $m->textbox('ff-name')->name('name')->placeholder('Name…'),
-            'Name'
-        )
-        ->field(
-            $m->dropdown('ff-status')->name('status')
-                ->dataSource([
-                    ['value' => '',        'text' => 'Any status'],
-                    ['value' => 'active',  'text' => 'Active'],
-                    ['value' => 'pending', 'text' => 'Pending'],
-                    ['value' => 'closed',  'text' => 'Closed'],
-                ])
-                ->value(''),
-            'Status'
-        )
-        ->reset('Clear');
-    $filterForm->submit('Filter', 'fa-filter');
-    echo $filterForm;
-    ?>
-
-    <?= demoCodeTabs(
-        '// ->reset() adds a <button type="reset"> — the browser clears all fields.
-<?php
-$form = $m->form(\'filterForm\')
-    ->action(\'/items\')
-    ->layout(\'inline\')
-    ->field($m->textbox(\'name\'  )->name(\'name\'),   \'Name\')
-    ->field($m->dropdown(\'status\')->name(\'status\'), \'Status\')
-    ->reset(\'Clear\');       // optional icon: ->reset(\'Reset\', \'fa-times\')
-$form->submit(\'Filter\', \'fa-filter\');
-echo $form;'
-    ) ?>
-
-    <h3>All Three Action Buttons</h3>
-    <p class="m-demo-desc">
-        Submit, cancel, and reset can all be combined. They render in one
-        <code>form-actions</code> div in the order: <em>submit &rarr; cancel &rarr; reset</em>.
+        <code>->cancel($text, $href, $icon)</code> renders a link to <code>$href</code>, or a
+        <code>history.back()</code> button when no href is given. <code>->reset($text, $icon)</code>
+        adds a native <code>type="reset"</code> button. Buttons render as <em>submit &rarr; cancel &rarr; reset</em>.
     </p>
 
     <?php
@@ -201,14 +107,13 @@ echo $form;'
     ?>
 
     <?= demoCodeTabs(
-        '// All three action buttons — order: submit → cancel → reset.
-<?php
+        '<?php
 $form = $m->form(\'profileForm\')
     ->action(\'/profile/save\')
     ->field($m->textbox(\'first_name\')->name(\'first_name\'), \'First Name\', [\'required\'])
     ->field($m->textbox(\'last_name\' )->name(\'last_name\'),  \'Last Name\')
-    ->cancel(\'Discard\', \'/profile\')     // anchor back to profile
-    ->reset(\'Clear All\', \'fa-eraser\');  // type="reset"
+    ->cancel(\'Discard\', \'/profile\')     // omit args: "Cancel" + history.back()
+    ->reset(\'Clear All\', \'fa-eraser\');
 $form->submit(\'Save Profile\', \'fa-save\')->primary();
 echo $form;'
     ) ?>
@@ -398,20 +303,8 @@ echo $form;'
 <div class="m-demo-section">
     <h3>Dirty Form Events</h3>
     <p class="m-demo-desc">
-        Enable <code>->dirtyFormProtection()</code> to activate dirty tracking. The form emits two
-        events on the <code>&lt;form&gt;</code> element that downstream code can use to drive UI
-        state — the canonical pattern is enabling a save button only when there are unsaved changes.
-    </p>
-    <ul class="m-demo-desc" style="margin-top:0">
-        <li><strong><code>m:form:dirty</code></strong> — fired once when the form first becomes
-        dirty (any field change from the saved baseline).</li>
-        <li><strong><code>m:form:clean</code></strong> — fired when <code>clearDirty()</code> is
-        called and the form was dirty (e.g. after a successful AJAX save).</li>
-    </ul>
-    <p class="m-demo-desc">
-        Both native fields (<code>input</code>/<code>change</code>) and Manhattan RTEs
-        (<code>m:rte:change</code>, which bubbles) are tracked automatically — no manual
-        per-field listeners needed.
+        <code>->dirtyFormProtection()</code> tracks unsaved changes (native fields and RTEs) and fires
+        <code>m:form:dirty</code> / <code>m:form:clean</code> on the form &mdash; e.g. to enable Save only when needed.
     </p>
 
     <?php
