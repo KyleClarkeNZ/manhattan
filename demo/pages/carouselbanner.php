@@ -3,14 +3,9 @@
 <div class="m-demo-section">
     <h2><?= $m->icon('fa-images') ?> CarouselBanner</h2>
     <p class="m-demo-desc">
-        A full-width animated banner slideshow — ideal for hero sections, promotional banners, and featured
-        content areas. Supports <strong>slide</strong> and <strong>fade</strong> animation types, auto-play
-        with a configurable interval, swipe gestures on mobile, keyboard navigation, lazy-loaded images,
-        a thumbnail navigation strip, and rich overlay content (title, subtitle, CTA button).
-    </p>
-    <p class="m-demo-desc">
-        <strong>Defaults:</strong> animation <code>'slide'</code>, no auto-play, dots <code>'inside'</code>,
-        arrows <code>true</code>, loop <code>true</code>, lazy-load <code>true</code>, aspect ratio <code>16/9</code>.
+        A full-width hero slideshow with slide or fade animation, auto-play, swipe and keyboard navigation,
+        lazy-loaded images, thumbnails and per-slide overlays (title, subtitle, CTA).
+        Defaults: <code>slide</code>, no auto-play, dots <code>inside</code>, arrows on, loop on, lazy-load on, <code>16/9</code>.
     </p>
 
     <?php
@@ -52,21 +47,9 @@
     ];
     ?>
 
-    <!-- ── Example 1: Default (slide animation, inside dots, arrows) ─────── -->
-    <h3>Default — slide animation</h3>
-    <p class="m-demo-desc">
-        Four slides with slide animation, inside dots, and arrows.
-        No auto-play by default — press the arrows or swipe on mobile.
-    </p>
+    <h3>Default</h3>
     <div class="m-demo-row">
-        <?php
-        echo $m->carouselBanner('demoBanner1')
-            ->slides($demoSlides)
-            ->animation('slide')
-            ->dots('inside')
-            ->arrows(true)
-            ->loop(true);
-        ?>
+        <?= $m->carouselBanner('demoBanner1')->slides($demoSlides) ?>
     </div>
 
     <?= demoCodeTabs(
@@ -88,41 +71,20 @@
     ],
     // ...
 ];
-echo $m->carouselBanner(\'heroBanner\')
-    ->slides($slides)
-    ->animation(\'slide\')
-    ->dots(\'inside\')
-    ->arrows(true)
-    ->loop(true);',
-        'document.addEventListener(\'DOMContentLoaded\', function() {
-    var banner = m.carouselBanner(\'heroBanner\');
+echo $m->carouselBanner(\'heroBanner\')->slides($slides);',
+        'var banner = m.carouselBanner(\'heroBanner\');
+banner.next();          // also prev(), goTo(index)
+banner.currentIndex();  // 0-based
+banner.count();
 
-    // Navigate programmatically
-    banner.next();
-    banner.prev();
-    banner.goTo(2);
-
-    // Current index
-    console.log(banner.currentIndex()); // 0-based
-
-    // Total slides
-    console.log(banner.count());
-
-    // Listen for slide change
-    document.getElementById(\'heroBanner\')
-        .addEventListener(\'m:cb:change\', function(e) {
-            console.log(\'Slide changed to:\', e.detail.index);
-        });
+document.getElementById(\'heroBanner\').addEventListener(\'m:cb:change\', function (e) {
+    console.log(\'Slide\', e.detail.index);
 });'
     ) ?>
 
     <!-- ── Example 2: Fade + auto-play + progress bar ────────────────────── -->
-    <h3>Fade animation with auto-play</h3>
-    <p class="m-demo-desc">
-        <code>->animation('fade')</code> crossfades between slides.
-        <code>->autoPlay(4000)</code> advances automatically every 4 seconds.
-        A progress bar shows remaining time. Auto-play pauses on hover.
-    </p>
+    <h3>Fade &amp; Auto-play</h3>
+    <p class="m-demo-desc"><code>->autoPlay($ms)</code> advances on a timer with a progress bar, pausing on hover.</p>
     <div class="m-demo-row">
         <?php
         echo $m->carouselBanner('demoBanner2')
@@ -147,28 +109,14 @@ echo $m->carouselBanner(\'heroBanner\')
     ->dots(\'inside\')
     ->arrows(true)
     ->loop(true);',
-        'document.addEventListener(\'DOMContentLoaded\', function() {
-    var banner = m.carouselBanner(\'fadeBanner\');
-
-    // Control auto-play manually
-    banner.pause();   // pause
-    banner.play();    // resume (uses original interval)
-    banner.stop();    // stop permanently
-
-    // Auto-play events
-    document.getElementById(\'fadeBanner\')
-        .addEventListener(\'m:cb:play\',  function(e) { console.log(\'playing, interval:\', e.detail.interval); });
-    document.getElementById(\'fadeBanner\')
-        .addEventListener(\'m:cb:pause\', function() { console.log(\'paused\'); });
-});'
+        'var banner = m.carouselBanner(\'fadeBanner\');
+banner.pause();
+banner.play();   // resume at the original interval
+banner.stop();   // stop permanently'
     ) ?>
 
     <!-- ── Example 3: Dots below, no arrows ──────────────────────────────── -->
-    <h3>Dots below, no arrows</h3>
-    <p class="m-demo-desc">
-        <code>->dots('below')</code> places the dot indicators below the banner frame.
-        <code>->arrows(false)</code> hides the prev/next buttons — navigation is dot and swipe only.
-    </p>
+    <h3>Dots Below, No Arrows, 21:9</h3>
     <div class="m-demo-row">
         <?php
         echo $m->carouselBanner('demoBanner3')
@@ -191,11 +139,7 @@ echo $m->carouselBanner(\'heroBanner\')
     ) ?>
 
     <!-- ── Example 4: Thumbnail strip ────────────────────────────────────── -->
-    <h3>Thumbnail navigation strip</h3>
-    <p class="m-demo-desc">
-        <code>->thumbs(true)</code> renders a scrollable thumbnail row below the banner.
-        Clicking a thumbnail navigates to that slide. The active thumbnail is highlighted.
-    </p>
+    <h3>Thumbnails</h3>
     <div class="m-demo-row">
         <?php
         echo $m->carouselBanner('demoBanner4')
@@ -219,12 +163,10 @@ echo $m->carouselBanner(\'heroBanner\')
     ) ?>
 
     <!-- ── Example 5: Centre overlay, max height ─────────────────────────── -->
-    <h3>Centred overlay, max-height, no loop</h3>
+    <h3>Overlay Position, Max Height, No Loop</h3>
     <p class="m-demo-desc">
-        Individual slides can have their <code>overlayPosition</code> set to
-        <code>'center'</code> for a centred card-style overlay.
-        <code>->maxHeight('400px')</code> caps the banner height regardless of aspect ratio.
-        <code>->loop(false)</code> disables wrap-around — arrows dim at the first/last slide.
+        Set <code>overlayPosition</code> per slide. <code>->maxHeight()</code> caps the height regardless of aspect ratio;
+        with <code>->loop(false)</code> the arrows dim at either end.
     </p>
     <div class="m-demo-row">
         <?php
@@ -282,34 +224,6 @@ echo $m->carouselBanner(\'heroBanner\')
     ->animation(\'fade\')
     ->maxHeight(\'360px\')   // cap height (overrides aspect ratio)
     ->loop(false);          // no wrap-around'
-    ) ?>
-
-    <!-- ── Example 6: Auto-play, below dots, lazy load off ───────────────── -->
-    <h3>Auto-play, below dots</h3>
-    <p class="m-demo-desc">
-        <code>->autoPlay(3500)</code> auto-advances every 3.5 s. Dots are placed below
-        (<code>'below'</code>). <code>->lazyLoad(false)</code> pre-loads all images eagerly.
-    </p>
-    <div class="m-demo-row">
-        <?php
-        echo $m->carouselBanner('demoBanner6')
-            ->slides($demoSlides)
-            ->animation('slide')
-            ->autoPlay(3500)
-            ->dots('below')
-            ->arrows(true)
-            ->lazyLoad(false)
-            ->loop(true);
-        ?>
-    </div>
-
-    <?= demoCodeTabs(
-        'echo $m->carouselBanner(\'promoBanner\')
-    ->slides($slides)
-    ->autoPlay(3500)
-    ->dots(\'below\')
-    ->lazyLoad(false)   // eager-load all images
-    ->loop(true);'
     ) ?>
 
     <!-- ── API Tables ──────────────────────────────────────────────────────── -->

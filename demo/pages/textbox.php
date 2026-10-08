@@ -94,6 +94,8 @@ tb.clearError();'
     ['->email()', '', 'Preset for email: sets type, autocomplete, inputmode.'],
     ['->password($autocomplete)', 'string', 'Preset for password field. Default: <code>"current-password"</code>.'],
     ['->autocomplete($value)', 'string', 'Set the <code>autocomplete</code> attribute.'],
+    ['->noAutocomplete()', '', 'Shorthand for <code>autocomplete="off"</code>.'],
+    ['->spellcheck($enabled, $lang)', 'bool, string', 'Toggle browser spell-checking; sets <code>lang</code> (default <code>en-NZ</code>).'],
     ['->pattern($pattern)', 'string', 'Regex validation pattern.'],
     ['->characterCount($max)', 'int', 'Show a live <code>X/max</code> character counter.'],
 ]) ?>

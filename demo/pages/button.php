@@ -11,7 +11,14 @@
         <?= $m->button('btn-outline', 'Outline')->outline()->icon('fa-envelope') ?>
         <?= $m->button('btn-danger', 'Danger')->danger()->icon('fa-trash') ?>
         <?= $m->button('btn-success', 'Success')->success()->icon('fa-check') ?>
-        <?= $m->button('btn-disabled', 'Disabled')->icon('fa-ban')->attr('disabled', 'disabled') ?>
+        <?= $m->button('btn-disabled', 'Disabled')->icon('fa-ban')->disabled() ?>
+    </div>
+
+    <h3>Icon Only</h3>
+    <div class="m-demo-row">
+        <?= $m->button('btn-icon-edit', '')->icon('fa-pen')->attr('title', 'Edit') ?>
+        <?= $m->button('btn-icon-del', '')->danger()->icon('fa-trash')->attr('title', 'Delete') ?>
+        <?= $m->button('btn-icon-add', '')->primary()->icon('fa-plus')->attr('aria-label', 'Add') ?>
     </div>
 
     <h3>JavaScript Initialisation</h3>
@@ -43,6 +50,11 @@
 // With confirmation dialog
 <?= $m->button(\'resetBtn\', \'Reset\')
     ->confirm(\'Are you sure you want to reset?\') ?>
+
+// Icon-only (empty label); give it an accessible name
+<?= $m->button(\'editBtn\', \'\')
+    ->icon(\'fa-pen\')
+    ->attr(\'title\', \'Edit\') ?>
 
 // Full-width block button
 <?= $m->button(\'loginBtn\', \'Sign In\')
@@ -78,6 +90,8 @@ btn.icon(\'fa-check\', \'left\');'
     ['->danger()', '', 'Apply danger (red) styling.'],
     ['->success()', '', 'Apply success (green) styling.'],
     ['->block()', '', 'Make the button full-width.'],
+    ['->disabled($disabled)', 'bool', 'Render disabled.'],
+    ['->iconOnly($iconOnly)', 'bool', 'Square, icon-only button. Automatic when the label is empty; add a <code>title</code> or <code>aria-label</code>.'],
     ['->loading()', '', 'Render with loading spinner visible on page load.'],
     ['->loadingText($text)', 'string', 'Text shown while <code>setLoading(true)</code> is active. Original text is restored automatically on <code>setLoading(false)</code>.'],
     ['->icon($icon)', 'string', 'Set a Font Awesome icon.'],

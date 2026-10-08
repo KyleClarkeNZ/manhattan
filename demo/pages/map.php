@@ -202,6 +202,7 @@ map.recenter();   // snaps back to original centre + zoom'
 <?= apiTable('PHP Methods (Fluent)', 'php', [
     ['$m->map($id)', 'string', 'Create a map component.'],
     ['->provider($name)', 'string', 'Map provider: <code>\'leaflet\'</code> (default, free) or <code>\'google\'</code>.'],
+    ['->tileUrl($url)', 'string', 'Leaflet tile URL template (default: OpenStreetMap), e.g. <code>https://{s}.tile.example.com/{z}/{x}/{y}.png</code>.'],
     ['->apiKey($key)', 'string', 'Google Maps JavaScript API key. Required when provider = <code>\'google\'</code>.'],
     ['->tileUrl($url)', 'string', 'Leaflet only. Use a different tile server, e.g. CARTO or a self-hosted server. Default: OpenStreetMap.'],
     ['->attribution($html)', 'string', 'Leaflet only. Credit line for the tile layer. Set this whenever <code>->tileUrl()</code> points at another provider.'],

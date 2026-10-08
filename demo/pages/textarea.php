@@ -111,6 +111,8 @@ m.textarea(\'notes\', {
     ['->cols($cols)', 'int', 'Visible column count.'],
     ['->disabled($dis)', 'bool', 'Disable the textarea.'],
     ['->characterCount($max)', 'int', 'Show a character counter with the given maximum.'],
+    ['->autocomplete($value) / ->noAutocomplete()', 'string', 'Set the <code>autocomplete</code> attribute, or turn it off.'],
+    ['->spellcheck($enabled, $lang)', 'bool, string', 'Toggle browser spell-checking; sets <code>lang</code> (default <code>en-NZ</code>).'],
     ['->resize($mode)', 'string', 'Resize behaviour: <code>none</code>, <code>vertical</code>, <code>horizontal</code>, <code>both</code>, <code>auto</code>.'],
 ]) ?>
 

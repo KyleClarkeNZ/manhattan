@@ -218,31 +218,29 @@ PHP
 ) ?>
 </div>
 
-<div class="m-demo-section">
-    <h2>API Reference</h2>
-
-<?= apiTable('PHP Methods', 'php', [
-    ['endpoint',     'string $url',       'URL of the host endpoint. <strong>Required.</strong>'],
-    ['folder',       'string $key',       'Folder key sent to the endpoint as <code>folder</code>. A logical name resolved server-side against a whitelist — never a filesystem path.'],
-    ['title',        'string $title',     'Heading shown in the modal. Default <code>Media library</code>.'],
-    ['trigger',      'string $elementId', 'Id of an element whose click opens the browser. Bound with a delegated listener, so the trigger may be rendered later or injected dynamically.'],
-    ['target',       'string $inputId',   'Id of the input that receives the chosen URL. A bubbling <code>change</code> is fired on it.'],
-    ['accept',       'string $accept',    '<code>accept</code> attribute for the upload file input. Default images only.'],
-    ['allowUpload',  'bool $allow',       'Hide the upload control and drop zone, leaving a read-only picker.'],
-    ['showFilter',   'bool $show',        'Hide the filename filter box.'],
-    ['maxBytes',     'int $bytes',        'Client-side size ceiling; oversized files are rejected before upload. The endpoint must enforce its own limit regardless.'],
-    ['emptyMessage', 'string $message',   'Message shown when the folder is empty.'],
-    ['selectLabel',  'string $label',     'Label on the confirm button. Default <code>Select</code>.'],
+<?= apiTable('PHP Methods (Fluent)', 'php', [
+    ['$m->mediaBrowser($id)', 'string', 'Create a media browser.'],
+    ['->endpoint($url)', 'string', 'URL of the host endpoint. <strong>Required.</strong>'],
+    ['->folder($key)', 'string', 'Folder key sent as <code>folder</code>. A logical name resolved server-side against a whitelist, never a path.'],
+    ['->title($title)', 'string', 'Modal heading. Default <code>Media library</code>.'],
+    ['->trigger($elementId)', 'string', 'Element whose click opens the browser (delegated, so it may be rendered later).'],
+    ['->target($inputId)', 'string', 'Input that receives the chosen URL; a bubbling <code>change</code> is fired on it.'],
+    ['->accept($accept)', 'string', '<code>accept</code> attribute for the upload input. Default images only.'],
+    ['->allowUpload($allow)', 'bool', 'Pass <code>false</code> to hide upload, leaving a picker only.'],
+    ['->showFilter($show)', 'bool', 'Pass <code>false</code> to hide the filename filter.'],
+    ['->maxBytes($bytes)', 'int', 'Client-side size limit. The endpoint must enforce its own.'],
+    ['->emptyMessage($message)', 'string', 'Shown when the folder is empty.'],
+    ['->selectLabel($label)', 'string', 'Confirm button label. Default <code>Select</code>.'],
 ]) ?>
 
 <?= apiTable('JS Methods', 'js', [
-    ['m.mediaBrowser', 'id',              'Get (or initialise) the browser instance for a container id.'],
-    ['open',           'fn? callback',    'Open the modal. An optional callback receives the chosen file object and replaces the <code>target()</code> write for that opening.'],
-    ['close',          '—',               'Close the modal without selecting.'],
-    ['refresh',        '—',               'Discard the cached listing and re-fetch from the server.'],
-    ['getSelected',    '—',               'The currently highlighted file object, or <code>null</code>.'],
-    ['setFolder',      'string key',      'Change the folder key and discard the cached listing.'],
-    ['element',        '—',               'The container element.'],
+    ['m.mediaBrowser(id)', 'string', 'Get (or initialise) the instance for a container id.'],
+    ['open(callback?)', 'function', 'Open the modal. A callback receives the chosen file instead of writing to <code>target()</code>.'],
+    ['close()', '', 'Close without selecting.'],
+    ['refresh()', '', 'Discard the cached listing and re-fetch.'],
+    ['getSelected()', '', 'The highlighted file object, or <code>null</code>.'],
+    ['setFolder(key)', 'string', 'Change folder and discard the cached listing.'],
+    ['element', '', 'The container element.'],
 ]) ?>
 
 <?= eventsTable([
@@ -251,7 +249,6 @@ PHP
     ['m:mediabrowser:upload', '{ id, file }',    'Fired after a successful upload, with the file the endpoint returned.'],
     ['m:mediabrowser:close',  '{ id }',          'Fired when the modal closes.'],
 ]) ?>
-</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
