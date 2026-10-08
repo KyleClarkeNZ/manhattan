@@ -7,6 +7,7 @@ class ToggleSwitch extends Component
 {
     private ?string $name = null;
     private ?string $value = null;
+    private ?string $uncheckedValue = null;
     private bool $checked = false;
     private bool $disabled = false;
     private ?string $label = null;
@@ -22,6 +23,9 @@ class ToggleSwitch extends Component
         }
         if (isset($options['value'])) {
             $this->value = (string)$options['value'];
+        }
+        if (isset($options['uncheckedValue'])) {
+            $this->uncheckedValue = (string)$options['uncheckedValue'];
         }
         if (isset($options['checked'])) {
             $this->checked = (bool)$options['checked'];
@@ -43,6 +47,22 @@ class ToggleSwitch extends Component
     public function value(string $value): self
     {
         $this->value = $value;
+        return $this;
+    }
+
+    /**
+     * Value posted when the switch is off. Browsers post nothing for an
+     * unchecked checkbox, so without this the field is simply missing.
+     *
+     *   ->name('published')->value('1')->uncheckedValue('0')
+     *
+     * Renders a hidden input with the same name before the checkbox; when the
+     * switch is on, the checkbox comes later in the form and wins. Not for
+     * array names ("tags[]"), which would receive both values.
+     */
+    public function uncheckedValue(string $value): self
+    {
+        $this->uncheckedValue = $value;
         return $this;
     }
 
@@ -129,8 +149,15 @@ class ToggleSwitch extends Component
                 . '</span>';
         }
 
+        $hiddenInput = '';
+        if ($this->name && $this->uncheckedValue !== null) {
+            $hiddenInput = '<input type="hidden" name="' . htmlspecialchars($this->name, ENT_QUOTES, 'UTF-8')
+                . '" value="' . htmlspecialchars($this->uncheckedValue, ENT_QUOTES, 'UTF-8') . '">';
+        }
+
         return <<<HTML
 <div class="{$wrapperClassAttr}">
+    {$hiddenInput}
     <label class="m-switch" for="{$this->id}">
         <input{$inputAttrString}{$eventAttrs}{$extraAttrs} role="switch" aria-checked="{$ariaChecked}">
         <span class="m-switch-slider" aria-hidden="true"></span>

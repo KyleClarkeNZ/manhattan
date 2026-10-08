@@ -87,6 +87,18 @@ field's value.
 grep '"version"' composer.json   # should print nothing
 ```
 
+## Local Path Repositories
+
+A project that symlinks a local checkout (a Composer `path` repository) sees it
+as `dev-master`, not a tagged version, because the path driver reads the branch.
+`composer.json` aliases `dev-master` to `1.x-dev`, so such a project can require:
+
+```json
+"kyleclarkenz/manhattan": "^1.54@dev"
+```
+
+Keep the alias's major version in step with the tags when cutting a 2.0.
+
 ## For Downstream Projects (CallSheet, etc.)
 
 To get the latest Manhattan version:

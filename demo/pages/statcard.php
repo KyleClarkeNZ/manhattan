@@ -52,3 +52,15 @@
     ['->deltaUp()', '', 'Show green up-arrow indicator.'],
     ['->deltaDown()', '', 'Show red down-arrow indicator.'],
 ]) ?>
+
+<?= apiTable('JS Methods', 'js', [
+    ['m.statCard(id)', 'string', 'Get the card instance.'],
+    ['value()', '', 'Current value as a number (<code>0</code> when not numeric).'],
+    ['value(val)', 'number|string', 'Set the value. Numbers are locale-formatted (<code>8432</code> shows as <code>8,432</code>); strings are shown as-is.'],
+    ['increment(by)', '?number', 'Add <code>by</code> (default <code>1</code>; negative to subtract).'],
+    ['label(text)', '?string', 'Get or set the label.'],
+]) ?>
+
+<?= eventsTable([
+    ['m:statcard:change', '{value}', 'Fired after <code>value()</code> or <code>increment()</code> changes the value.'],
+]) ?>

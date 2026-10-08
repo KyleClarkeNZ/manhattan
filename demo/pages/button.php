@@ -98,6 +98,8 @@ btn.icon(\'fa-check\', \'left\');'
     ['->type($type)', 'string', 'Set the button type: <code>button</code>, <code>submit</code>, <code>reset</code>.'],
     ['->name($name)', 'string', 'Set the <code>name</code> attribute.'],
     ['->confirm($message)', 'string', 'Show a browser confirm dialog before the click fires.'],
+    ['->opensWindow($id)', 'string', 'Open the <a href="/demo/window">Window</a> with this id on click.'],
+    ['->closesWindow($id)', '?string', 'Close the enclosing Window on click, or the one with this id.'],
     ['->on($event, $handler)', 'string, string', 'Attach a JS event handler.'],
 ]) ?>
 

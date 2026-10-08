@@ -62,6 +62,7 @@ document.getElementById(\'notifications\')
     ['$m->toggleSwitch($id)', 'string', 'Create a toggle switch component.'],
     ['->name($name)', 'string', 'Form field name.'],
     ['->value($value)', 'string', 'Hidden input value when checked.'],
+    ['->uncheckedValue($value)', 'string', 'Value posted when the switch is off (renders a hidden input with the same name). Without it an unchecked switch posts nothing.'],
     ['->checked($checked)', 'bool', 'Set checked state (default: true).'],
     ['->disabled($disabled)', 'bool', 'Disable the toggle.'],
     ['->label($label)', 'string', 'Label text shown beside the switch.'],
