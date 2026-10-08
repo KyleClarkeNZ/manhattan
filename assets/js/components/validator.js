@@ -231,7 +231,8 @@
         // we still run validation for UI feedback but must NOT call form.submit() afterwards —
         // that would trigger a native page navigation that would race against (or cancel) the
         // pending AJAX request.
-        var alreadyHandled = event.defaultPrevented;
+        // A Manhattan AJAX form (data-m-ajax) submits itself, whichever listener runs first.
+        var alreadyHandled = event.defaultPrevented || this.form.getAttribute('data-m-ajax') === 'true';
 
         event.preventDefault();
         

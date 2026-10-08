@@ -37,6 +37,22 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   instance with a second calendar and duplicate event handlers; it now returns the
   existing instance, so `m.datepicker(id).value('2026-01-31')` is safe to call.
 - DatePicker: the initial value and placeholder are set as text, not HTML.
+- **`Form->ajax()` posted an empty body.** `submitAjax()` disabled every field
+  before building its `FormData` (disabled fields are omitted), and `m.ajax()` then
+  JSON-encoded the `FormData` as `{}`. Fields are now read first, and the clicked
+  submit button's name/value is included as in a native submit.
+- **AJAX forms posted even when invalid.** `validate()` looked for a
+  `window.manhattanValidators` registry that never existed, and the Validator can
+  only block native submits. AJAX submits now run `form._mValidatorInstance.validateAll()`
+  first, and the Validator never calls `form.submit()` on a `data-m-ajax` form.
+- **AJAX forms and dirty protection:** submitting no longer switches protection off
+  for good. A successful save marks the form clean; a failed one leaves it dirty.
+- **AJAX forms treat `{success: false}` as an error** and fire `m:form:error` with the
+  response's `message`.
+- After an AJAX submit, fields that were disabled beforehand stay disabled (previously
+  every field was re-enabled).
+- Validator initialises at `DOMContentLoaded` instead of 100 ms later, so a fast
+  submit can no longer bypass it.
 
 ### Fixed
 - **Address autocomplete (`AddressProxy`, `address.js`)** — correctness and performance fixes:
