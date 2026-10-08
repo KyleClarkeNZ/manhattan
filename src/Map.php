@@ -42,6 +42,9 @@ class Map extends Component
     /** @var string Custom tile URL for Leaflet (leave empty for OpenStreetMap default) */
     protected string $tileUrl = '';
 
+    /** @var string|null Attribution HTML for the tile layer (null = OSM credit for default tiles) */
+    protected ?string $attribution = null;
+
     /** @var float|null Default centre latitude */
     protected ?float $centerLat = null;
 
@@ -83,11 +86,26 @@ class Map extends Component
     /**
      * Override the Leaflet tile URL (leave empty for OpenStreetMap default).
      *
-     * Example: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+     * Example: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+     *
+     * Most tile providers require a credit line — set it with ->attribution().
      */
     public function tileUrl(string $url): self
     {
         $this->tileUrl = $url;
+        return $this;
+    }
+
+    /**
+     * Set the attribution HTML shown in the corner of a Leaflet map.
+     *
+     * Defaults to the OpenStreetMap credit when using the default tiles. Set
+     * this whenever ->tileUrl() points at another provider, using the credit
+     * that provider's terms require. The value is trusted HTML.
+     */
+    public function attribution(string $html): self
+    {
+        $this->attribution = $html;
         return $this;
     }
 
@@ -183,6 +201,10 @@ class Map extends Component
 
         if ($this->tileUrl !== '') {
             $dataAttrs .= ' data-tile-url="' . htmlspecialchars($this->tileUrl, ENT_QUOTES, 'UTF-8') . '"';
+        }
+
+        if ($this->attribution !== null) {
+            $dataAttrs .= ' data-attribution="' . htmlspecialchars($this->attribution, ENT_QUOTES, 'UTF-8') . '"';
         }
 
         if ($this->centerLat !== null && $this->centerLng !== null) {

@@ -9,10 +9,14 @@
  *   var map = m.map('myMapId');
  *   map.setCenter(lat, lng);
  *   map.setZoom(zoom);
- *   map.addMarker(lat, lng, title);  // returns the native marker instance
+ *   map.addMarker(lat, lng, title);  // returns the native marker (null if called before m:map:ready)
  *   map.clearMarkers();
  *   map.getMarkers();                // returns array of {lat, lng, title, marker}
  *   map.fitMarkers();                // fit map viewport to all current markers
+ *   map.recenter();                  // reset to the initial centre + zoom
+ *
+ * Calls made before the provider script has loaded are queued and applied
+ * once the map is ready, so m.map(id) can be used straight after page load.
  *
  * Events (fired on the container element):
  *   m:map:ready         — { map }          — map fully initialised
@@ -94,15 +98,27 @@
     }
 
     // ── Shared helpers ─────────────────────────────────────────────────────
+    var OSM_TILE_URL    = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+    var OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+
+    // Leaflet's default attribution prefix includes a flag emoji. Replace it
+    // with a plain credit so the map carries no political symbol.
+    var LEAFLET_PREFIX  = '<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>';
+
     function readConfig(el) {
+        var tileUrl = el.getAttribute('data-tile-url') || '';
         return {
-            provider      : el.getAttribute('data-provider')        || 'google',
+            provider      : el.getAttribute('data-provider')        || 'leaflet',
             apiKey        : el.getAttribute('data-api-key')         || '',
             zoom          : parseInt(el.getAttribute('data-zoom') || '14', 10),
             centerLat     : parseFloat(el.getAttribute('data-center-lat') || '0'),
             centerLng     : parseFloat(el.getAttribute('data-center-lng') || '0'),
             hasCenter     : el.hasAttribute('data-center-lat') && el.hasAttribute('data-center-lng'),
-            tileUrl       : el.getAttribute('data-tile-url')        || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            tileUrl       : tileUrl || OSM_TILE_URL,
+            // Custom tiles need their own credit; the OSM line only fits OSM tiles.
+            attribution   : el.hasAttribute('data-attribution')
+                                ? el.getAttribute('data-attribution')
+                                : (tileUrl ? '' : OSM_ATTRIBUTION),
             markersRaw    : el.getAttribute('data-markers')         || '[]',
             recenterButton: el.getAttribute('data-recenter-button') === 'true',
         };
@@ -112,87 +128,127 @@
         try { return JSON.parse(raw) || []; } catch (e) { return []; }
     }
 
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    /**
+     * Build the public API around a provider adapter. The same object is
+     * returned before and after the provider script loads: calls made before
+     * the map is ready are queued and replayed once it is.
+     *
+     * adapter: { native, addMarker(lat, lng, title), removeMarker(mk),
+     *            setCenter(lat, lng), setZoom(z), setView(lat, lng, z),
+     *            fitBounds(points) }
+     */
+    function createApi(el, nativeKey, initialCenter, initialZoom) {
+        var adapter = null;
+        var queue   = [];
+        var markers = [];
+
+        function whenReady(fn) {
+            if (adapter) { fn(); } else { queue.push(fn); }
+        }
+
+        var api = {
+            element: el,
+
+            setCenter: function(lat, lng) {
+                whenReady(function() { adapter.setCenter(lat, lng); });
+                return this;
+            },
+
+            setZoom: function(z) {
+                whenReady(function() { adapter.setZoom(z); });
+                return this;
+            },
+
+            recenter: function() {
+                whenReady(function() { adapter.setView(initialCenter.lat, initialCenter.lng, initialZoom); });
+                return this;
+            },
+
+            addMarker: function(lat, lng, title) {
+                var entry = { lat: lat, lng: lng, title: title || '', marker: null };
+                markers.push(entry);
+                whenReady(function() {
+                    // Skip if clearMarkers() ran before the map became ready
+                    if (markers.indexOf(entry) === -1) { return; }
+                    entry.marker = adapter.addMarker(lat, lng, entry.title);
+                    utils.trigger(el, 'm:map:markeradded', { lat: lat, lng: lng, title: entry.title });
+                });
+                return entry.marker;
+            },
+
+            clearMarkers: function() {
+                var old = markers;
+                markers = [];
+                whenReady(function() {
+                    for (var i = 0; i < old.length; i++) {
+                        if (old[i].marker) { adapter.removeMarker(old[i].marker); }
+                    }
+                    utils.trigger(el, 'm:map:markerscleared', {});
+                });
+                return this;
+            },
+
+            getMarkers: function() { return markers.slice(); },
+
+            fitMarkers: function() {
+                whenReady(function() {
+                    if (markers.length === 0) { return; }
+                    adapter.fitBounds(markers);
+                });
+                return this;
+            },
+
+            // Called by the provider initialiser once the native map exists
+            _attach: function(a) {
+                adapter = a;
+                api[nativeKey] = a.native;
+                var pending = queue; queue = [];
+                for (var i = 0; i < pending.length; i++) { pending[i](); }
+                utils.trigger(el, 'm:map:ready', { map: a.native });
+            }
+        };
+        api[nativeKey] = null;
+        return api;
+    }
+
+    function addInitialMarkers(api, raw) {
+        var initMs = parseMarkers(raw);
+        for (var i = 0; i < initMs.length; i++) {
+            var im = initMs[i];
+            if (typeof im.lat === 'number' && typeof im.lng === 'number') {
+                api.addMarker(im.lat, im.lng, im.title || '');
+            }
+        }
+    }
+
     // ── Leaflet map initialiser ────────────────────────────────────────────
     function initLeafletMap(el) {
         var cfg           = readConfig(el);
-        var lMap          = null;
-        var markers       = [];
-        var initialCenter = cfg.hasCenter ? [cfg.centerLat, cfg.centerLng] : [NZ_DEFAULT_LAT, NZ_DEFAULT_LNG];
-        var initialZoom   = cfg.zoom;
+        var initialCenter = cfg.hasCenter ? { lat: cfg.centerLat, lng: cfg.centerLng } : { lat: NZ_DEFAULT_LAT, lng: NZ_DEFAULT_LNG };
+        var api           = createApi(el, 'leafletMap', initialCenter, cfg.zoom);
 
-        function buildApi(map) {
-            return {
-                element   : el,
-                leafletMap: map,
-
-                setCenter: function(lat, lng) {
-                    if (map) { map.setView([lat, lng]); }
-                    return this;
-                },
-
-                setZoom: function(z) {
-                    if (map) { map.setZoom(z); }
-                    return this;
-                },
-
-                recenter: function() {
-                    if (map) { map.setView(initialCenter, initialZoom); }
-                    return this;
-                },
-
-                addMarker: function(lat, lng, title) {
-                    if (!map) { return null; }
-                    var mk = window.L.marker([lat, lng]).addTo(map);
-                    if (title) { mk.bindPopup('<strong>' + title + '</strong>').openPopup(); }
-                    markers.push({ lat: lat, lng: lng, title: title || '', marker: mk });
-                    utils.trigger(el, 'm:map:markeradded', { lat: lat, lng: lng, title: title || '' });
-                    return mk;
-                },
-
-                clearMarkers: function() {
-                    for (var i = 0; i < markers.length; i++) {
-                        if (map) { map.removeLayer(markers[i].marker); }
-                    }
-                    markers = [];
-                    utils.trigger(el, 'm:map:markerscleared', {});
-                    return this;
-                },
-
-                getMarkers: function() { return markers.slice(); },
-
-                fitMarkers: function() {
-                    if (!map || markers.length === 0) { return this; }
-                    var latlngs = [];
-                    for (var i = 0; i < markers.length; i++) {
-                        latlngs.push([markers[i].lat, markers[i].lng]);
-                    }
-                    map.fitBounds(latlngs, { maxZoom: 16 });
-                    return this;
-                }
-            };
-        }
+        addInitialMarkers(api, cfg.markersRaw);
 
         loadLeaflet(function() {
-            var L      = window.L;
-            var center = initialCenter;
+            var L = window.L;
 
             el.innerHTML = '';
-            lMap = L.map(el, { zoomControl: true }).setView(center, cfg.zoom);
+            var lMap = L.map(el, { zoomControl: true }).setView([initialCenter.lat, initialCenter.lng], cfg.zoom);
+            lMap.attributionControl.setPrefix(LEAFLET_PREFIX);
 
             L.tileLayer(cfg.tileUrl, {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+                attribution: cfg.attribution,
                 maxZoom    : 19,
             }).addTo(lMap);
-
-            var initMs = parseMarkers(cfg.markersRaw);
-            for (var i = 0; i < initMs.length; i++) {
-                var im = initMs[i];
-                if (typeof im.lat === 'number' && typeof im.lng === 'number') {
-                    var mk = L.marker([im.lat, im.lng]).addTo(lMap);
-                    if (im.title) { mk.bindPopup('<strong>' + im.title + '</strong>').openPopup(); }
-                    markers.push({ lat: im.lat, lng: im.lng, title: im.title || '', marker: mk });
-                }
-            }
 
             if (cfg.recenterButton) {
                 var RecentreControl = L.Control.extend({
@@ -206,7 +262,7 @@
                         btn.innerHTML = '<i class="fas fa-crosshairs"></i>';
                         L.DomEvent.on(btn, 'click', function(e) {
                             L.DomEvent.stopPropagation(e);
-                            lMap.setView(initialCenter, initialZoom);
+                            api.recenter();
                         });
                         L.DomEvent.disableClickPropagation(container);
                         return container;
@@ -215,21 +271,33 @@
                 new RecentreControl().addTo(lMap);
             }
 
-            el._manhattanMap = buildApi(lMap);
-            utils.trigger(el, 'm:map:ready', { map: lMap });
+            api._attach({
+                native: lMap,
+                addMarker: function(lat, lng, title) {
+                    var mk = L.marker([lat, lng]).addTo(lMap);
+                    if (title) { mk.bindPopup('<strong>' + escapeHtml(title) + '</strong>').openPopup(); }
+                    return mk;
+                },
+                removeMarker: function(mk) { lMap.removeLayer(mk); },
+                setCenter   : function(lat, lng) { lMap.setView([lat, lng]); },
+                setZoom     : function(z) { lMap.setZoom(z); },
+                setView     : function(lat, lng, z) { lMap.setView([lat, lng], z); },
+                fitBounds   : function(points) {
+                    var latlngs = [];
+                    for (var i = 0; i < points.length; i++) { latlngs.push([points[i].lat, points[i].lng]); }
+                    lMap.fitBounds(latlngs, { maxZoom: 16 });
+                }
+            });
         });
 
-        var stub = buildApi(null);
-        return stub;
+        return api;
     }
 
     // ── Google Maps initialiser ────────────────────────────────────────────
     function initGoogleMap(el) {
         var cfg           = readConfig(el);
-        var gMap          = null;
-        var markers       = [];
         var initialCenter = cfg.hasCenter ? { lat: cfg.centerLat, lng: cfg.centerLng } : { lat: NZ_DEFAULT_LAT, lng: NZ_DEFAULT_LNG };
-        var initialZoom   = cfg.zoom;
+        var api           = createApi(el, 'googleMap', initialCenter, cfg.zoom);
 
         if (cfg.apiKey === '') {
             el.innerHTML = '<div class="m-map-error">'
@@ -237,92 +305,23 @@
                 + ' No Google Maps API key configured.'
                 + ' Use <code>->provider(\'leaflet\')</code> for a free map.'
                 + '</div>';
-            return buildApi(null);
+            return api;
         }
 
-        function createGMarker(lat, lng, title) {
-            var gm = new window.google.maps.Marker({
-                position: { lat: lat, lng: lng },
-                map     : gMap,
-                title   : title || undefined,
-            });
-            if (title) {
-                var iw = new window.google.maps.InfoWindow({ content: '<span>' + title + '</span>' });
-                gm.addListener('click', function() { iw.open(gMap, gm); });
-            }
-            return gm;
-        }
-
-        function buildApi(map) {
-            return {
-                element  : el,
-                googleMap: map,
-
-                setCenter: function(lat, lng) {
-                    if (map) { map.setCenter({ lat: lat, lng: lng }); }
-                    return this;
-                },
-
-                setZoom: function(z) {
-                    if (map) { map.setZoom(z); }
-                    return this;
-                },
-
-                recenter: function() {
-                    if (map) { map.setCenter(initialCenter); map.setZoom(initialZoom); }
-                    return this;
-                },
-
-                addMarker: function(lat, lng, title) {
-                    if (!map) { return null; }
-                    var gm = createGMarker(lat, lng, title || '');
-                    markers.push({ lat: lat, lng: lng, title: title || '', marker: gm });
-                    utils.trigger(el, 'm:map:markeradded', { lat: lat, lng: lng, title: title || '' });
-                    return gm;
-                },
-
-                clearMarkers: function() {
-                    for (var i = 0; i < markers.length; i++) { markers[i].marker.setMap(null); }
-                    markers = [];
-                    utils.trigger(el, 'm:map:markerscleared', {});
-                    return this;
-                },
-
-                getMarkers: function() { return markers.slice(); },
-
-                fitMarkers: function() {
-                    if (!map || markers.length === 0) { return this; }
-                    var bounds = new window.google.maps.LatLngBounds();
-                    for (var i = 0; i < markers.length; i++) {
-                        bounds.extend({ lat: markers[i].lat, lng: markers[i].lng });
-                    }
-                    map.fitBounds(bounds);
-                    return this;
-                }
-            };
-        }
+        addInitialMarkers(api, cfg.markersRaw);
 
         loadGoogleMaps(cfg.apiKey, function() {
-            var center = initialCenter;
+            var g = window.google.maps;
 
             el.innerHTML = '';
 
-            gMap = new window.google.maps.Map(el, {
-                center           : center,
+            var gMap = new g.Map(el, {
+                center           : initialCenter,
                 zoom             : cfg.zoom,
                 mapTypeControl   : true,
                 streetViewControl: false,
                 fullscreenControl: true,
             });
-
-            var initMs = parseMarkers(cfg.markersRaw);
-            for (var i = 0; i < initMs.length; i++) {
-                var im = initMs[i];
-                if (typeof im.lat === 'number' && typeof im.lng === 'number') {
-                    var gm = createGMarker(im.lat, im.lng, im.title || '');
-                    markers.push({ lat: im.lat, lng: im.lng, title: im.title || '', marker: gm });
-                }
-            }
 
             if (cfg.recenterButton) {
                 var btn = document.createElement('button');
@@ -331,23 +330,42 @@
                 btn.title = 'Recentre map';
                 btn.setAttribute('aria-label', 'Recentre map');
                 btn.innerHTML = '<i class="fas fa-crosshairs"></i>';
-                btn.addEventListener('click', function() {
-                    gMap.setCenter(initialCenter);
-                    gMap.setZoom(initialZoom);
-                });
-                gMap.controls[window.google.maps.ControlPosition.BOTTOM_LEFT].push(btn);
+                btn.addEventListener('click', function() { api.recenter(); });
+                gMap.controls[g.ControlPosition.BOTTOM_LEFT].push(btn);
             }
 
-            el._manhattanMap = buildApi(gMap);
-            utils.trigger(el, 'm:map:ready', { map: gMap });
+            api._attach({
+                native: gMap,
+                addMarker: function(lat, lng, title) {
+                    var gm = new g.Marker({
+                        position: { lat: lat, lng: lng },
+                        map     : gMap,
+                        title   : title || undefined,
+                    });
+                    if (title) {
+                        var iw = new g.InfoWindow({ content: '<span>' + escapeHtml(title) + '</span>' });
+                        gm.addListener('click', function() { iw.open(gMap, gm); });
+                    }
+                    return gm;
+                },
+                removeMarker: function(gm) { gm.setMap(null); },
+                setCenter   : function(lat, lng) { gMap.setCenter({ lat: lat, lng: lng }); },
+                setZoom     : function(z) { gMap.setZoom(z); },
+                setView     : function(lat, lng, z) { gMap.setCenter({ lat: lat, lng: lng }); gMap.setZoom(z); },
+                fitBounds   : function(points) {
+                    var bounds = new g.LatLngBounds();
+                    for (var i = 0; i < points.length; i++) { bounds.extend({ lat: points[i].lat, lng: points[i].lng }); }
+                    gMap.fitBounds(bounds);
+                }
+            });
         });
 
-        return buildApi(null);
+        return api;
     }
 
     // ── Entry point ────────────────────────────────────────────────────────
     function initMap(el) {
-        var provider = el.getAttribute('data-provider') || 'google';
+        var provider = el.getAttribute('data-provider') || 'leaflet';
         return provider === 'leaflet' ? initLeafletMap(el) : initGoogleMap(el);
     }
 

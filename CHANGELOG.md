@@ -39,8 +39,23 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 - Demo page `demo/pages/mediabrowser.php`, plus `/demo/mediaLibrary` in `demo/index.php`
   — a working reference endpoint (whitelisted folder, content-based image validation,
   server-chosen filenames) host authors can crib from.
+- **`Map::attribution()`** — sets the credit line for a Leaflet tile layer. Use it with
+  `tileUrl()` when pointing at a tile provider other than OpenStreetMap; custom tiles no
+  longer get the OpenStreetMap credit by default.
 
 ### Fixed
+- **Map: no flag in the Leaflet attribution.** Leaflet 1.8+ puts a flag emoji in front of
+  its "Leaflet" credit. The component now replaces that prefix with a plain "Leaflet" link.
+- **Map: `m.map(id)` returned a dead API object.** When the call came before Leaflet or
+  Google Maps had loaded (the usual case on page load), the returned object held no map, and
+  `addMarker()`, `setCenter()`, `fitMarkers()` etc. silently did nothing. The demo's dynamic
+  marker buttons were broken this way. There is now one API object per map, and calls made
+  before the map is ready are queued and run once it is.
+- **Map: marker titles are escaped** before being put in the popup / info window, so a
+  title containing HTML can no longer inject markup.
+- **Map:** default OpenStreetMap tiles now use `tile.openstreetmap.org` (OSM no longer
+  recommends the `{s}` subdomains), and the JS default provider is `leaflet` to match PHP.
+- Map demo page no longer says a Google Maps API key is required.
 - **A pinned popup closed itself when the user scrolled INSIDE it.** The
   scroll-to-close guard added for pinned panels listens on `window` in the capture
   phase, which sees scroll events from every element on the page — including the
