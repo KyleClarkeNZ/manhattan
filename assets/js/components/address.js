@@ -125,6 +125,7 @@
 
         resultsEl.hidden = false;
         resultsEl.classList.add('m-address-results-open');
+        if (resultsEl._input) { resultsEl._input.setAttribute('aria-expanded', 'true'); }
     }
 
     function hideResults(resultsEl) {
@@ -132,6 +133,10 @@
         resultsEl.classList.remove('m-address-results-open');
         resultsEl.innerHTML = '';
         resultsEl._activeIndex = -1;
+        if (resultsEl._input) {
+            resultsEl._input.setAttribute('aria-expanded', 'false');
+            resultsEl._input.removeAttribute('aria-activedescendant');
+        }
     }
 
     function renderResults(resultsEl, suggestions) {
@@ -144,8 +149,9 @@
         const html = items.map(function(s, idx) {
             const label = suggestionLabel(s);
             const value = suggestionValue(s);
+            const optionId = resultsEl.id ? ' id="' + escapeHtml(resultsEl.id + '_opt_' + idx) + '"' : '';
             return (
-                '<div class="m-address-result" role="option" tabindex="-1" data-index="' + idx + '" data-value="' + escapeHtml(value) + '">' +
+                '<div class="m-address-result" role="option" aria-selected="false" tabindex="-1"' + optionId + ' data-index="' + idx + '" data-value="' + escapeHtml(value) + '">' +
                 '<span class="m-address-result-icon" aria-hidden="true">' + m.icon('fa-map-marker-alt') + '</span>' +
                 '<span class="m-address-result-text">' + escapeHtml(label) + '</span>' +
                 '</div>'
@@ -160,7 +166,10 @@
 
     function setActiveResult(resultsEl, index) {
         const els = Array.from(resultsEl.querySelectorAll('.m-address-result'));
-        els.forEach(function(el) { el.classList.remove('m-address-result-active'); });
+        els.forEach(function(el) {
+            el.classList.remove('m-address-result-active');
+            el.setAttribute('aria-selected', 'false');
+        });
 
         if (!els.length) {
             resultsEl._activeIndex = -1;
@@ -170,7 +179,11 @@
         const next = Math.max(0, Math.min(index, els.length - 1));
         resultsEl._activeIndex = next;
         els[next].classList.add('m-address-result-active');
+        els[next].setAttribute('aria-selected', 'true');
         els[next].scrollIntoView({ block: 'nearest' });
+        if (resultsEl._input && els[next].id) {
+            resultsEl._input.setAttribute('aria-activedescendant', els[next].id);
+        }
     }
 
     m.address = function(id, options) {
@@ -201,6 +214,12 @@
         const results = root.querySelector('.m-address-results');
 
         const typeRadios = Array.from(root.querySelectorAll('input[type="radio"][name$="[type]"]'));
+
+        if (results) { results._input = search; }
+
+        // True only while the search text is an address chosen from the list (or
+        // restored via setValue()); any edit to the text clears it.
+        var confirmed = false;
 
         // Inject a small loader between the search box and the results dropdown.
         // Hidden by default; shown while an API request is in flight.
@@ -246,7 +265,17 @@
             }
         }
 
+        function setConfirmed(isConfirmed) {
+            confirmed = isConfirmed;
+            if (affixIcon) {
+                affixIcon.classList.toggle('fa-search', !isConfirmed);
+                affixIcon.classList.toggle('fa-check-circle', isConfirmed);
+            }
+            root.classList.toggle('m-address-confirmed', isConfirmed);
+        }
+
         function clearSelection() {
+            setHidden(root, 'id', '');
             setHidden(root, 'line1', '');
             setHidden(root, 'line2', '');
             setHidden(root, 'suburb', '');
@@ -267,6 +296,7 @@
             // Best-effort mapping. If the API returns structured fields, we preserve them.
             const data = (suggestion && suggestion.data) ? suggestion.data : suggestion;
 
+            setHidden(root, 'id', suggestionValue(suggestion) === label ? '' : suggestionValue(suggestion));
             setHidden(root, 'line1', data.line1 || data.Line1 || data.address1 || data.Address1 || label);
             setHidden(root, 'line2', data.line2 || data.Line2 || data.address2 || data.Address2 || '');
             setHidden(root, 'suburb', data.suburb || data.Suburb || '');
@@ -284,12 +314,10 @@
             if (results) hideResults(results);
             setHelp(root, '', 'info');
             if (loader) { loader.classList.add('m-hidden'); }
+            // Cancel any pending or in-flight lookup so it can't reopen the list.
+            cancelPending();
             // Show a confirmed-address checkmark in the search affix icon
-            if (affixIcon) {
-                affixIcon.classList.remove('fa-search');
-                affixIcon.classList.add('fa-check-circle');
-            }
-            root.classList.add('m-address-confirmed');
+            setConfirmed(true);
 
             utils.trigger(root, 'm:address:select', { suggestion: suggestion, label: label, value: suggestionValue(suggestion) });
             if (typeof options.onChange === 'function') {
@@ -307,16 +335,27 @@
         // so stale network requests don't continue consuming bandwidth/server CPU.
         var inflightAbort = null;
 
+        // Discard and abort whatever request is in flight.
+        function cancelPending() {
+            requestGen++;
+            if (inflightAbort) { try { inflightAbort.abort(); } catch (e) {} inflightAbort = null; }
+        }
+
+        function lookupFailed() {
+            if (loader) { loader.classList.add('m-hidden'); }
+            setHelp(root, 'Address lookup failed. Please type the address manually.', 'error');
+            hideResults(results);
+        }
+
         const doSuggest = debounce(function() {
             if (!search || !results) return;
             if (currentMode() !== 'nz') return;
+            if (confirmed) return; // A selection was made after this keystroke.
 
             const q = String(search.value || '').trim();
-            clearSelection();
 
             if (q.length < options.minChars) {
-                requestGen++; // discard any in-flight request
-                if (inflightAbort) { try { inflightAbort.abort(); } catch (e) {} inflightAbort = null; }
+                cancelPending();
                 hideResults(results);
                 setHelp(root, '', 'info');
                 if (loader) { loader.classList.add('m-hidden'); }
@@ -329,9 +368,12 @@
                 return;
             }
 
-            // Cache hit — instant results, no request needed.
+            // Cache hit — instant results, no request needed. Still cancel any
+            // in-flight request so its older response can't overwrite these.
             const cached = getCached(suggestUrl, q);
             if (cached !== null) {
+                cancelPending();
+                if (loader) { loader.classList.add('m-hidden'); }
                 if (!cached.length) {
                     setHelp(root, 'No matches found.', 'info');
                     hideResults(results);
@@ -344,10 +386,9 @@
 
             // New request — bump generation so any in-flight response for an older
             // query is discarded when it arrives.
-            requestGen++;
+            // Aborting the previous request also frees server/network resources.
+            cancelPending();
             var myGen = requestGen;
-// Abort the previous in-flight request to free server/network resources.
-            if (inflightAbort) { try { inflightAbort.abort(); } catch (e) {} }
             var ac = (typeof AbortController !== 'undefined') ? new AbortController() : null;
             inflightAbort = ac;
 
@@ -359,9 +400,14 @@
                 contentType: null,
                 signal: ac ? ac.signal : undefined
             }).then(function(payload) {
-                if (myGen !== requestGen) { return; } // stale response — discard
-                if (payload === null) { return; } // aborted or network error (handled in catch)
-                if (myGen !== requestGen) { return; } // stale response — discard
+                if (myGen !== requestGen) { return; } // stale or aborted — discard
+                inflightAbort = null;
+                // m.ajax resolves null (rather than rejecting) on HTTP and network
+                // errors; aborted requests were already discarded above.
+                if (payload === null || typeof payload !== 'object' || payload.success === false) {
+                    lookupFailed();
+                    return;
+                }
                 if (loader) { loader.classList.add('m-hidden'); }
 
                 const suggestions = normalizeSuggestions(payload);
@@ -378,9 +424,8 @@
                 renderResults(results, suggestions);
             }).catch(function() {
                 if (myGen !== requestGen) { return; } // stale — discard
-                if (loader) { loader.classList.add('m-hidden'); }
-                setHelp(root, 'Address lookup failed. Please type the address manually.', 'error');
-                hideResults(results);
+                inflightAbort = null;
+                lookupFailed();
             });
         }, options.debounceMs);
 
@@ -394,13 +439,23 @@
         // Suggest on input
         if (search && results) {
             search.addEventListener('input', function() {
-                // Clear confirmed state when the user starts typing again
-                if (affixIcon) {
-                    affixIcon.classList.remove('fa-check-circle');
-                    affixIcon.classList.add('fa-search');
+                // Any edit invalidates the selection immediately (not after the
+                // debounce), so the form can never submit a previously selected
+                // address alongside different visible text.
+                const wasSelected = confirmed;
+                setConfirmed(false);
+                clearSelection();
+                if (wasSelected) {
+                    utils.trigger(root, 'm:address:clear', {});
+                    if (typeof options.onChange === 'function') {
+                        options.onChange({ mode: 'nz', source: 'clear' });
+                    }
                 }
-                root.classList.remove('m-address-confirmed');
                 doSuggest();
+            });
+
+            search.addEventListener('blur', function() {
+                hideResults(results);
             });
 
             search.addEventListener('keydown', function(e) {
@@ -424,6 +479,8 @@
             });
 
             results.addEventListener('mousedown', function(e) {
+                // Keep focus in the search box so its blur handler doesn't close the list first.
+                e.preventDefault();
                 const target = e.target.closest('.m-address-result');
                 if (!target) return;
                 const idx = parseInt(target.getAttribute('data-index') || '-1', 10);
@@ -457,15 +514,13 @@
                 return this;
             },
             clear: function() {
+                cancelPending();
                 if (search) search.value = '';
                 clearSelection();
                 if (results) hideResults(results);
                 if (loader) { loader.classList.add('m-hidden'); }
-                if (affixIcon) {
-                    affixIcon.classList.remove('fa-check-circle');
-                    affixIcon.classList.add('fa-search');
-                }
-                root.classList.remove('m-address-confirmed');
+                setHelp(root, '', 'info');
+                setConfirmed(false);
                 return this;
             },
             /**
@@ -475,15 +530,19 @@
              * value is provided.
              */
             setValue: function(text) {
-                if (search) { search.value = text; }
-                if (text && String(text).trim()) {
-                    if (affixIcon) {
-                        affixIcon.classList.remove('fa-search');
-                        affixIcon.classList.add('fa-check-circle');
-                    }
-                    root.classList.add('m-address-confirmed');
-                }
+                cancelPending();
+                if (search) { search.value = text == null ? '' : String(text); }
+                if (results) hideResults(results);
+                if (loader) { loader.classList.add('m-hidden'); }
+                setConfirmed(!!(text && String(text).trim()));
                 return this;
+            },
+            /**
+             * Whether the search text is a confirmed address — one picked from the
+             * suggestions, or restored via setValue(). False once the user edits it.
+             */
+            isConfirmed: function() {
+                return confirmed;
             },
             getCoordinates: function() {
                 var latEl = root.querySelector('.m-address-nz-hidden[data-field="lat"]');

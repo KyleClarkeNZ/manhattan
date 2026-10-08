@@ -10,14 +10,26 @@ namespace Manhattan;
  *   1. LINZ WFS layer-123113  — NZ street addresses (authoritative, macroned, with ASCII fallback)
  *   2. OpenStreetMap Nominatim — POIs and named buildings (libraries, schools, etc.)
  *
- * Performance optimisations:
- *   - Per-source file caching (optional, via {@see setCacheDir()}).
+ * Matching:
+ *   - The query is split into words, so "1 queen st auckland" matches
+ *     "1 Queen Street, Auckland Central, Auckland" regardless of commas or word order.
+ *   - Words match at word boundaries against full_address_ascii, so macron-free input
+ *     works and "1 Queen" does not match "21 Queen" or "101 Queen".
+ *   - Common street-type abbreviations (St, Rd, Ave, …) match their full form, and a
+ *     doubled vowel ("Aatatu") also matches as a macron substitute ("Ātātū").
+ *   - LINZ returns an unordered page, so a wider page is fetched and ranked locally.
+ *
+ * Performance:
+ *   - Per-source file caching (optional, via {@see setCacheDir()}). Only successful
+ *     upstream responses are cached, so a rate-limit or outage is never cached as
+ *     "no results".
  *   - Early-exit: when LINZ returns ≥ 5 results the Nominatim request is aborted
  *     mid-flight, reducing TTFB to just the LINZ round-trip on the common case.
- *   - curl_multi with per-handle reaction rather than waiting for the slower source.
+ *   - Nominatim is throttled to one request per second per server, as its usage
+ *     policy requires; LINZ-only results are returned while it is throttled.
  *
- * Results are deduplicated by geographic proximity (~100 m) and ranked so that
- * prefix matches appear before substring matches.
+ * Results from different sources are deduplicated only when they are the same street
+ * address; distinct LINZ addresses (units, neighbouring numbers) are never merged.
  *
  * Attribution:
  *   LINZ data    — Toitū Te Whenua Land Information New Zealand, CC BY 4.0.
@@ -28,10 +40,59 @@ namespace Manhattan;
  *   $proxy = new \Manhattan\AddressProxy($linzApiKey, 'MyApp/1.0 (https://example.com)');
  *   $proxy->setCacheDir('/var/www/cache/address/');
  *   $suggestions = $proxy->suggest($query);  // array of suggestion rows
+ *
+ *   // On form submit, re-resolve the submitted id rather than trusting posted fields:
+ *   $address = $proxy->lookup($_POST['address']['nz']['id']);  // row or null
  * </code>
  */
 class AddressProxy
 {
+    /** Maximum suggestions returned to the client. */
+    private const MAX_RESULTS = 10;
+
+    /** LINZ page size. LINZ does not rank results, so fetch more than we show and rank locally. */
+    private const LINZ_FETCH_COUNT = 50;
+
+    /** Maximum query words turned into filter clauses (bounds the CQL/URL length). */
+    private const MAX_TOKENS = 6;
+
+    /** Minimum seconds between Nominatim requests (usage policy: max 1 req/s). */
+    private const NOMINATIM_INTERVAL = 1.0;
+
+    private const MACRON_MAP = [
+        'ā' => 'a', 'ē' => 'e', 'ī' => 'i', 'ō' => 'o', 'ū' => 'u',
+        'Ā' => 'A', 'Ē' => 'E', 'Ī' => 'I', 'Ō' => 'O', 'Ū' => 'U',
+    ];
+
+    /** Abbreviation => full form(s) as they appear in LINZ addresses. */
+    private const ABBREVIATIONS = [
+        'st'   => ['street', 'saint'],
+        'rd'   => ['road'],
+        'ave'  => ['avenue'],
+        'av'   => ['avenue'],
+        'dr'   => ['drive'],
+        'pl'   => ['place'],
+        'cres' => ['crescent'],
+        'cr'   => ['crescent'],
+        'tce'  => ['terrace'],
+        'ln'   => ['lane'],
+        'hwy'  => ['highway'],
+        'blvd' => ['boulevard'],
+        'ct'   => ['court'],
+        'crt'  => ['court'],
+        'gr'   => ['grove'],
+        'gdns' => ['gardens'],
+        'pde'  => ['parade'],
+        'sq'   => ['square'],
+        'cl'   => ['close'],
+        'hts'  => ['heights'],
+        'esp'  => ['esplanade'],
+        'mt'   => ['mount'],
+    ];
+
+    /** Words users type that never appear in LINZ full_address. */
+    private const IGNORED_WORDS = ['flat', 'unit', 'apartment', 'apt', 'nz'];
+
     /** @var string */
     private $linzApiKey;
 
@@ -78,23 +139,17 @@ class AddressProxy
      */
     public function suggest(string $query): array
     {
-        $query = trim($query);
+        $query = trim((string)preg_replace('/[\x00-\x1F\x7F]/', '', $query));
         if ($query === '' || mb_strlen($query) < 3) {
             return [];
         }
 
-        // Strip control chars; escape for CQL ILIKE interpolation.
-        $sanitized = (string)preg_replace('/[\x00-\x1F\x7F]/', '', $query);
-        $escaped   = str_replace("'", "''", $sanitized);
+        $tokens = $this->tokenize($query);
+        if ($tokens === []) {
+            return [];
+        }
 
-        // Normalise for full_address_ascii: strip macrons then collapse double-vowels
-        // so "Te Aatatu" finds "Te Ātātū" via the ASCII field.
-        $macronMap   = ['ā'=>'a','ē'=>'e','ī'=>'i','ō'=>'o','ū'=>'u','Ā'=>'A','Ē'=>'E','Ī'=>'I','Ō'=>'O','Ū'=>'U'];
-        $normalized  = strtr($sanitized, $macronMap);
-        $normalized  = (string)preg_replace('/([aeiouAEIOU])\1+/u', '$1', $normalized);
-        $escapedNorm = str_replace("'", "''", $normalized);
-
-        $baseKey      = md5(mb_strtolower(trim($query)));
+        $baseKey      = md5($this->normalize($query) . ($this->endsWithSeparator($query) ? ' ' : ''));
         $linzCacheKey = 'linz_' . $baseKey;
         $nomCacheKey  = 'nom_'  . $baseKey;
 
@@ -104,7 +159,7 @@ class AddressProxy
 
         if ($cachedLinz !== null && $cachedNom !== null) {
             // Both sources cached — zero API calls.
-            return $this->merge($cachedLinz, $cachedNom, $query);
+            return $this->merge($cachedLinz, $cachedNom, $tokens);
         }
 
         // ── Build curl handles only for sources that need a live call ───────
@@ -113,51 +168,17 @@ class AddressProxy
         $chNominatim = null;
 
         if ($cachedLinz === null) {
-            // Filter to current addresses only, excluding retired/historical entries.
-            $cql = "(full_address ILIKE '%" . $escaped . "%'"
-                 . " OR full_address_ascii ILIKE '%" . $escapedNorm . "%')"
-                 . " AND address_lifecycle = 'Current'";
-
-            // Request only the 5 properties we use plus the geometry column (shape).
-            // Omitting other columns cuts the response payload by ~60 %.
-            // Note: postcode is not available in layer-123113 — NZ Post does not
-            // publish postcode-level data through this feed.
-            $propertyName = 'full_address,full_address_number,full_road_name,suburb_locality,town_city,shape';
-
-            $linzUrl = 'https://data.linz.govt.nz/services;key=' . rawurlencode($this->linzApiKey) . '/wfs'
-                . '?service=WFS&version=2.0.0&request=GetFeature'
-                . '&typeNames=layer-123113&outputFormat=application%2Fjson'
-                . '&count=10&srsName=CRS%3A84'
-                . '&propertyName=' . rawurlencode($propertyName)
-                . '&CQL_FILTER=' . rawurlencode($cql);
-
-            $chLinz = curl_init($linzUrl);
-            curl_setopt_array($chLinz, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => 5,
-                CURLOPT_CONNECTTIMEOUT => 2,
-                CURLOPT_ENCODING       => '',
-                CURLOPT_HTTPHEADER     => ['Accept: application/json'],
-            ]);
+            $chLinz = $this->curlHandle($this->linzUrl($this->buildLinzFilter($tokens), self::LINZ_FETCH_COUNT), 5);
             curl_multi_add_handle($mh, $chLinz);
         }
 
-        if ($cachedNom === null) {
+        if ($cachedNom === null && $this->acquireNominatimSlot()) {
             $nominatimUrl = 'https://nominatim.openstreetmap.org/search'
-                . '?q=' . rawurlencode($sanitized)
+                . '?q=' . rawurlencode($query)
                 . '&format=jsonv2&countrycodes=nz&limit=5&addressdetails=1';
 
-            $chNominatim = curl_init($nominatimUrl);
-            curl_setopt_array($chNominatim, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => 3,  // Nominatim is supplementary — don't wait long.
-                CURLOPT_CONNECTTIMEOUT => 2,
-                CURLOPT_ENCODING       => '',
-                CURLOPT_HTTPHEADER     => [
-                    'Accept: application/json',
-                    'User-Agent: ' . $this->userAgent,
-                ],
-            ]);
+            // Nominatim is supplementary — don't wait long.
+            $chNominatim = $this->curlHandle($nominatimUrl, 2);
             curl_multi_add_handle($mh, $chNominatim);
         }
 
@@ -165,71 +186,359 @@ class AddressProxy
         // curl_multi_info_read() lets us react to each handle the moment it
         // finishes.  When LINZ completes with ≥ 5 results we abort the
         // in-flight Nominatim request immediately to cut TTFB.
-        $linzBody   = false;
-        $linzStatus = 0;
-        $nomBody    = false;
-        $nomStatus  = 0;
-        $nomAborted = false;
-        $running    = null;
+        $linzParsed = null;
+        $nomParsed  = null;
+        $running    = 0;
 
         do {
-            curl_multi_exec($mh, $running);
+            $status = curl_multi_exec($mh, $running);
 
             while (($info = curl_multi_info_read($mh)) !== false) {
                 if ($chLinz !== null && $info['handle'] === $chLinz) {
-                    $linzBody   = curl_multi_getcontent($chLinz);
-                    $linzStatus = (int)curl_getinfo($chLinz, CURLINFO_HTTP_CODE);
+                    $linzParsed = $this->parseLinzResponse(
+                        curl_multi_getcontent($chLinz),
+                        (int)curl_getinfo($chLinz, CURLINFO_HTTP_CODE)
+                    );
                     curl_multi_remove_handle($mh, $chLinz);
                     curl_close($chLinz);
                     $chLinz = null;
 
                     // Early-exit: enough LINZ results — skip Nominatim entirely.
-                    if ($chNominatim !== null
-                        && count($this->parseLinzResponse($linzBody, $linzStatus)) >= 5
-                    ) {
+                    if ($chNominatim !== null && $linzParsed !== null && count($linzParsed) >= 5) {
                         curl_multi_remove_handle($mh, $chNominatim);
                         curl_close($chNominatim);
                         $chNominatim = null;
-                        $nomAborted  = true;
                         break 2;
                     }
                 }
 
                 if ($chNominatim !== null && $info['handle'] === $chNominatim) {
-                    $nomBody   = curl_multi_getcontent($chNominatim);
-                    $nomStatus = (int)curl_getinfo($chNominatim, CURLINFO_HTTP_CODE);
+                    $nomParsed = $this->parseNominatimResponse(
+                        curl_multi_getcontent($chNominatim),
+                        (int)curl_getinfo($chNominatim, CURLINFO_HTTP_CODE)
+                    );
                     curl_multi_remove_handle($mh, $chNominatim);
                     curl_close($chNominatim);
                     $chNominatim = null;
                 }
             }
 
-            if ($running > 0) {
-                curl_multi_select($mh, 0.5);
+            // curl_multi_select() returns -1 on some platforms when there is
+            // nothing to wait on; sleep briefly rather than busy-looping.
+            if ($running > 0 && curl_multi_select($mh, 0.5) === -1) {
+                usleep(10000);
             }
-        } while ($running > 0);
+        } while ($running > 0 && $status === CURLM_OK);
 
+        foreach ([$chLinz, $chNominatim] as $ch) {
+            if ($ch !== null) {
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+            }
+        }
         curl_multi_close($mh);
 
-        // ── Parse and cache per source ───────────────────────────────────────
-        $linzSuggestions = $cachedLinz ?? $this->parseLinzResponse($linzBody, $linzStatus);
-        $nomSuggestions  = $cachedNom  ?? ($nomAborted ? [] : $this->parseNominatimResponse($nomBody, $nomStatus));
-
-        if ($cachedLinz === null && $linzBody !== false) {
-            $this->cachePut($linzCacheKey, $linzSuggestions);
+        // ── Cache per source — successful responses only ─────────────────────
+        // A null parse result means the request failed (timeout, 4xx/5xx, bad JSON),
+        // was aborted, or was throttled; none of those are "no results".
+        if ($cachedLinz === null && $linzParsed !== null) {
+            $this->cachePut($linzCacheKey, $linzParsed);
         }
-        // Only cache Nominatim when we actually waited for a response (not aborted early).
-        if ($cachedNom === null && !$nomAborted && $nomBody !== false) {
-            $this->cachePut($nomCacheKey, $nomSuggestions);
+        if ($cachedNom === null && $nomParsed !== null) {
+            $this->cachePut($nomCacheKey, $nomParsed);
         }
 
-        return $this->merge($linzSuggestions, $nomSuggestions, $query);
+        return $this->merge(
+            $cachedLinz ?? $linzParsed ?? [],
+            $cachedNom  ?? $nomParsed  ?? [],
+            $tokens
+        );
+    }
+
+    /**
+     * Re-resolve a suggestion by the id returned from {@see suggest()}.
+     *
+     * Use this on form submission instead of trusting the posted hidden fields,
+     * which the client can edit freely.
+     *
+     * @param  string $id A LINZ address_id (numeric) or an "osm-N123" style OSM id.
+     * @return array<string, string>|null  The suggestion row, or null when not found
+     *                                     or the upstream request failed.
+     */
+    public function lookup(string $id): ?array
+    {
+        $id = trim($id);
+        $cacheKey = 'lookup_' . md5($id);
+
+        $cached = $this->cacheGet($cacheKey);
+        if ($cached !== null) {
+            return $cached === [] ? null : $cached;
+        }
+
+        $rows = null;
+        if (preg_match('/^[0-9]{1,12}$/', $id) === 1) {
+            if ($this->linzApiKey === '') {
+                return null;
+            }
+            [$body, $status] = $this->httpGet($this->linzUrl('address_id = ' . $id, 1), 5);
+            $rows = $this->parseLinzResponse($body, $status);
+        } elseif (preg_match('/^osm-([NWR][0-9]{1,15})$/', $id, $m) === 1) {
+            if (!$this->acquireNominatimSlot()) {
+                return null;
+            }
+            [$body, $status] = $this->httpGet(
+                'https://nominatim.openstreetmap.org/lookup?osm_ids=' . $m[1] . '&format=jsonv2&addressdetails=1',
+                3
+            );
+            $rows = $this->parseNominatimResponse($body, $status);
+        } else {
+            return null;
+        }
+
+        if ($rows === null) {
+            return null; // Upstream failure — don't cache.
+        }
+
+        $row = $rows[0] ?? null;
+        $this->cachePut($cacheKey, $row ?? []);
+        return $row;
+    }
+
+    // ── Query building ─────────────────────────────────────────────────────────
+
+    /**
+     * Lower-case, strip macrons and reduce to space-separated words.
+     */
+    private function normalize(string $text): string
+    {
+        $text = mb_strtolower(strtr($text, self::MACRON_MAP));
+        $text = (string)preg_replace("/[^a-z0-9'\\-]+/", ' ', $text);
+        return trim((string)preg_replace('/\s+/', ' ', $text));
+    }
+
+    private function endsWithSeparator(string $text): bool
+    {
+        return preg_match("/[^\\p{L}\\p{N}'\\-]$/u", $text) === 1;
+    }
+
+    /**
+     * Split a query into match tokens.
+     *
+     * Each token carries the alternative spellings it may match, whether it is a
+     * complete word (anything but a last word the user is still typing) and
+     * whether it is a pure number (matched as a whole word, so "1" ≠ "11").
+     *
+     * @return array<int, array{alts: string[], complete: bool, numeric: bool}>
+     */
+    private function tokenize(string $query): array
+    {
+        $words = array_values(array_filter(
+            array_map(static function (string $w): string {
+                return trim($w, "'-");
+            }, explode(' ', $this->normalize($query))),
+            static function (string $w): bool {
+                return $w !== '' && !in_array($w, self::IGNORED_WORDS, true);
+            }
+        ));
+        $words = array_slice($this->stripPostalParts($words), 0, self::MAX_TOKENS);
+
+        $lastComplete = $this->endsWithSeparator($query);
+        $tokens = [];
+        $count  = count($words);
+
+        foreach ($words as $i => $word) {
+            $complete = $i < $count - 1 || $lastComplete;
+            $alts     = [$word];
+
+            if ($complete && isset(self::ABBREVIATIONS[$word])) {
+                $alts = array_merge($alts, self::ABBREVIATIONS[$word]);
+            }
+
+            // A doubled vowel is a common macron substitute ("Aatatu" for "Ātātū").
+            // Offer the collapsed form as an alternative; never replace the original,
+            // which would break real double vowels ("Queen", "Moorhouse").
+            $collapsed = (string)preg_replace('/([aeiou])\1+/', '$1', $word);
+            if ($collapsed !== $word) {
+                $alts[] = $collapsed;
+            }
+
+            $tokens[] = [
+                'alts'     => array_values(array_unique($alts)),
+                'complete' => $complete,
+                'numeric'  => ctype_digit($word),
+            ];
+        }
+
+        return $tokens;
+    }
+
+    /**
+     * Drop postal-only parts that LINZ physical addresses never contain, so pasting a
+     * full postal address still matches: a trailing postcode ("… Auckland 1010") and a
+     * rural delivery number ("… RD 2 …"). LINZ has neither.
+     *
+     * @param  string[] $words
+     * @return string[]
+     */
+    private function stripPostalParts(array $words): array
+    {
+        $out   = [];
+        $count = count($words);
+        for ($i = 0; $i < $count; $i++) {
+            $word = $words[$i];
+            if ($i > 1 && $word === 'rd' && isset($words[$i + 1]) && ctype_digit($words[$i + 1])) {
+                $i++; // Skip "RD" and its number.
+                continue;
+            }
+            if ($i > 1 && preg_match('/^rd[0-9]+$/', $word) === 1) {
+                continue;
+            }
+            // A trailing postcode (or one still being typed) after the town. Numbers
+            // only follow words in highway names ("State Highway 2").
+            if ($i === $count - 1 && $i >= 3 && preg_match('/^[0-9]{1,4}$/', $word) === 1
+                && !ctype_digit($words[$i - 1])
+                && !in_array($words[$i - 1], ['highway', 'hwy', 'sh'], true)
+            ) {
+                continue;
+            }
+            $out[] = $word;
+        }
+        return $out;
+    }
+
+    /**
+     * Build the LINZ CQL filter: every token must match a word in full_address_ascii.
+     *
+     * Tokens contain only [a-z0-9'-], so the only character needing escaping is the
+     * single quote; ILIKE wildcards (% and _) in user input never reach the filter.
+     *
+     * @param array<int, array{alts: string[], complete: bool, numeric: bool}> $tokens
+     */
+    private function buildLinzFilter(array $tokens): string
+    {
+        $clauses = [];
+        foreach ($tokens as $token) {
+            $patterns = [];
+            foreach ($token['alts'] as $alt) {
+                $alt = str_replace("'", "''", $alt);
+                if ($token['numeric'] && $token['complete']) {
+                    // Whole-number match: preceded by start/space/slash/hyphen,
+                    // followed by space/slash/comma/hyphen ("2/10", "10-12").
+                    foreach (['', '% ', '%/', '%-'] as $before) {
+                        foreach ([' %', '/%', ',%', '-%'] as $after) {
+                            $patterns[] = $before . $alt . $after;
+                        }
+                    }
+                } else {
+                    // Word-prefix match; numbers can also follow a unit slash ("2/10").
+                    $patterns[] = $alt . '%';
+                    $patterns[] = '% ' . $alt . '%';
+                    if ($token['numeric']) {
+                        $patterns[] = '%/' . $alt . '%';
+                    }
+                }
+            }
+
+            $clauses[] = '(' . implode(' OR ', array_map(static function (string $p): string {
+                return "full_address_ascii ILIKE '" . $p . "'";
+            }, $patterns)) . ')';
+        }
+
+        return implode(' AND ', $clauses);
+    }
+
+    private function linzUrl(string $filter, int $count): string
+    {
+        // Filter to current addresses only, excluding retired/historical entries.
+        $cql = '(' . $filter . ") AND address_lifecycle = 'Current'";
+
+        // Request only the properties we use plus the geometry column (shape).
+        // Omitting other columns cuts the response payload by ~60 %.
+        // Note: postcode is not available in layer-123113 — NZ Post does not
+        // publish postcode-level data through this feed.
+        $propertyName = 'address_id,full_address,full_address_number,full_road_name,suburb_locality,town_city,shape';
+
+        return 'https://data.linz.govt.nz/services;key=' . rawurlencode($this->linzApiKey) . '/wfs'
+            . '?service=WFS&version=2.0.0&request=GetFeature'
+            . '&typeNames=layer-123113&outputFormat=application%2Fjson'
+            . '&count=' . $count . '&srsName=CRS%3A84'
+            . '&propertyName=' . rawurlencode($propertyName)
+            . '&CQL_FILTER=' . rawurlencode($cql);
+    }
+
+    // ── HTTP helpers ───────────────────────────────────────────────────────────
+
+    /**
+     * @return resource|\CurlHandle
+     */
+    private function curlHandle(string $url, int $timeout)
+    {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => $timeout,
+            CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_HTTPHEADER     => [
+                'Accept: application/json',
+                'User-Agent: ' . $this->userAgent,
+            ],
+        ]);
+        return $ch;
+    }
+
+    /**
+     * @return array{0: string|false, 1: int}
+     */
+    private function httpGet(string $url, int $timeout): array
+    {
+        $ch     = $this->curlHandle($url, $timeout);
+        $body   = curl_exec($ch);
+        $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return [is_string($body) ? $body : false, $status];
+    }
+
+    /**
+     * Claim the next Nominatim request slot, enforcing the usage policy's
+     * one-request-per-second limit across all PHP processes on this server.
+     *
+     * @return bool false when a request was made less than a second ago.
+     */
+    private function acquireNominatimSlot(): bool
+    {
+        $dir = $this->cacheDir ?? rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR;
+        if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+            return false;
+        }
+
+        $fp = @fopen($dir . 'manhattan_nominatim.lock', 'c+');
+        if ($fp === false) {
+            return false;
+        }
+
+        $acquired = false;
+        if (flock($fp, LOCK_EX | LOCK_NB)) {
+            $last = (float)stream_get_contents($fp);
+            $now  = microtime(true);
+            if ($now - $last >= self::NOMINATIM_INTERVAL) {
+                ftruncate($fp, 0);
+                rewind($fp);
+                fwrite($fp, (string)$now);
+                fflush($fp);
+                $acquired = true;
+            }
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+
+        return $acquired;
     }
 
     // ── Cache helpers ──────────────────────────────────────────────────────────
 
     /**
-     * @return array<int, array<string, string>>|null  null = absent or expired.
+     * @return array<mixed>|null  null = absent or expired.
      */
     private function cacheGet(string $key): ?array
     {
@@ -257,7 +566,7 @@ class AddressProxy
     }
 
     /**
-     * @param array<int, array<string, string>> $data
+     * @param array<mixed> $data
      */
     private function cachePut(string $key, array $data): void
     {
@@ -269,7 +578,12 @@ class AddressProxy
             return;
         }
 
-        file_put_contents($this->cacheDir . $key . '.json', (string)json_encode($data));
+        // Write-then-rename so concurrent readers never see a partial file.
+        $path = $this->cacheDir . $key . '.json';
+        $tmp  = $path . '.' . getmypid() . '.tmp';
+        if (file_put_contents($tmp, (string)json_encode($data)) !== false && !rename($tmp, $path)) {
+            @unlink($tmp);
+        }
     }
 
     // ── Parsing helpers ────────────────────────────────────────────────────────
@@ -278,20 +592,20 @@ class AddressProxy
      * Parse a LINZ WFS GeoJSON response body into normalised suggestion rows.
      *
      * @param  string|false $body
-     * @return array<int, array<string, string>>
+     * @return array<int, array<string, string>>|null  null when the request failed.
      */
-    private function parseLinzResponse($body, int $httpStatus): array
+    private function parseLinzResponse($body, int $httpStatus): ?array
     {
-        $suggestions = [];
         if ($body === false || $httpStatus !== 200) {
-            return $suggestions;
+            return null;
         }
 
         $data = json_decode((string)$body, true);
-        if (!is_array($data) || !isset($data['features'])) {
-            return $suggestions;
+        if (!is_array($data) || !isset($data['features']) || !is_array($data['features'])) {
+            return null;
         }
 
+        $suggestions = [];
         foreach ($data['features'] as $feature) {
             if (!is_array($feature)) {
                 continue;
@@ -299,7 +613,7 @@ class AddressProxy
             $props = is_array($feature['properties'] ?? null) ? $feature['properties'] : [];
             $geom  = is_array($feature['geometry']   ?? null) ? $feature['geometry']   : null;
 
-            // full_address_number preserves unit/suffix (e.g. "5A", "Unit 2/10");
+            // full_address_number preserves unit/suffix (e.g. "5A", "2/10");
             // full_road_name includes the road type (e.g. "Matipo Road" not just "Matipo").
             $addrNum  = trim((string)($props['full_address_number'] ?? $props['address_number'] ?? ''));
             $roadName = trim((string)($props['full_road_name']      ?? $props['road_name']      ?? ''));
@@ -319,14 +633,16 @@ class AddressProxy
             }
 
             $suggestions[] = [
-                'text'   => (string)($props['full_address'] ?? $line1),
-                'id'     => (string)($props['address_id']   ?? ''),
-                'name'   => '',   // LINZ provides addresses, not named POIs
-                'line1'  => $line1,
-                'suburb' => (string)($props['suburb_locality'] ?? ''),
-                'city'   => (string)($props['town_city']       ?? ''),
-                'lat'    => $lat,
-                'lng'    => $lng,
+                'text'     => (string)($props['full_address'] ?? $line1),
+                'id'       => (string)($props['address_id']   ?? ''),
+                'source'   => 'linz',
+                'name'     => '',   // LINZ provides addresses, not named POIs
+                'line1'    => $line1,
+                'suburb'   => (string)($props['suburb_locality'] ?? ''),
+                'city'     => (string)($props['town_city']       ?? ''),
+                'postcode' => '',   // Not published in layer-123113
+                'lat'      => $lat,
+                'lng'      => $lng,
             ];
         }
 
@@ -338,20 +654,20 @@ class AddressProxy
      * Nominatim supplements LINZ with POIs: libraries, schools, shops, etc.
      *
      * @param  string|false $body
-     * @return array<int, array<string, string>>
+     * @return array<int, array<string, string>>|null  null when the request failed.
      */
-    private function parseNominatimResponse($body, int $httpStatus): array
+    private function parseNominatimResponse($body, int $httpStatus): ?array
     {
-        $suggestions = [];
         if ($body === false || $httpStatus !== 200) {
-            return $suggestions;
+            return null;
         }
 
         $data = json_decode((string)$body, true);
         if (!is_array($data)) {
-            return $suggestions;
+            return null;
         }
 
+        $suggestions = [];
         foreach ($data as $item) {
             if (!is_array($item)) {
                 continue;
@@ -366,7 +682,7 @@ class AddressProxy
             $houseNo  = trim((string)($addr['house_number'] ?? ''));
             $road     = trim((string)($addr['road']         ?? ''));
             $suburb   = trim((string)($addr['suburb']       ?? $addr['quarter'] ?? $addr['neighbourhood'] ?? ''));
-            $city     = trim((string)($addr['city']         ?? $addr['town']    ?? $addr['county']        ?? ''));
+            $city     = trim((string)($addr['city']         ?? $addr['town']    ?? $addr['village']       ?? ''));
             $postcode = trim((string)($addr['postcode']     ?? ''));
 
             $line1 = $houseNo !== '' && $road !== ''
@@ -385,9 +701,14 @@ class AddressProxy
                 continue;
             }
 
+            // Keep the OSM type (N/W/R) so the id can be re-resolved via /lookup.
+            $osmType = strtoupper(substr((string)($item['osm_type'] ?? ''), 0, 1));
+            $osmId   = (string)($item['osm_id'] ?? '');
+
             $suggestions[] = [
                 'text'     => $text,
-                'id'       => 'osm-' . ($item['osm_id'] ?? ''),
+                'id'       => $osmType !== '' && $osmId !== '' ? 'osm-' . $osmType . $osmId : '',
+                'source'   => 'osm',
                 'name'     => $poiName,  // Building/POI name — surfaced for venue auto-fill
                 'line1'    => $line1,
                 'suburb'   => $suburb,
@@ -401,52 +722,157 @@ class AddressProxy
         return $suggestions;
     }
 
+    // ── Merging and ranking ────────────────────────────────────────────────────
+
     /**
-     * Merge LINZ and Nominatim suggestion arrays, deduplicate by proximity (~100 m),
-     * rank prefix matches above substring matches, and cap at 10 results.
+     * Normalise a street line for cross-source comparison: "10 Queen St" and
+     * "10 Queen Street" compare equal; "2/10 Queen Street" does not.
+     */
+    private function streetKey(string $line1): string
+    {
+        $words = explode(' ', $this->normalize($line1));
+        foreach ($words as $i => $word) {
+            if (isset(self::ABBREVIATIONS[$word])) {
+                $words[$i] = self::ABBREVIATIONS[$word][0];
+            }
+        }
+        return implode(' ', $words);
+    }
+
+    /**
+     * Merge LINZ and Nominatim suggestions, rank them against the query and cap
+     * the result at {@see MAX_RESULTS}.
      *
-     * LINZ (street addresses) is processed first so its data wins deduplication;
-     * Nominatim POIs that are not near a LINZ result are appended afterwards.
+     * Every LINZ address is kept — units and neighbouring house numbers are distinct
+     * addresses even when they share a location. A Nominatim result is dropped only
+     * when it describes the same street address as a LINZ result; if it names a POI,
+     * that LINZ row inherits the name so venue auto-fill works when the user searches
+     * by address rather than POI name.
      *
      * @param  array<int, array<string, string>> $linz
      * @param  array<int, array<string, string>> $nominatim
+     * @param  array<int, array{alts: string[], complete: bool, numeric: bool}> $tokens
      * @return array<int, array<string, string>>
      */
-    private function merge(array $linz, array $nominatim, string $query): array
+    private function merge(array $linz, array $nominatim, array $tokens): array
     {
-        $merged = [];
-        foreach (array_merge($linz, $nominatim) as $item) {
-            $iLat  = (float)$item['lat'];
-            $iLng  = (float)$item['lng'];
-            $isDup    = false;
-            $dupIndex = -1;
-            if ($iLat !== 0.0 || $iLng !== 0.0) {
-                foreach ($merged as $idx => $existing) {
-                    if (abs($iLat - (float)$existing['lat']) < 0.001
-                        && abs($iLng - (float)$existing['lng']) < 0.001
-                    ) {
-                        $isDup    = true;
-                        $dupIndex = $idx;
-                        break;
-                    }
-                }
+        $merged   = [];
+        $seenIds  = [];
+        $byStreet = [];
+
+        foreach ($linz as $item) {
+            $id = (string)($item['id'] ?? '');
+            if ($id !== '' && isset($seenIds[$id])) {
+                continue;
             }
-            if (!$isDup) {
-                $merged[] = $item;
-            } elseif ($dupIndex >= 0 && empty($merged[$dupIndex]['name']) && !empty($item['name'])) {
-                // Nominatim POI matched a LINZ address — inherit the POI name so venue
-                // auto-fill works when the user searches by address rather than POI name.
-                $merged[$dupIndex]['name'] = $item['name'];
+            $seenIds[$id] = true;
+            $merged[] = $item;
+            $key = $this->streetKey((string)($item['line1'] ?? ''));
+            if ($key !== '' && !isset($byStreet[$key])) {
+                $byStreet[$key] = count($merged) - 1;
             }
         }
 
-        $queryLower = mb_strtolower($query);
-        usort($merged, static function (array $a, array $b) use ($queryLower): int {
-            $aStarts = mb_strtolower(mb_substr($a['text'], 0, mb_strlen($queryLower))) === $queryLower ? 0 : 1;
-            $bStarts = mb_strtolower(mb_substr($b['text'], 0, mb_strlen($queryLower))) === $queryLower ? 0 : 1;
-            return $aStarts - $bStarts;
+        $seenText = [];
+        foreach ($nominatim as $item) {
+            $textKey = $this->normalize((string)$item['text']);
+            if (isset($seenText[$textKey])) {
+                continue;
+            }
+            $seenText[$textKey] = true;
+
+            $key = $this->streetKey((string)($item['line1'] ?? ''));
+            if ($key !== '' && isset($byStreet[$key])) {
+                $idx = $byStreet[$key];
+                // Same street address but a different town (e.g. two "1 Queen Street"s)
+                // is not a duplicate; require the points to be within ~200 m.
+                if ($this->isNear($merged[$idx], $item, 0.002)) {
+                    if ($merged[$idx]['name'] === '' && $item['name'] !== '') {
+                        $merged[$idx]['name'] = $item['name'];
+                    }
+                    continue;
+                }
+            }
+            $merged[] = $item;
+        }
+
+        // Rank; the original index is the final tie-break so the order is stable on PHP 7.4.
+        $scored = [];
+        foreach ($merged as $i => $item) {
+            $scored[] = [$this->score($item, $tokens), strlen((string)$item['text']), $i, $item];
+        }
+        usort($scored, static function (array $a, array $b): int {
+            return [$b[0], $a[1], $a[2]] <=> [$a[0], $b[1], $b[2]];
         });
 
-        return array_slice($merged, 0, 10);
+        return array_slice(array_column($scored, 3), 0, self::MAX_RESULTS);
+    }
+
+    /**
+     * @param array<string, string> $a
+     * @param array<string, string> $b
+     */
+    private function isNear(array $a, array $b, float $degrees): bool
+    {
+        if ($a['lat'] === '' || $a['lng'] === '' || $b['lat'] === '' || $b['lng'] === '') {
+            return false;
+        }
+        return abs((float)$a['lat'] - (float)$b['lat']) < $degrees
+            && abs((float)$a['lng'] - (float)$b['lng']) < $degrees;
+    }
+
+    /**
+     * Score how well a suggestion matches the query tokens (higher is better).
+     *
+     * @param array<string, string> $item
+     * @param array<int, array{alts: string[], complete: bool, numeric: bool}> $tokens
+     */
+    private function score(array $item, array $tokens): int
+    {
+        $words   = explode(' ', $this->normalize((string)$item['text']));
+        $score   = 0;
+        $lastPos = -1;
+        $inOrder = true;
+
+        foreach ($tokens as $t => $token) {
+            $best    = -5; // Unmatched (e.g. a fuzzy Nominatim hit)
+            $bestPos = -1;
+            foreach ($words as $pos => $word) {
+                foreach ($token['alts'] as $alt) {
+                    if ($word === $alt) {
+                        $points = 3;
+                    } elseif (!$token['complete'] && strpos($word, $alt) === 0) {
+                        $points = 2;
+                    } elseif (!$token['numeric'] && strpos($word, $alt) === 0) {
+                        $points = 1;
+                    } else {
+                        continue;
+                    }
+                    if ($points > $best) {
+                        $best    = $points;
+                        $bestPos = $pos;
+                    }
+                }
+            }
+            $score += $best;
+
+            // The address starts with what the user typed first (usually the number).
+            if ($t === 0 && $bestPos === 0) {
+                $score += 4;
+            }
+            if ($bestPos < $lastPos) {
+                $inOrder = false;
+            }
+            $lastPos = $bestPos;
+        }
+
+        if ($inOrder) {
+            $score += 2;
+        }
+        if (($item['source'] ?? '') === 'linz') {
+            $score += 1;
+        }
+
+        return $score;
     }
 }

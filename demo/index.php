@@ -62,8 +62,8 @@ if ($uri === '/demo/toggleTheme' || (strpos($uri, '/toggleTheme') !== false && $
 
 if (strpos($uri, '/addressSuggest') !== false) {
     header('Content-Type: application/json');
-    header('Cache-Control: no-store, no-cache, must-revalidate');
-    header('Pragma: no-cache');
+    // Suggestions for a given query are stable — let the browser reuse them briefly.
+    header('Cache-Control: private, max-age=300');
 
     $query = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
     $key   = getenv('LINZ_API_KEY') ?: '';
@@ -92,7 +92,8 @@ if (strpos($uri, '/addressSuggest') !== false) {
         exit;
     }
 
-    $proxy       = new \Manhattan\AddressProxy($key, 'ManhattanDemo/1.0 (https://github.com/KyleClarkeNZ/manhattan)');
+    $proxy = (new \Manhattan\AddressProxy($key, 'ManhattanDemo/1.0 (https://github.com/KyleClarkeNZ/manhattan)'))
+        ->setCacheDir(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'manhattan-address-cache');
     $suggestions = $proxy->suggest($query);
     echo json_encode(['success' => true, 'suggestions' => $suggestions]);
     exit;
