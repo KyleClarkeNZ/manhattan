@@ -106,13 +106,11 @@ class Validator extends Component {
         }
     }
     
-    // Wait for DOM and all scripts to load
+    // Deferred scripts (Manhattan) run before DOMContentLoaded, so m.validator exists by then.
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initValidator, 100);
-        });
+        document.addEventListener('DOMContentLoaded', initValidator);
     } else {
-        setTimeout(initValidator, 100);
+        initValidator();
     }
 })();
 </script>

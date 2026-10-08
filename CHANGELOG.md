@@ -20,6 +20,10 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   `Button::opensWindow($id)` and `Button::closesWindow($id)`.
 - **`ToggleSwitch::uncheckedValue($value)`** posts a value when the switch is off
   (a hidden input with the same name), so an unchecked switch no longer drops the field.
+- **`m.init(root)`** initialises the components inside an element. It runs on page
+  load and now also for content loaded into Tabs (`remoteUrl`, `refreshContent()`)
+  and Windows (`loadContent()`), so AJAX forms, dropdowns, date pickers etc. in
+  remote content work without manual wiring. Form auto-init moved into it.
 - **`HtmlHelper::scriptFiles()`** returns Manhattan's JS files in load order, for
   projects that bundle Manhattan into their own build. `renderScripts()` uses it.
 - `composer.json` aliases `dev-master` to `1.x-dev`, so projects using a local
@@ -37,6 +41,22 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   instance with a second calendar and duplicate event handlers; it now returns the
   existing instance, so `m.datepicker(id).value('2026-01-31')` is safe to call.
 - DatePicker: the initial value and placeholder are set as text, not HTML.
+- **`Form->ajax()` posted an empty body.** `submitAjax()` disabled every field
+  before building its `FormData` (disabled fields are omitted), and `m.ajax()` then
+  JSON-encoded the `FormData` as `{}`. Fields are now read first, and the clicked
+  submit button's name/value is included as in a native submit.
+- **AJAX forms posted even when invalid.** `validate()` looked for a
+  `window.manhattanValidators` registry that never existed, and the Validator can
+  only block native submits. AJAX submits now run `form._mValidatorInstance.validateAll()`
+  first, and the Validator never calls `form.submit()` on a `data-m-ajax` form.
+- **AJAX forms and dirty protection:** submitting no longer switches protection off
+  for good. A successful save marks the form clean; a failed one leaves it dirty.
+- **AJAX forms treat `{success: false}` as an error** and fire `m:form:error` with the
+  response's `message`.
+- After an AJAX submit, fields that were disabled beforehand stay disabled (previously
+  every field was re-enabled).
+- Validator initialises at `DOMContentLoaded` instead of 100 ms later, so a fast
+  submit can no longer bypass it.
 
 ### Fixed
 - **Address autocomplete (`AddressProxy`, `address.js`)** — correctness and performance fixes:

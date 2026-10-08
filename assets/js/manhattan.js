@@ -374,86 +374,114 @@
     // Expose Manhattan globally
     window.m = m;
 
-    // Auto-initialize components (modules register methods on m)
-    document.addEventListener('DOMContentLoaded', function() {
+    /**
+     * Initialise the Manhattan components inside root (default: the whole page).
+     *
+     * Runs on page load and for content loaded into Tabs (remoteUrl, refreshContent)
+     * and Windows (loadContent). Call it yourself after inserting server-rendered
+     * component HTML any other way, e.g. m.init(container).
+     *
+     * @param {Element|Document} [root]
+     */
+    m.init = function(root) {
+        root = root || document;
+
         if (typeof m.button === 'function') {
-            document.querySelectorAll('[data-m-button]').forEach(el => {
+            root.querySelectorAll('[data-m-button]').forEach(el => {
                 m.button(el.id || el, {});
             });
         }
 
         if (typeof m.datepicker === 'function') {
-            document.querySelectorAll('.m-datepicker').forEach(el => {
+            root.querySelectorAll('.m-datepicker').forEach(el => {
                 m.datepicker(el.id || el, {});
             });
         }
 
         if (typeof m.timepicker === 'function') {
-            document.querySelectorAll('.m-timepicker').forEach(el => {
+            root.querySelectorAll('.m-timepicker').forEach(el => {
                 if (el.id) m.timepicker(el.id, {});
             });
         }
 
         if (typeof m.dropdown === 'function') {
-            document.querySelectorAll('.m-dropdown').forEach(el => {
+            root.querySelectorAll('.m-dropdown').forEach(el => {
                 m.dropdown(el.id || el, {});
             });
         }
 
         if (typeof m.textbox === 'function') {
-            document.querySelectorAll('.m-textbox').forEach(el => {
+            root.querySelectorAll('.m-textbox').forEach(el => {
                 m.textbox(el.id || el, {});
             });
         }
 
         if (typeof m.address === 'function') {
-            document.querySelectorAll('.m-address').forEach(el => {
+            root.querySelectorAll('.m-address').forEach(el => {
                 m.address(el.id || el, {});
             });
         }
 
         if (typeof m.textarea === 'function') {
-            document.querySelectorAll('.m-textarea').forEach(el => {
+            root.querySelectorAll('.m-textarea').forEach(el => {
                 const autoResize = el.classList.contains('m-textarea-resize-auto');
                 m.textarea(el.id || el, { autoResize: autoResize });
             });
         }
 
         if (typeof m.window === 'function') {
-            document.querySelectorAll('.m-window').forEach(el => {
+            root.querySelectorAll('.m-window').forEach(el => {
                 m.window(el.id || el, {});
             });
         }
 
         if (typeof m.tabs === 'function') {
-            document.querySelectorAll('.m-tabs').forEach(el => {
+            root.querySelectorAll('.m-tabs').forEach(el => {
                 m.tabs(el.id || el, {});
             });
         }
 
         if (typeof m.wizard === 'function') {
-            document.querySelectorAll('.m-wizard').forEach(el => {
+            root.querySelectorAll('.m-wizard').forEach(el => {
                 if (el.id) m.wizard(el.id, {});
             });
         }
 
         if (typeof m.richTextEditor === 'function') {
-            document.querySelectorAll('[data-component="richtexteditor"]').forEach(el => {
+            root.querySelectorAll('[data-component="richtexteditor"]').forEach(el => {
                 if (el.id) m.richTextEditor(el.id);
             });
         }
 
         if (typeof m.filterBar === 'function') {
-            document.querySelectorAll('.m-filter-bar').forEach(el => {
+            root.querySelectorAll('.m-filter-bar').forEach(el => {
                 if (el.id) m.filterBar(el.id);
             });
         }
 
         if (typeof m.reorderable === 'function') {
-            document.querySelectorAll('.m-reorderable').forEach(el => {
+            root.querySelectorAll('.m-reorderable').forEach(el => {
                 if (el.id) m.reorderable(el.id);
             });
         }
+        if (typeof m.form === 'function') {
+            root.querySelectorAll('form[data-m-ajax="true"], form[data-m-dirty-protection="true"]').forEach(el => {
+                m.form(el);
+            });
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() { m.init(document); });
+
+    // Content loaded into a Tabs panel or a Window arrives after page load.
+    document.addEventListener('m-tab-content-loaded', function(e) {
+        if (e.detail && e.detail.panel) m.init(e.detail.panel);
+    });
+    document.addEventListener('m-tab-content-refresh', function(e) {
+        if (e.detail && e.detail.panel) m.init(e.detail.panel);
+    });
+    document.addEventListener('m:window:content-loaded', function(e) {
+        m.init(e.target);
     });
 
 })(window);

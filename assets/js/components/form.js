@@ -31,6 +31,7 @@
         const isAjax = form.getAttribute('data-m-ajax') === 'true';
         const hasDirtyProtection = form.getAttribute('data-m-dirty-protection') === 'true';
         let isSubmitting = false;
+        let lockedInputs = [];
         let isDirty = false;
         let dirtyBaseline = null;
         let beforeUnloadHandler = null;
@@ -133,18 +134,26 @@
                 }
             }
 
-            // Disable all form inputs while loading
-            const inputs = form.querySelectorAll('input, select, textarea, button');
-            for (let i = 0; i < inputs.length; i++) {
-                inputs[i].disabled = loading;
+            // Disable form inputs while loading. Remember which ones we disabled so
+            // fields that were already disabled stay disabled afterwards.
+            if (loading) {
+                lockedInputs = Array.prototype.filter.call(
+                    form.querySelectorAll('input, select, textarea, button'),
+                    function(el) { return !el.disabled; }
+                );
+                lockedInputs.forEach(function(el) { el.disabled = true; });
+            } else {
+                lockedInputs.forEach(function(el) { el.disabled = false; });
+                lockedInputs = [];
             }
         }
 
         /**
          * Submit the form programmatically
          * @param {function} callback - Optional callback after submit
+         * @param {HTMLElement} [submitter] - The button that submitted the form, if any
          */
-        function submit(callback) {
+        function submit(callback, submitter) {
             if (isSubmitting) {
                 return;
             }
@@ -160,7 +169,11 @@
             }
 
             if (isAjax) {
-                submitAjax(callback);
+                // The Validator can only block native submits; an AJAX form must check it.
+                if (!validate()) {
+                    return;
+                }
+                submitAjax(callback, submitter);
             } else {
                 form.submit();
                 if (callback) {
@@ -173,18 +186,39 @@
          * Submit form via AJAX
          * @param {function} callback - Optional callback
          */
-        function submitAjax(callback) {
-            setLoading(true);
-
+        function submitAjax(callback, submitter) {
             const action = form.getAttribute('action') || window.location.href;
             const method = form.getAttribute('method') || 'POST';
+            // Read the fields before setLoading() disables them; disabled fields
+            // are left out of FormData.
             const formData = new FormData(form);
+            // Like a native submit, include the clicked button's name/value.
+            if (submitter && submitter.name) {
+                formData.append(submitter.name, submitter.value || '');
+            }
+
+            setLoading(true);
 
             m.ajax(action, {
                 method: method,
                 data: formData,
                 success: function(response) {
                     setLoading(false);
+
+                    // A 200 response with {success: false} is a failure too.
+                    if (response && typeof response === 'object' && response.success === false) {
+                        const err = new Error(typeof response.message === 'string' && response.message
+                            ? response.message : 'Request failed');
+                        err.data = response;
+                        utils.trigger(form, 'm:form:error', { error: err });
+                        if (callback) {
+                            callback(err, null);
+                        }
+                        return;
+                    }
+
+                    // Saved: the current values are the new clean baseline.
+                    clearDirty();
                     utils.trigger(form, 'm:form:success', { response: response });
                     
                     if (callback) {
@@ -225,10 +259,10 @@
          * @returns {boolean} Whether form is valid
          */
         function validate() {
-            // Trigger validation via validator if present
-            const validator = window.manhattanValidators && window.manhattanValidators[id];
-            if (validator && typeof validator.validate === 'function') {
-                return validator.validate();
+            // Validator registers itself on the form element
+            const validator = form._mValidatorInstance;
+            if (validator && typeof validator.validateAll === 'function') {
+                return validator.validateAll();
             }
             
             // Fallback: use HTML5 validation
@@ -239,7 +273,7 @@
         if (isAjax) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                submit();
+                submit(null, e.submitter);
             });
         }
 
@@ -369,9 +403,13 @@
             });
 
             // Submit deactivates protection so beforeunload doesn't fire during navigation
-            form.addEventListener('submit', function() {
-                deactivateDirtyProtection();
-            });
+            // AJAX forms stay on the page: they keep protection and are marked
+            // clean only when the save succeeds (see submitAjax).
+            if (!isAjax) {
+                form.addEventListener('submit', function() {
+                    deactivateDirtyProtection();
+                });
+            }
 
             // Native beforeunload: fallback only for true browser-level navigation
             // (tab close, URL bar input, browser back/forward button) where clicking
@@ -448,17 +486,6 @@
         return api;
     };
 
-    // Auto-initialize all AJAX forms and dirty-protection forms
-    utils.ready(function() {
-        var forms = document.querySelectorAll('[data-m-ajax="true"], [data-m-dirty-protection="true"]');
-        var seen = {};
-        for (var i = 0; i < forms.length; i++) {
-            var form = forms[i];
-            if (form.id && !seen[form.id]) {
-                seen[form.id] = true;
-                m.form(form.id);
-            }
-        }
-    });
+    // Auto-initialised by m.init() (page load and Tabs/Window remote content).
 
 })(window);
