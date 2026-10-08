@@ -181,16 +181,44 @@
 
     /**
      * Inject HTML into an element, executing any embedded <script> tags.
-     * Unlike innerHTML assignment, createContextualFragment preserves script execution.
+     * Scripts parsed into a contextual fragment can remain inert in Firefox, so
+     * replace them with fresh script elements after the fragment is attached.
      */
     function injectHtml(el, html) {
         el.innerHTML = '';
+        var scripts = [];
         try {
             var frag = document.createRange().createContextualFragment(html);
+
+            // Remove scripts before attaching the fragment so they cannot run
+            // once in one browser and then a second time when re-created.
+            var parsedScripts = frag.querySelectorAll('script');
+            for (var i = 0; i < parsedScripts.length; i++) {
+                var script = parsedScripts[i];
+                var marker = document.createComment('manhattan-script');
+                script.parentNode.replaceChild(marker, script);
+                scripts.push({ source: script, marker: marker });
+            }
             el.appendChild(frag);
         } catch (e) {
             // Fallback for environments that don't support createContextualFragment
             el.innerHTML = html;
+            scripts = [];
+            var fallbackScripts = el.querySelectorAll('script');
+            for (var f = 0; f < fallbackScripts.length; f++) {
+                scripts.push({ source: fallbackScripts[f], marker: fallbackScripts[f] });
+            }
+        }
+
+        for (var i = 0; i < scripts.length; i++) {
+            var script = scripts[i].source;
+            var executable = document.createElement('script');
+            for (var j = 0; j < script.attributes.length; j++) {
+                var attribute = script.attributes[j];
+                executable.setAttribute(attribute.name, attribute.value);
+            }
+            executable.text = script.text;
+            scripts[i].marker.parentNode.replaceChild(executable, scripts[i].marker);
         }
     }
 
