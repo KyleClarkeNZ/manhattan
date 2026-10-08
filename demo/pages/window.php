@@ -143,6 +143,12 @@ document.getElementById(\'myWin\')
     ['loadContent(url, fetchOpts)', 'string, ?object', 'Fetch HTML from a URL and set as content (returns Promise).'],
 ]) ?>
 
+<?= apiTable('Declarative Attributes', 'js', [
+    ['data-m-window-open="id"', 'string', 'Clicking the element opens that window. PHP: <code>$m->button(...)->opensWindow(\'id\')</code>.'],
+    ['data-m-window-close', '', 'Clicking the element closes the window it is in. PHP: <code>->closesWindow()</code>.'],
+    ['data-m-window-close="id"', 'string', 'Clicking the element closes that window. PHP: <code>->closesWindow(\'id\')</code>.'],
+]) ?>
+
 <?= eventsTable([
     ['m:window:open', '', 'Fired when the window opens.'],
     ['m:window:close', '', 'Fired when the window closes.'],

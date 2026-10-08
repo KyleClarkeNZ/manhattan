@@ -28,6 +28,10 @@
         const method = String(options.method || 'GET').toUpperCase();
         const hasBody = !(method === 'GET' || method === 'HEAD') && options.data !== null && options.data !== undefined;
 
+        // FormData, URLSearchParams and Blob bodies are sent as-is so file uploads
+        // work; the browser sets their Content-Type (including the multipart boundary).
+        const rawBody = hasBody && isRawBody(options.data);
+
         const headers = utils.extend({
             'X-Requested-With': 'XMLHttpRequest'
         }, options.headers || {});
@@ -38,7 +42,7 @@
             headers['X-CSRF-Token'] = csrfMeta.getAttribute('content');
         }
 
-        if (hasBody && options.contentType) {
+        if (hasBody && !rawBody && options.contentType) {
             headers['Content-Type'] = options.contentType;
         }
 
@@ -51,7 +55,7 @@
         return fetch(url, {
             method: method,
             headers: headers,
-            body: hasBody ? JSON.stringify(options.data) : null,
+            body: hasBody ? (rawBody ? options.data : JSON.stringify(options.data)) : null,
             signal: options.signal || undefined
         })
         .then(async (response) => {
@@ -68,7 +72,10 @@
             }
 
             if (!response.ok) {
-                const err = new Error('Request failed');
+                // Prefer the server's own message, e.g. {"success": false, "message": "..."}
+                const serverMessage = parsed && typeof parsed === 'object' && typeof parsed.message === 'string'
+                    ? parsed.message : '';
+                const err = new Error(serverMessage || 'Request failed');
                 err.status = response.status;
                 err.response = response;
                 err.data = parsed;
@@ -99,11 +106,10 @@
         });
     };
 
-    /**
-     * List Component
-     * - Optional drag/drop reordering (default off)
-     * - Emits 'm:list:reorder' on the list element when order changes
-     * - Optionally persists order to server when updateModelOnReorder + updateUrl are set
-     */
+    function isRawBody(data) {
+        return (typeof FormData !== 'undefined' && data instanceof FormData)
+            || (typeof URLSearchParams !== 'undefined' && data instanceof URLSearchParams)
+            || (typeof Blob !== 'undefined' && data instanceof Blob);
+    }
 
 })(window);

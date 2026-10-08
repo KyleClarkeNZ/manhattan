@@ -727,55 +727,74 @@ class HtmlHelper
     }
 
     /**
+     * Manhattan's JS files in load order, relative to the configured JS URL.
+     *
+     * Use this when bundling Manhattan into your own build so the bundle loads
+     * files in the same order as renderScripts(). Some modules depend on others
+     * having loaded first.
+     *
+     * @return string[]
+     */
+    public static function scriptFiles(): array
+    {
+        return [
+            'manhattan.js',
+            'manhattan.ajax.js',
+            'components/button.js',
+            'components/tooltip.js',
+            'components/datepicker.js',
+            'components/daterangepicker.js',
+            'components/timepicker.js',
+            'components/dropdown.js',
+            'components/textbox.js',
+            'components/address.js',
+            'components/map.js',
+            'components/textarea.js',
+            'components/codearea.js',
+            'components/toggleswitch.js',
+            'components/chart.js',
+            'components/list.js',
+            'components/reorderable.js',
+            'components/window.js',
+            'components/dialog.js',
+            'components/toaster.js',
+            'components/validator.js',
+            'components/form.js',
+            'components/tabs.js',
+            'components/rating.js',
+            'components/progressbar.js',
+            'components/statcard.js',
+            'components/datagrid.js',
+            'components/accordion.js',
+            'components/wizard.js',
+            'components/buttongroup.js',
+            'components/richtexteditor.js',
+            'components/popover.js',
+            'components/pagination.js',
+            'components/filterbar.js',
+            'components/iconpicker.js',
+            'components/mediabrowser.js',
+            'components/splitpane.js',
+            'components/lightbox.js',
+            'components/imageviewer.js',
+            'components/carousel.js',
+            'components/carouselbanner.js',
+            'components/calendar.js',
+        ];
+    }
+
+    /**
      * Render Manhattan script includes
      * Should be called in layout before closing </body> tag
      */
     public function renderScripts(): string
     {
         $js = self::$jsUrl;
-        return <<<HTML
-<script src="{$js}/manhattan.js" defer></script>
-<script src="{$js}/manhattan.ajax.js" defer></script>
-<script src="{$js}/components/button.js" defer></script>
-<script src="{$js}/components/tooltip.js" defer></script>
-<script src="{$js}/components/datepicker.js" defer></script>
-<script src="{$js}/components/daterangepicker.js" defer></script>
-<script src="{$js}/components/timepicker.js" defer></script>
-<script src="{$js}/components/dropdown.js" defer></script>
-<script src="{$js}/components/textbox.js" defer></script>
-<script src="{$js}/components/address.js" defer></script>
-<script src="{$js}/components/map.js" defer></script>
-<script src="{$js}/components/textarea.js" defer></script>
-<script src="{$js}/components/codearea.js" defer></script>
-<script src="{$js}/components/toggleswitch.js" defer></script>
-<script src="{$js}/components/chart.js" defer></script>
-<script src="{$js}/components/list.js" defer></script>
-<script src="{$js}/components/reorderable.js" defer></script>
-<script src="{$js}/components/window.js" defer></script>
-<script src="{$js}/components/dialog.js" defer></script>
-<script src="{$js}/components/toaster.js" defer></script>
-<script src="{$js}/components/validator.js" defer></script>
-<script src="{$js}/components/form.js" defer></script>
-<script src="{$js}/components/tabs.js" defer></script>
-<script src="{$js}/components/rating.js" defer></script>
-<script src="{$js}/components/progressbar.js" defer></script>
-<script src="{$js}/components/datagrid.js" defer></script>
-<script src="{$js}/components/accordion.js" defer></script>
-<script src="{$js}/components/wizard.js" defer></script>
-<script src="{$js}/components/buttongroup.js" defer></script>
-<script src="{$js}/components/richtexteditor.js" defer></script>
-<script src="{$js}/components/popover.js" defer></script>
-<script src="{$js}/components/pagination.js" defer></script>
-<script src="{$js}/components/filterbar.js" defer></script>
-<script src="{$js}/components/iconpicker.js" defer></script>
-<script src="{$js}/components/mediabrowser.js" defer></script>
-<script src="{$js}/components/splitpane.js" defer></script>
-<script src="{$js}/components/lightbox.js" defer></script>
-<script src="{$js}/components/imageviewer.js" defer></script>
-<script src="{$js}/components/carousel.js" defer></script>
-<script src="{$js}/components/carouselbanner.js" defer></script>
-<script src="{$js}/components/calendar.js" defer></script>
-HTML;
+        $tags = [];
+        foreach (self::scriptFiles() as $file) {
+            $tags[] = '<script src="' . htmlspecialchars($js . '/' . $file, ENT_QUOTES, 'UTF-8') . '" defer></script>';
+        }
+        return implode("\n", $tags) . "\n";
     }
 
     /**

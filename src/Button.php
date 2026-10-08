@@ -166,6 +166,23 @@ class Button extends Component
     }
 
     /**
+     * Open the Window with this id when clicked. No JS wiring needed.
+     */
+    public function opensWindow(string $windowId): self
+    {
+        return $this->attr('data-m-window-open', $windowId);
+    }
+
+    /**
+     * Close a Window when clicked: the enclosing one by default, or the
+     * Window with the given id. No JS wiring needed.
+     */
+    public function closesWindow(string $windowId = ''): self
+    {
+        return $this->attr('data-m-window-close', $windowId);
+    }
+
+    /**
      * Set button icon
      */
     public function icon(string $icon): self

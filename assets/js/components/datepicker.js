@@ -21,6 +21,12 @@
             return null;
         }
 
+        // Idempotent: auto-init and later m.datepicker(id) calls share one instance,
+        // so a second call doesn't build another calendar or bind events twice.
+        if (input._mDatepickerInstance) {
+            return input._mDatepickerInstance;
+        }
+
         options = utils.extend({
             format: input.getAttribute('data-format') || 'Y-m-d',
             min: input.getAttribute('data-min') || null,
@@ -46,7 +52,7 @@
         // Setup interactions
         setupDatePickerEvents(customInput, calendar, wrapper, options);
 
-        return {
+        const api = {
             element: customInput,
             
             value: function(val) {
@@ -82,6 +88,9 @@
                 return this;
             }
         };
+
+        input._mDatepickerInstance = api;
+        return api;
     };
 
     function createDatePickerWrapper(input) {
@@ -96,9 +105,11 @@
         customInput.setAttribute('tabindex', '0');
         customInput.setAttribute('data-value', originalInput.value || '');
         customInput.innerHTML = `
-            <span class="m-datepicker-value">${originalInput.value || originalInput.getAttribute('placeholder') || 'Select date...'}</span>
+            <span class="m-datepicker-value"></span>
             <i class="fas fa-calendar-alt m-datepicker-icon"></i>
         `;
+        customInput.querySelector('.m-datepicker-value').textContent =
+            originalInput.value || originalInput.getAttribute('placeholder') || 'Select date...';
 
         // Apply value class if pre-populated (e.g. via PHP ->value())
         if (originalInput.value) {

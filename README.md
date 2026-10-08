@@ -38,10 +38,10 @@ Manhattan is a server-rendered PHP + vanilla-JS UI component library. Drop it in
 | Window | `Window` | `components/window.js` |
 | Toaster | `Toaster` | `components/toaster.js` |
 | Rating | `Rating` | `components/rating.js` |
-| ProgressBar | `ProgressBar` | — |
+| ProgressBar | `ProgressBar` | `components/progressbar.js` |
 | Badge | `Badge` | — |
 | Card | `Card` | — |
-| StatCard | `StatCard` | — |
+| StatCard | `StatCard` | `components/statcard.js` |
 | PageHeader | `PageHeader` | — |
 | Breadcrumb | `Breadcrumb` | — |
 | Address | `Address` | `components/address.js` |

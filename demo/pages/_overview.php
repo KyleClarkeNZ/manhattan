@@ -72,7 +72,7 @@ m.ajax(\'/api/save\', { method: \'POST\', data: { id: 1 } })
 ]) ?>
 
 <?= apiTable('Core JS', 'js', [
-    ['m.ajax(url, options)', 'string, {method, data, headers, contentType, signal, beforeSend, success, error, complete}', '<code>fetch</code> wrapper. Sends <code>data</code> as JSON, parses JSON responses, adds CSRF and <code>X-Requested-With</code> headers. Returns a Promise resolving to the parsed body, or <code>null</code> on error.'],
+    ['m.ajax(url, options)', 'string, {method, data, headers, contentType, signal, beforeSend, success, error, complete}', '<code>fetch</code> wrapper. Sends <code>data</code> as JSON, or as-is when it is a <code>FormData</code>, <code>URLSearchParams</code> or <code>Blob</code> (file uploads). Parses JSON responses, adds CSRF and <code>X-Requested-With</code> headers. Returns a Promise resolving to the parsed body, or <code>null</code> on error. On an HTTP error, <code>error(err)</code> receives <code>err.status</code>, <code>err.data</code> (parsed body) and <code>err.message</code> (the body\'s <code>message</code> when it has one).'],
     ['m.utils.ready(fn)', 'function', 'Run once the DOM is ready.'],
     ['m.overlays.closeAll()', '', 'Close every open popup surface (dropdowns, pickers, popovers).'],
 ]) ?>

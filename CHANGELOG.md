@@ -9,6 +9,35 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **`m.ajax()` sends `FormData`, `URLSearchParams` and `Blob` bodies as-is**, so file
+  uploads no longer need a hand-written `XMLHttpRequest`. The browser sets the
+  multipart `Content-Type`; CSRF and `X-Requested-With` headers are still added.
+- **`m.statCard(id)`** — JS API for a server-rendered StatCard: `value()`,
+  `value(v)`, `increment(by)`, `label(text)`, and an `m:statcard:change` event.
+- **Declarative Window open/close:** `data-m-window-open="id"` and
+  `data-m-window-close` (or `="id"`) on any element, with PHP shorthands
+  `Button::opensWindow($id)` and `Button::closesWindow($id)`.
+- **`ToggleSwitch::uncheckedValue($value)`** posts a value when the switch is off
+  (a hidden input with the same name), so an unchecked switch no longer drops the field.
+- **`HtmlHelper::scriptFiles()`** returns Manhattan's JS files in load order, for
+  projects that bundle Manhattan into their own build. `renderScripts()` uses it.
+- `composer.json` aliases `dev-master` to `1.x-dev`, so projects using a local
+  `path` repository can require `^1.x@dev` (see VERSIONING.md).
+
+### Fixed
+- **`m.dialog` was defined twice** (`window.js` and `dialog.js`), and the second file
+  loaded silently replaced the first. Bundles that load components alphabetically got
+  the `window.js` copy, which has no `prompt()`. The `window.js` copy is removed;
+  `dialog.js` is the only implementation.
+- **`m.ajax()` error messages:** on an HTTP error, `err.message` is now the response
+  body's `message` (e.g. `{"success": false, "message": "File too large"}`) instead of
+  always "Request failed".
+- **`m.datepicker(id)` is idempotent.** Calling it after auto-init returned a new
+  instance with a second calendar and duplicate event handlers; it now returns the
+  existing instance, so `m.datepicker(id).value('2026-01-31')` is safe to call.
+- DatePicker: the initial value and placeholder are set as text, not HTML.
+
 ### Fixed
 - **Address autocomplete (`AddressProxy`, `address.js`)** — correctness and performance fixes:
   - Distinct LINZ addresses are no longer merged when within ~100 m of each other, so
