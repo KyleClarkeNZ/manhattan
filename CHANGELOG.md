@@ -20,6 +20,10 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   `Button::opensWindow($id)` and `Button::closesWindow($id)`.
 - **`ToggleSwitch::uncheckedValue($value)`** posts a value when the switch is off
   (a hidden input with the same name), so an unchecked switch no longer drops the field.
+- **`m.init(root)`** initialises the components inside an element. It runs on page
+  load and now also for content loaded into Tabs (`remoteUrl`, `refreshContent()`)
+  and Windows (`loadContent()`), so AJAX forms, dropdowns, date pickers etc. in
+  remote content work without manual wiring. Form auto-init moved into it.
 - **`HtmlHelper::scriptFiles()`** returns Manhattan's JS files in load order, for
   projects that bundle Manhattan into their own build. `renderScripts()` uses it.
 - `composer.json` aliases `dev-master` to `1.x-dev`, so projects using a local

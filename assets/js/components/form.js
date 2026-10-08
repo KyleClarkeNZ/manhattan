@@ -486,17 +486,6 @@
         return api;
     };
 
-    // Auto-initialize all AJAX forms and dirty-protection forms
-    utils.ready(function() {
-        var forms = document.querySelectorAll('[data-m-ajax="true"], [data-m-dirty-protection="true"]');
-        var seen = {};
-        for (var i = 0; i < forms.length; i++) {
-            var form = forms[i];
-            if (form.id && !seen[form.id]) {
-                seen[form.id] = true;
-                m.form(form.id);
-            }
-        }
-    });
+    // Auto-initialised by m.init() (page load and Tabs/Window remote content).
 
 })(window);
