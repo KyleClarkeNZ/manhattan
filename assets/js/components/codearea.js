@@ -136,25 +136,24 @@
 
     function protectTokens(input, patterns) {
         const tokens = [];
-        let out = input;
 
-        patterns.forEach(function(re) {
-            out = out.replace(re, function(match) {
-                const idx = tokens.length;
-                tokens.push(match);
-                return '___M_TOKEN_' + idx + '___';
-            });
+        // One left-to-right pass, so whichever token starts first wins
+        // (a '#' inside a string is not a comment, a quote inside a comment is not a string).
+        const re = new RegExp(patterns.map(function(p) { return '(?:' + p.source + ')'; }).join('|'), 'gm');
+        const out = input.replace(re, function(match) {
+            const idx = tokens.length;
+            tokens.push(match);
+            return '___M_TOKEN_' + idx + '___';
         });
 
         return { out: out, tokens: tokens };
     }
 
     function restoreTokens(input, tokens, wrapper) {
-        let out = input;
-        tokens.forEach(function(tok, idx) {
-            out = out.replace('___M_TOKEN_' + idx + '___', wrapper(tok));
+        // Function replacement: a token containing "$'" or "$&" must be inserted literally
+        return input.replace(/___M_TOKEN_(\d+)___/g, function(match, idx) {
+            return wrapper(tokens[idx]);
         });
-        return out;
     }
 
     function highlight(code, lang) {
@@ -176,9 +175,6 @@
 
         const protectedRes = protectTokens(raw, patterns);
         let out = escapeHtml(protectedRes.out);
-
-        // Numbers
-        out = out.replace(/\b\d+(?:\.\d+)?\b/g, '<span class="m-codearea-token-number">$&</span>');
 
         // Keywords
         if (lang === 'sql') {
@@ -208,6 +204,9 @@
             const re = new RegExp('\\b(' + kw.join('|') + ')\\b', 'g');
             out = out.replace(re, '<span class="m-codearea-token-keyword">$1</span>');
         }
+
+        // Numbers last: the keyword pass would otherwise match "class" inside these spans
+        out = out.replace(/\b\d+(?:\.\d+)?\b/g, '<span class="m-codearea-token-number">$&</span>');
 
         // Restore tokens as strings/comments
         out = restoreTokens(out, protectedRes.tokens.map(escapeHtml), function(tokEscaped) {
