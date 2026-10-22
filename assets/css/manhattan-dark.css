@@ -357,7 +357,13 @@ body.theme-dark .m-card-footer {
    ======================================== */
 body.m-dark .m-chart,
 body.theme-dark .m-chart {
+    --m-chart-surface: #1e242b;
     color: #ecf0f1;
+}
+
+body.m-dark .m-chart-value,
+body.theme-dark .m-chart-value {
+    fill: #a7b0bb;
 }
 
 body.m-dark .m-chart-axis,

@@ -7,19 +7,29 @@ namespace Manhattan;
  * Chart Component (SVG)
  *
  * Supports:
- * - Bar chart (single series)
- * - Line/time-series chart (single series)
+ * - Bar chart (single series, vertical columns)
+ * - Stacked bar chart (multiple series, vertical columns)
+ * - Horizontal bar chart (single series, suits long category labels)
+ * - Line/time-series chart (multiple series, optional smoothing, null = gap)
  *
  * This is intentionally dependency-free (no external JS libraries).
  */
 final class Chart extends Component
 {
+    private const TYPES = ['bar', 'line', 'stacked-bar', 'horizontal-bar'];
+
+    /** Approximate glyph width (px) of the 11px axis font, used for layout. */
+    private const CHAR_W = 6.4;
+
+    /** Surface gap (px) between stacked segments. */
+    private const GAP = 2.0;
+
     private string $type = 'bar';
 
     /** @var string[] */
     private array $labels = [];
 
-    /** @var array<int, array{name: string, values: float[], color: string}> */
+    /** @var array<int, array{name: string, values: array<int, float|null>, color: string, striped: bool}> */
     private array $series = [];
 
     private int $width = 640;
@@ -30,10 +40,19 @@ final class Chart extends Component
     /** @var array{value: float, color: string, label: string}|null */
     private ?array $goalLine = null;
 
+    private string $title = '';
+    private string $valuePrefix = '';
+    private string $valueSuffix = '';
+    private bool $smooth = false;
+    private string $legendPosition = 'top';
+
     public function type(string $type): self
     {
         $type = strtolower(trim($type));
-        if (!in_array($type, ['bar', 'line', 'stacked-bar'], true)) {
+        if ($type === 'hbar') {
+            $type = 'horizontal-bar';
+        }
+        if (!in_array($type, self::TYPES, true)) {
             $type = 'bar';
         }
         $this->type = $type;
@@ -50,7 +69,10 @@ final class Chart extends Component
     }
 
     /**
-     * Add a single series. For now, only the first series is rendered.
+     * Add a data series. Line and stacked-bar charts render every series;
+     * bar and horizontal-bar render the first.
+     *
+     * A null value is "no data": a gap in a line, no bar in a bar chart.
      *
      * @param array<int, float|int|string|null> $values
      * @param bool $striped When true, renders the series bars with a diagonal stripe pattern instead of a solid fill.
@@ -58,12 +80,8 @@ final class Chart extends Component
     public function series(string $name, array $values, ?string $color = null, bool $striped = false): self
     {
         $vals = [];
-        foreach ($values as $v) {
-            if ($v === null || $v === '') {
-                $vals[] = 0.0;
-                continue;
-            }
-            $vals[] = is_numeric($v) ? (float)$v : 0.0;
+        foreach (array_values($values) as $v) {
+            $vals[] = is_numeric($v) ? (float)$v : null;
         }
 
         $this->series[] = [
@@ -106,6 +124,45 @@ final class Chart extends Component
         return $this;
     }
 
+    /**
+     * Heading shown above the chart. With a title, a single-series chart drops
+     * its one-swatch legend (the title already names what is plotted).
+     */
+    public function title(string $title): self
+    {
+        $this->title = $title;
+        return $this;
+    }
+
+    /**
+     * Prefix/suffix for axis ticks, tooltips and value labels, e.g. ('$') or ('', '%').
+     */
+    public function valueFormat(string $prefix = '', string $suffix = ''): self
+    {
+        $this->valuePrefix = $prefix;
+        $this->valueSuffix = $suffix;
+        return $this;
+    }
+
+    /**
+     * Draw line series as smooth curves (monotone, so they never overshoot the data).
+     */
+    public function smooth(bool $smooth = true): self
+    {
+        $this->smooth = $smooth;
+        return $this;
+    }
+
+    /**
+     * Legend placement: top (default), bottom or none.
+     */
+    public function legend(string $position): self
+    {
+        $position = strtolower(trim($position));
+        $this->legendPosition = in_array($position, ['top', 'bottom', 'none'], true) ? $position : 'top';
+        return $this;
+    }
+
     protected function getComponentType(): string
     {
         return 'chart';
@@ -114,286 +171,552 @@ final class Chart extends Component
     protected function renderHtml(): string
     {
         $classes = array_merge(['m-chart', 'm-chart-' . $this->type], $this->getExtraClasses());
-        $classAttr = htmlspecialchars(implode(' ', array_filter($classes)), ENT_QUOTES, 'UTF-8');
-        $idAttr = htmlspecialchars($this->id, ENT_QUOTES, 'UTF-8');
+        $classAttr = self::e(implode(' ', array_filter($classes)));
+        $idAttr = self::e($this->id);
 
         $extraAttrs = $this->renderAdditionalAttributes(['id', 'class']);
         $eventAttrs = $this->renderEventAttributes();
 
-        $labels = $this->labels;
-        $series0 = $this->series[0] ?? ['name' => '', 'values' => [], 'color' => '#2196F3'];
-        $seriesNameRaw = (string)($series0['name'] ?? '');
-        $values = $series0['values'];
+        $titleHtml = $this->title !== '' ? '<div class="m-chart-title">' . self::e($this->title) . '</div>' : '';
 
-        $n = max(count($labels), count($values));
-        // For stacked-bar, extend $n to cover all series lengths
-        if ($this->type === 'stacked-bar') {
-            foreach ($this->series as $ser) {
-                $n = max($n, count((array)$ser['values']));
-            }
+        $n = count($this->labels);
+        foreach ($this->series as $ser) {
+            $n = max($n, count($ser['values']));
         }
         if ($n <= 0) {
             $empty = '<div class="m-chart-empty">No data</div>';
-            return "<div id=\"{$idAttr}\" class=\"{$classAttr}\"{$eventAttrs}{$extraAttrs}>{$empty}</div>";
+            return "<div id=\"{$idAttr}\" class=\"{$classAttr}\"{$eventAttrs}{$extraAttrs}>{$titleHtml}{$empty}</div>";
         }
 
-        // Normalize lengths
+        $labels = $this->labels;
         for ($i = 0; $i < $n; $i++) {
             if (!isset($labels[$i])) {
                 $labels[$i] = (string)($i + 1);
             }
-            if (!isset($values[$i])) {
-                $values[$i] = 0.0;
-            }
         }
 
-        $maxVal = 0.0;
-        if ($this->type === 'stacked-bar') {
-            // yMax = largest cumulative stack total across all positions
-            for ($i = 0; $i < $n; $i++) {
-                $sum = 0.0;
-                foreach ($this->series as $ser) {
-                    $sum += max(0.0, (float)(((array)$ser['values'])[$i] ?? 0.0));
-                }
-                $maxVal = max($maxVal, $sum);
-            }
+        if ($this->type === 'horizontal-bar') {
+            [$svg, $w, $h] = $this->renderHorizontalBar($labels, $n);
         } else {
-            foreach ($values as $v) {
-                $maxVal = max($maxVal, (float)$v);
-            }
+            [$svg, $w, $h] = $this->renderVertical($labels, $n);
         }
-        $yMax = $this->yMax !== null ? max(0.0, $this->yMax) : $maxVal;
-        if ($yMax <= 0.0) {
-            $yMax = 1.0;
+
+        $ariaLabel = $this->title !== ''
+            ? $this->title
+            : implode(', ', array_filter(array_map(static fn($s) => (string)$s['name'], $this->series)));
+        $ariaLabel = self::e($ariaLabel);
+
+        $svg = "<svg class=\"m-chart-svg\" viewBox=\"0 0 {$w} {$h}\" role=\"img\" aria-label=\"{$ariaLabel}\">{$svg}</svg>";
+
+        $legend = $this->legendPosition === 'none' ? '' : $this->renderLegend();
+        $body = $this->legendPosition === 'bottom' ? $svg . $legend : $legend . $svg;
+
+        return "<div id=\"{$idAttr}\" class=\"{$classAttr}\"{$eventAttrs}{$extraAttrs}>{$titleHtml}{$body}</div>";
+    }
+
+    /**
+     * Bar, stacked-bar and line: categories along X, values up the Y axis.
+     *
+     * @param string[] $labels
+     * @return array{0: string, 1: int, 2: int}
+     */
+    private function renderVertical(array $labels, int $n): array
+    {
+        $isLine = $this->type === 'line';
+        $isStacked = $this->type === 'stacked-bar';
+        $drawn = ($isLine || $isStacked) ? $this->series : array_slice($this->series, 0, 1);
+
+        $maxVal = 0.0;
+        for ($i = 0; $i < $n; $i++) {
+            $sum = 0.0;
+            foreach ($drawn as $ser) {
+                $v = max(0.0, (float)($ser['values'][$i] ?? 0.0));
+                $sum = $isStacked ? $sum + $v : max($sum, $v);
+            }
+            $maxVal = max($maxVal, $sum);
+        }
+        if ($this->goalLine !== null) {
+            $maxVal = max($maxVal, $this->goalLine['value']);
+        }
+
+        if ($this->yMax !== null && $this->yMax > 0.0) {
+            $yMax = $this->yMax;
+            $tickStep = $yMax / 4;
+        } else {
+            [$yMax, $tickStep] = self::niceScale($maxVal);
+        }
+        $tickCount = max(1, (int)round($yMax / $tickStep));
+
+        $tickLabels = [];
+        $longestTick = 0;
+        for ($t = 0; $t <= $tickCount; $t++) {
+            $tickLabels[$t] = $this->formatTick($tickStep * $t);
+            $longestTick = max($longestTick, self::len($tickLabels[$t]));
         }
 
         $w = $this->width;
         $h = $this->height;
 
-        $padL = 42;
-        $padR = 14;
+        $padL = (int)max(42, ceil($longestTick * self::CHAR_W + 14));
+        $padR = $isLine ? 20 : 14;
         $padT = 14;
         $padB = 34;
 
         $plotW = max(1, $w - $padL - $padR);
         $plotH = max(1, $h - $padT - $padB);
-
         $axisX1 = $padL;
-        $axisY = $padT + $plotH;
         $axisX2 = $padL + $plotW;
+        $axisY = $padT + $plotH;
 
-        $color = htmlspecialchars((string)$series0['color'], ENT_QUOTES, 'UTF-8');
+        $yFor = static fn(float $v): float => $axisY - (min(max(0.0, $v), $yMax) / $yMax) * $plotH;
 
-        $formatValue = static function (float $v): string {
-            $rounded = round($v);
-            if (abs($v - $rounded) < 0.0001) {
-                return (string)(int)$rounded;
-            }
-            return number_format($v, 2, '.', '');
-        };
+        $svg = '';
 
-        $grid = '';
-        $ticks = 3;
-        for ($t = 0; $t <= $ticks; $t++) {
-            $y = $padT + ($plotH * (1 - ($t / $ticks)));
-            $val = ($yMax * ($t / $ticks));
-            $grid .= '<line class="m-chart-grid" x1="' . $axisX1 . '" y1="' . $y . '" x2="' . $axisX2 . '" y2="' . $y . '" />';
-            $grid .= '<text class="m-chart-axis" x="' . ($padL - 8) . '" y="' . ($y + 4) . '" text-anchor="end">' . htmlspecialchars((string)round($val), ENT_QUOTES, 'UTF-8') . '</text>';
+        // Grid and Y ticks
+        for ($t = 0; $t <= $tickCount; $t++) {
+            $y = self::r($yFor($tickStep * $t));
+            $svg .= '<line class="m-chart-grid" x1="' . $axisX1 . '" y1="' . $y . '" x2="' . $axisX2 . '" y2="' . $y . '" />';
+            $svg .= '<text class="m-chart-axis" x="' . ($padL - 8) . '" y="' . ($y + 4) . '" text-anchor="end">' . self::e($tickLabels[$t]) . '</text>';
         }
 
-        // Build SVG <defs> patterns for any striped series
-        $safePatId = preg_replace('/[^a-zA-Z0-9_-]/', '-', $this->id);
-        $stripeDefs = '';
-        foreach ($this->series as $_si => $_ser) {
-            if (!empty($_ser['striped'])) {
-                $patId    = 'm-chart-stripe-' . $safePatId . '-' . $_si;
-                $patColor = htmlspecialchars((string)$_ser['color'], ENT_QUOTES, 'UTF-8');
-                $stripeDefs .= '<pattern id="' . $patId . '" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45 0 0)">'
-                    . '<rect width="8" height="8" fill="' . $patColor . '" fill-opacity="0.15"/>'
-                    . '<rect x="0" y="0" width="4" height="8" fill="' . $patColor . '"/>'
+        // X labels, thinned so they never collide
+        $slotW = $isLine ? $plotW / max(1, $n - 1) : $plotW / $n;
+        $longestLabel = 0;
+        foreach ($labels as $lab) {
+            $longestLabel = max($longestLabel, self::len($lab));
+        }
+        $every = max(1, (int)ceil(($longestLabel * self::CHAR_W + 10) / max(1.0, $slotW)));
+        $xFor = static function (int $i) use ($isLine, $padL, $slotW): float {
+            return $isLine ? $padL + $slotW * $i : $padL + $slotW * $i + $slotW / 2;
+        };
+        for ($i = 0; $i < $n; $i += $every) {
+            $svg .= '<text class="m-chart-x" x="' . self::r($xFor($i)) . '" y="' . ($h - 10) . '" text-anchor="middle">' . self::e($labels[$i]) . '</text>';
+        }
+
+        $svg .= '<line class="m-chart-axis-line" x1="' . $axisX1 . '" y1="' . $axisY . '" x2="' . $axisX2 . '" y2="' . $axisY . '" />';
+        $svg .= '<line class="m-chart-axis-line" x1="' . $axisX1 . '" y1="' . $padT . '" x2="' . $axisX1 . '" y2="' . $axisY . '" />';
+
+        if ($isLine) {
+            $svg .= $this->renderLines($labels, $n, $xFor, $yFor);
+        } else {
+            $svg .= $this->renderColumns($labels, $n, $drawn, $slotW, $xFor, $yFor, $axisY);
+        }
+
+        if ($this->goalLine !== null) {
+            $goalVal = $this->goalLine['value'];
+            $goalColor = self::e($this->goalLine['color']);
+            $goalLabel = self::e($this->goalLine['label']);
+            $goalY = self::r($yFor($goalVal));
+            $goalTip = self::e($this->goalLine['label'] . ': ' . $this->formatValue($goalVal));
+
+            $svg .= '<line class="m-chart-goal" x1="' . $axisX1 . '" y1="' . $goalY . '" x2="' . $axisX2 . '" y2="' . $goalY . '" stroke="' . $goalColor . '" stroke-dasharray="6 3" stroke-width="2" data-m-tooltip="' . $goalTip . '" data-m-tooltip-position="top" />';
+            $svg .= '<text class="m-chart-goal-label" x="' . ($axisX2 - 6) . '" y="' . ($goalY - 6) . '" fill="' . $goalColor . '" font-size="11" font-weight="600" text-anchor="end" data-m-tooltip="' . $goalTip . '" data-m-tooltip-position="top">' . $goalLabel . '</text>';
+        }
+
+        return [$this->renderDefs() . $svg, $w, $h];
+    }
+
+    /**
+     * @param string[] $labels
+     * @param array<int, array{name: string, values: array<int, float|null>, color: string, striped: bool}> $drawn
+     */
+    private function renderColumns(array $labels, int $n, array $drawn, float $slotW, callable $xFor, callable $yFor, float $axisY): string
+    {
+        $barW = max(2.0, $slotW * 0.62);
+        $svg = '';
+
+        for ($i = 0; $i < $n; $i++) {
+            $x = $xFor($i) - $barW / 2;
+
+            // Visible segments bottom-up; only the top one gets rounded corners
+            $segs = [];
+            foreach ($drawn as $s => $ser) {
+                $v = max(0.0, (float)($ser['values'][$i] ?? 0.0));
+                if ($v > 0.0) {
+                    $segs[] = [$s, $v];
+                }
+            }
+
+            $cum = 0.0;
+            $last = count($segs) - 1;
+            foreach ($segs as $k => [$s, $v]) {
+                $ser = $drawn[$s];
+                $yBottom = $yFor($cum);
+                $cum += $v;
+                $yTop = $yFor($cum);
+                if ($k > 0) {
+                    // Surface gap separates the segment from the one beneath
+                    $yBottom = max($yTop + 0.5, $yBottom - self::GAP);
+                }
+
+                $fill = $ser['striped'] ? 'url(#' . $this->patternId($s) . ')' : self::e($ser['color']);
+
+                $tip = $labels[$i];
+                if ($ser['name'] !== '') {
+                    $tip .= ' — ' . $ser['name'];
+                }
+                $tip = self::e($tip . ': ' . $this->formatValue($v));
+
+                if ($k === $last) {
+                    $d = self::roundedRectPath($x, $yTop, $barW, $yBottom - $yTop, 'top');
+                    $svg .= '<path class="m-chart-bar" d="' . $d . '" fill="' . $fill . '" data-m-tooltip="' . $tip . '" data-m-tooltip-position="top" />';
+                } else {
+                    $svg .= '<rect class="m-chart-bar" x="' . self::r($x) . '" y="' . self::r($yTop) . '" width="' . self::r($barW) . '" height="' . self::r($yBottom - $yTop) . '" fill="' . $fill . '" data-m-tooltip="' . $tip . '" data-m-tooltip-position="top" />';
+                }
+            }
+        }
+
+        return $svg;
+    }
+
+    /**
+     * @param string[] $labels
+     */
+    private function renderLines(array $labels, int $n, callable $xFor, callable $yFor): string
+    {
+        $paths = '';
+        $points = '';
+        $hits = '';
+
+        foreach ($this->series as $ser) {
+            $color = self::e($ser['color']);
+
+            // Split into runs of consecutive non-null values; nulls leave a gap
+            $runs = [];
+            $run = [];
+            for ($i = 0; $i < $n; $i++) {
+                $v = $ser['values'][$i] ?? null;
+                if ($v === null) {
+                    if ($run) {
+                        $runs[] = $run;
+                    }
+                    $run = [];
+                    continue;
+                }
+                $pt = [$xFor($i), $yFor($v)];
+                $run[] = $pt;
+
+                $tip = $labels[$i];
+                if ($ser['name'] !== '') {
+                    $tip .= ' — ' . $ser['name'];
+                }
+                $tip = self::e($tip . ': ' . $this->formatValue($v));
+
+                $cx = self::r($pt[0]);
+                $cy = self::r($pt[1]);
+                $points .= '<circle class="m-chart-point" cx="' . $cx . '" cy="' . $cy . '" r="4" fill="' . $color . '" />';
+                $hits .= '<circle class="m-chart-hit" cx="' . $cx . '" cy="' . $cy . '" r="10" data-m-tooltip="' . $tip . '" data-m-tooltip-position="top" />';
+            }
+            if ($run) {
+                $runs[] = $run;
+            }
+
+            foreach ($runs as $r) {
+                if (count($r) < 2) {
+                    continue;
+                }
+                $d = $this->smooth ? self::smoothPath($r) : self::linearPath($r);
+                $paths .= '<path class="m-chart-line" d="' . $d . '" fill="none" stroke="' . $color . '" />';
+            }
+        }
+
+        return $paths . $points . $hits;
+    }
+
+    /**
+     * Horizontal bars: one row per category, value labelled at the bar tip.
+     *
+     * @param string[] $labels
+     * @return array{0: string, 1: int, 2: int}
+     */
+    private function renderHorizontalBar(array $labels, int $n): array
+    {
+        $ser = $this->series[0] ?? ['name' => '', 'values' => [], 'color' => '#2196F3', 'striped' => false];
+
+        $maxVal = 0.0;
+        $longestValue = 0;
+        for ($i = 0; $i < $n; $i++) {
+            $v = max(0.0, (float)($ser['values'][$i] ?? 0.0));
+            $maxVal = max($maxVal, $v);
+            $longestValue = max($longestValue, self::len($this->formatValue($v)));
+        }
+        $xMax = ($this->yMax !== null && $this->yMax > 0.0) ? $this->yMax : $maxVal;
+        if ($xMax <= 0.0) {
+            $xMax = 1.0;
+        }
+
+        $w = $this->width;
+        $padT = 6;
+        $padB = 6;
+        // Grow to fit the rows rather than squashing them
+        $h = max($this->height, $n * 28 + $padT + $padB);
+
+        $longestLabel = 0;
+        foreach ($labels as $lab) {
+            $longestLabel = max($longestLabel, self::len($lab));
+        }
+        $padL = (int)min($w * 0.45, ceil($longestLabel * self::CHAR_W + 16));
+        $padR = (int)ceil($longestValue * self::CHAR_W + 14);
+        $maxChars = max(4, (int)floor(($padL - 16) / self::CHAR_W));
+
+        $plotW = max(1, $w - $padL - $padR);
+        $plotH = max(1, $h - $padT - $padB);
+        $step = $plotH / $n;
+        $barH = min(24.0, $step * 0.62);
+
+        $fill = $ser['striped'] ? 'url(#' . $this->patternId(0) . ')' : self::e($ser['color']);
+
+        $svg = '';
+        for ($i = 0; $i < $n; $i++) {
+            $cy = $padT + $step * $i + $step / 2;
+            $raw = $ser['values'][$i] ?? null;
+            $v = max(0.0, (float)($raw ?? 0.0));
+            $len = (min($v, $xMax) / $xMax) * $plotW;
+
+            $labRaw = $labels[$i];
+            $labShown = self::len($labRaw) > $maxChars ? self::cut($labRaw, $maxChars - 1) . '…' : $labRaw;
+            $labTip = $labShown !== $labRaw ? ' data-m-tooltip="' . self::e($labRaw) . '" data-m-tooltip-position="top"' : '';
+            $svg .= '<text class="m-chart-x" x="' . ($padL - 8) . '" y="' . self::r($cy + 4) . '" text-anchor="end"' . $labTip . '>' . self::e($labShown) . '</text>';
+
+            if ($raw === null) {
+                continue;
+            }
+
+            $valueText = $this->formatValue($v);
+            $tip = $labRaw;
+            if ($ser['name'] !== '') {
+                $tip .= ' — ' . $ser['name'];
+            }
+            $tip = self::e($tip . ': ' . $valueText);
+
+            if ($len > 0.0) {
+                $d = self::roundedRectPath((float)$padL, $cy - $barH / 2, $len, $barH, 'right');
+                $svg .= '<path class="m-chart-bar" d="' . $d . '" fill="' . $fill . '" data-m-tooltip="' . $tip . '" data-m-tooltip-position="top" />';
+            }
+            $svg .= '<text class="m-chart-value" x="' . self::r($padL + $len + 6) . '" y="' . self::r($cy + 4) . '">' . self::e($valueText) . '</text>';
+        }
+
+        $svg .= '<line class="m-chart-axis-line" x1="' . $padL . '" y1="' . $padT . '" x2="' . $padL . '" y2="' . ($padT + $plotH) . '" />';
+
+        return [$this->renderDefs() . $svg, $w, $h];
+    }
+
+    private function renderLegend(): string
+    {
+        $multi = $this->type === 'line' || $this->type === 'stacked-bar';
+        $shown = $multi ? $this->series : array_slice($this->series, 0, 1);
+
+        // A lone series is named by the title (horizontal-bar: by its row labels)
+        if (count($shown) < 2 && ($this->title !== '' || $this->type === 'horizontal-bar')) {
+            return '';
+        }
+
+        $items = '';
+        foreach ($shown as $ser) {
+            if ($ser['name'] === '') {
+                continue;
+            }
+            $color = self::e($ser['color']);
+            $swatchClass = 'm-chart-swatch' . ($this->type === 'line' ? ' m-chart-swatch-line' : '');
+            if ($ser['striped']) {
+                $swatchStyle = 'background: repeating-linear-gradient(45deg, ' . $color . ', ' . $color . ' 3px, transparent 3px, transparent 7px); border: 1px solid ' . $color . ';';
+            } else {
+                $swatchStyle = 'background:' . $color;
+            }
+            $items .= '<span class="m-chart-legend-item"><span class="' . $swatchClass . '" style="' . $swatchStyle . '"></span>' . self::e($ser['name']) . '</span>';
+        }
+
+        return $items !== '' ? '<div class="m-chart-legend">' . $items . '</div>' : '';
+    }
+
+    private function renderDefs(): string
+    {
+        $defs = '';
+        foreach ($this->series as $s => $ser) {
+            if ($ser['striped']) {
+                $color = self::e($ser['color']);
+                $defs .= '<pattern id="' . $this->patternId($s) . '" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45 0 0)">'
+                    . '<rect width="8" height="8" fill="' . $color . '" fill-opacity="0.15"/>'
+                    . '<rect x="0" y="0" width="4" height="8" fill="' . $color . '"/>'
                     . '</pattern>';
             }
         }
-        $defs = $stripeDefs !== '' ? '<defs>' . $stripeDefs . '</defs>' : '';
+        return $defs !== '' ? '<defs>' . $defs . '</defs>' : '';
+    }
 
-        $seriesSvg = '';
+    private function patternId(int $seriesIndex): string
+    {
+        return 'm-chart-stripe-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $this->id) . '-' . $seriesIndex;
+    }
 
-        if ($this->type === 'stacked-bar') {
-            $step = $plotW / $n;
-            $barW = max(2.0, $step * 0.62);
-            $seriesCount = count($this->series);
+    /**
+     * Full value for tooltips and labels: prefix, thousands separators, suffix.
+     */
+    private function formatValue(float $v): string
+    {
+        $decimals = abs($v - round($v)) < 0.0001 ? 0 : 2;
+        return $this->valuePrefix . number_format($v, $decimals, '.', ',') . $this->valueSuffix;
+    }
 
-            for ($i = 0; $i < $n; $i++) {
-                $cumBase = $axisY; // build upward from the x-axis
-
-                for ($s = 0; $s < $seriesCount; $s++) {
-                    $ser = $this->series[$s];
-                    $serVals = (array)$ser['values'];
-                    $v = max(0.0, (float)($serVals[$i] ?? 0.0));
-                    if ($v <= 0.0) {
-                        continue;
-                    }
-
-                    $segH = ($v / $yMax) * $plotH;
-                    $cumBase -= $segH;
-
-                    $x = $padL + ($step * $i) + (($step - $barW) / 2);
-
-                    // Striped series use an SVG pattern fill; solid series use the colour directly
-                    $segColor = !empty($ser['striped'])
-                        ? 'url(#m-chart-stripe-' . $safePatId . '-' . $s . ')'
-                        : htmlspecialchars((string)$ser['color'], ENT_QUOTES, 'UTF-8');
-
-                    $labRaw = (string)$labels[$i];
-                    $tip = $labRaw . ' — ' . (string)$ser['name'] . ': ' . $formatValue($v);
-                    $tipEsc = htmlspecialchars($tip, ENT_QUOTES, 'UTF-8');
-
-                    // Apply rounded corners only to the topmost visible segment
-                    $isTopSeg = true;
-                    for ($t = $s + 1; $t < $seriesCount; $t++) {
-                        $tVals = (array)$this->series[$t]['values'];
-                        if ((float)($tVals[$i] ?? 0.0) > 0.0) {
-                            $isTopSeg = false;
-                            break;
-                        }
-                    }
-
-                    if ($isTopSeg) {
-                        // Path with rounded top-left and top-right corners only
-                        $r  = min(4.0, $barW / 2, $segH / 2);
-                        $x1 = round($x, 2);
-                        $x2 = round($x + $barW, 2);
-                        $yt = round($cumBase, 2);
-                        $yb = round($cumBase + $segH, 2);
-                        $d  = "M {$x1},{$yb} L {$x1}," . round($yt + $r, 2)
-                            . " A {$r},{$r} 0 0 1 " . round($x1 + $r, 2) . ",{$yt}"
-                            . " L " . round($x2 - $r, 2) . ",{$yt}"
-                            . " A {$r},{$r} 0 0 1 {$x2}," . round($yt + $r, 2)
-                            . " L {$x2},{$yb} Z";
-                        $seriesSvg .= '<path class="m-chart-bar" d="' . $d . '" fill="' . $segColor . '" data-m-tooltip="' . $tipEsc . '" data-m-tooltip-position="top" />';
-                    } else {
-                        $seriesSvg .= '<rect class="m-chart-bar" x="' . $x . '" y="' . $cumBase . '" width="' . $barW . '" height="' . $segH . '" fill="' . $segColor . '" data-m-tooltip="' . $tipEsc . '" data-m-tooltip-position="top" />';
-                    }
-                }
-
-                // X-axis labels (sparse if many)
-                if ($n <= 10 || ($i % 2) === 0) {
-                    $lx = $padL + ($step * $i) + ($step / 2);
-                    $lab = htmlspecialchars((string)$labels[$i], ENT_QUOTES, 'UTF-8');
-                    $seriesSvg .= '<text class="m-chart-x" x="' . $lx . '" y="' . ($h - 10) . '" text-anchor="middle">' . $lab . '</text>';
-                }
-            }
-        } elseif ($this->type === 'bar') {
-            $step = $plotW / $n;
-            $barW = max(2.0, $step * 0.62);
-
-            for ($i = 0; $i < $n; $i++) {
-                $v = max(0.0, (float)$values[$i]);
-                $barH = ($v / $yMax) * $plotH;
-                $x = $padL + ($step * $i) + (($step - $barW) / 2);
-                $y = $axisY - $barH;
-
-                $labRaw = (string)$labels[$i];
-                $tip = $labRaw;
-                if ($seriesNameRaw !== '') {
-                    $tip .= ' — ' . $seriesNameRaw;
-                }
-                $tip .= ': ' . $formatValue($v);
-                $tipEsc = htmlspecialchars($tip, ENT_QUOTES, 'UTF-8');
-
-                $seriesSvg .= '<rect class="m-chart-bar" x="' . $x . '" y="' . $y . '" width="' . $barW . '" height="' . $barH . '" fill="' . $color . '" rx="4" data-m-tooltip="' . $tipEsc . '" data-m-tooltip-position="top" />';
-
-                // X labels (sparse if lots)
-                if ($n <= 10 || ($i % 2) === 0) {
-                    $lx = $padL + ($step * $i) + ($step / 2);
-                    $lab = htmlspecialchars((string)$labels[$i], ENT_QUOTES, 'UTF-8');
-                    $seriesSvg .= '<text class="m-chart-x" x="' . $lx . '" y="' . ($h - 10) . '" text-anchor="middle">' . $lab . '</text>';
-                }
-            }
+    /**
+     * Compact value for axis ticks: 0 / 500 / 1K / 1.5K / 2M.
+     */
+    private function formatTick(float $v): string
+    {
+        $abs = abs($v);
+        if ($abs >= 1000000) {
+            $num = self::trimNumber($v / 1000000) . 'M';
+        } elseif ($abs >= 1000) {
+            $num = self::trimNumber($v / 1000) . 'K';
         } else {
-            $step = $plotW / max(1, $n - 1);
-            $points = [];
-            for ($i = 0; $i < $n; $i++) {
-                $v = max(0.0, (float)$values[$i]);
-                $x = $padL + ($step * $i);
-                $y = $axisY - (($v / $yMax) * $plotH);
-                $points[] = $x . ',' . $y;
+            $num = self::trimNumber($v);
+        }
+        return $this->valuePrefix . $num . $this->valueSuffix;
+    }
 
-                if ($n <= 10 || ($i % 2) === 0) {
-                    $lab = htmlspecialchars((string)$labels[$i], ENT_QUOTES, 'UTF-8');
-                    $seriesSvg .= '<text class="m-chart-x" x="' . $x . '" y="' . ($h - 10) . '" text-anchor="middle">' . $lab . '</text>';
-                }
+    private static function trimNumber(float $v): string
+    {
+        $s = number_format($v, 2, '.', '');
+        return rtrim(rtrim($s, '0'), '.');
+    }
+
+    /**
+     * Round an axis maximum up to a clean number with a clean tick step.
+     *
+     * @return array{0: float, 1: float} [max, step]
+     */
+    private static function niceScale(float $max, int $targetTicks = 4): array
+    {
+        if ($max <= 0.0) {
+            return [1.0, 0.25];
+        }
+        $rough = $max / $targetTicks;
+        $mag = 10 ** floor(log10($rough));
+        $norm = $rough / $mag;
+        if ($norm <= 1) {
+            $nice = 1;
+        } elseif ($norm <= 2) {
+            $nice = 2;
+        } elseif ($norm <= 2.5) {
+            $nice = 2.5;
+        } elseif ($norm <= 5) {
+            $nice = 5;
+        } else {
+            $nice = 10;
+        }
+        $step = $nice * $mag;
+        return [ceil($max / $step - 1e-9) * $step, $step];
+    }
+
+    /**
+     * Rect path with 4px rounded corners on one end only ('top' or 'right'),
+     * square where the bar meets its baseline.
+     */
+    private static function roundedRectPath(float $x, float $y, float $w, float $h, string $end): string
+    {
+        $x1 = self::r($x);
+        $y1 = self::r($y);
+        $x2 = self::r($x + $w);
+        $y2 = self::r($y + $h);
+
+        if ($end === 'right') {
+            $r = self::r(min(4.0, $w / 2, $h / 2));
+            return "M {$x1},{$y1} L " . self::r($x2 - $r) . ",{$y1}"
+                . " A {$r},{$r} 0 0 1 {$x2}," . self::r($y1 + $r)
+                . " L {$x2}," . self::r($y2 - $r)
+                . " A {$r},{$r} 0 0 1 " . self::r($x2 - $r) . ",{$y2}"
+                . " L {$x1},{$y2} Z";
+        }
+
+        $r = self::r(min(4.0, $w / 2, $h / 2));
+        return "M {$x1},{$y2} L {$x1}," . self::r($y1 + $r)
+            . " A {$r},{$r} 0 0 1 " . self::r($x1 + $r) . ",{$y1}"
+            . " L " . self::r($x2 - $r) . ",{$y1}"
+            . " A {$r},{$r} 0 0 1 {$x2}," . self::r($y1 + $r)
+            . " L {$x2},{$y2} Z";
+    }
+
+    /**
+     * @param array<int, array{0: float, 1: float}> $pts
+     */
+    private static function linearPath(array $pts): string
+    {
+        $d = '';
+        foreach ($pts as $i => [$x, $y]) {
+            $d .= ($i === 0 ? 'M ' : ' L ') . self::r($x) . ',' . self::r($y);
+        }
+        return $d;
+    }
+
+    /**
+     * Monotone cubic (Fritsch–Carlson) curve through the points: smooth, but
+     * never bulges above a peak or below a trough the data doesn't have.
+     *
+     * @param array<int, array{0: float, 1: float}> $pts
+     */
+    private static function smoothPath(array $pts): string
+    {
+        $n = count($pts);
+        if ($n < 3) {
+            return self::linearPath($pts);
+        }
+
+        $dx = [];
+        $m = [];
+        for ($i = 0; $i < $n - 1; $i++) {
+            $dx[$i] = $pts[$i + 1][0] - $pts[$i][0];
+            $m[$i] = $dx[$i] != 0.0 ? ($pts[$i + 1][1] - $pts[$i][1]) / $dx[$i] : 0.0;
+        }
+
+        $t = [$m[0]];
+        for ($i = 1; $i < $n - 1; $i++) {
+            $t[$i] = ($m[$i - 1] * $m[$i] <= 0.0) ? 0.0 : ($m[$i - 1] + $m[$i]) / 2;
+        }
+        $t[$n - 1] = $m[$n - 2];
+
+        for ($i = 0; $i < $n - 1; $i++) {
+            if ($m[$i] == 0.0) {
+                $t[$i] = 0.0;
+                $t[$i + 1] = 0.0;
+                continue;
             }
-
-            $seriesSvg .= '<polyline class="m-chart-line" fill="none" stroke="' . $color . '" stroke-width="3" points="' . htmlspecialchars(implode(' ', $points), ENT_QUOTES, 'UTF-8') . '" />';
-            foreach ($points as $idx => $p) {
-                [$cx, $cy] = explode(',', $p);
-
-                $v = max(0.0, (float)$values[$idx]);
-                $labRaw = (string)$labels[$idx];
-                $tip = $labRaw;
-                if ($seriesNameRaw !== '') {
-                    $tip .= ' — ' . $seriesNameRaw;
-                }
-                $tip .= ': ' . $formatValue($v);
-                $tipEsc = htmlspecialchars($tip, ENT_QUOTES, 'UTF-8');
-
-                $seriesSvg .= '<circle class="m-chart-point" cx="' . $cx . '" cy="' . $cy . '" r="3.5" fill="' . $color . '" data-m-tooltip="' . $tipEsc . '" data-m-tooltip-position="top" />';
+            $a = $t[$i] / $m[$i];
+            $b = $t[$i + 1] / $m[$i];
+            $s = $a * $a + $b * $b;
+            if ($s > 9.0) {
+                $tau = 3.0 / sqrt($s);
+                $t[$i] = $tau * $a * $m[$i];
+                $t[$i + 1] = $tau * $b * $m[$i];
             }
         }
 
-        $title = htmlspecialchars((string)$series0['name'], ENT_QUOTES, 'UTF-8');
-
-        // Build legend — multi-series for stacked-bar, single-series otherwise
-        $legend = '';
-        if ($this->type === 'stacked-bar' && count($this->series) > 0) {
-            $legendItems = '';
-            foreach ($this->series as $ser) {
-                $serLabel = htmlspecialchars((string)$ser['name'], ENT_QUOTES, 'UTF-8');
-                $serColor = htmlspecialchars((string)$ser['color'], ENT_QUOTES, 'UTF-8');
-                if ($serLabel !== '') {
-                    if (!empty($ser['striped'])) {
-                        $swatchStyle = 'background: repeating-linear-gradient(45deg, ' . $serColor . ', ' . $serColor . ' 3px, transparent 3px, transparent 7px); border: 1px solid ' . $serColor . ';';
-                    } else {
-                        $swatchStyle = 'background:' . $serColor;
-                    }
-                    $legendItems .= '<span class="m-chart-legend-item"><span class="m-chart-swatch" style="' . $swatchStyle . '"></span>' . $serLabel . '</span>';
-                }
-            }
-            if ($legendItems !== '') {
-                $legend = '<div class="m-chart-legend">' . $legendItems . '</div>';
-            }
-        } elseif ($title !== '') {
-            $legend = '<div class="m-chart-legend"><span class="m-chart-swatch" style="background:' . $color . '"></span>' . $title . '</div>';
+        $d = 'M ' . self::r($pts[0][0]) . ',' . self::r($pts[0][1]);
+        for ($i = 0; $i < $n - 1; $i++) {
+            $h3 = $dx[$i] / 3;
+            $d .= ' C ' . self::r($pts[$i][0] + $h3) . ',' . self::r($pts[$i][1] + $t[$i] * $h3)
+                . ' ' . self::r($pts[$i + 1][0] - $h3) . ',' . self::r($pts[$i + 1][1] - $t[$i + 1] * $h3)
+                . ' ' . self::r($pts[$i + 1][0]) . ',' . self::r($pts[$i + 1][1]);
         }
+        return $d;
+    }
 
-        $goalSvg = '';
-        if ($this->goalLine !== null) {
-            $goalVal = $this->goalLine['value'];
-            $goalColor = htmlspecialchars($this->goalLine['color'], ENT_QUOTES, 'UTF-8');
-            $goalLabel = htmlspecialchars($this->goalLine['label'], ENT_QUOTES, 'UTF-8');
-            $goalY = $axisY - (min($goalVal, $yMax) / $yMax) * $plotH;
-            $goalY = round($goalY, 2);
-            
-            // Tooltip for goal line
-            $goalTip = htmlspecialchars($this->goalLine['label'] . ': ' . $formatValue($goalVal), ENT_QUOTES, 'UTF-8');
-            
-            $goalSvg = '<line class="m-chart-goal" x1="' . $axisX1 . '" y1="' . $goalY . '" x2="' . $axisX2 . '" y2="' . $goalY . '" stroke="' . $goalColor . '" stroke-dasharray="6 3" stroke-width="2" data-m-tooltip="' . $goalTip . '" data-m-tooltip-position="top" />';
-            // Position label with better visibility - anchored to right side with padding
-            $goalSvg .= '<text class="m-chart-goal-label" x="' . ($axisX2 - 6) . '" y="' . ($goalY - 6) . '" fill="' . $goalColor . '" font-size="11" font-weight="600" text-anchor="end" data-m-tooltip="' . $goalTip . '" data-m-tooltip-position="top">' . $goalLabel . '</text>';
-        }
+    private static function r(float $v): float
+    {
+        return round($v, 2);
+    }
 
-        $svg = <<<SVG
-<svg class="m-chart-svg" viewBox="0 0 {$w} {$h}" role="img" aria-label="{$title}">
-    {$defs}
-    {$grid}
-    <line class="m-chart-axis-line" x1="{$axisX1}" y1="{$axisY}" x2="{$axisX2}" y2="{$axisY}" />
-    <line class="m-chart-axis-line" x1="{$axisX1}" y1="{$padT}" x2="{$axisX1}" y2="{$axisY}" />
-    {$seriesSvg}
-    {$goalSvg}
-</svg>
-SVG;
+    private static function e(string $s): string
+    {
+        return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+    }
 
-        return "<div id=\"{$idAttr}\" class=\"{$classAttr}\"{$eventAttrs}{$extraAttrs}>{$legend}{$svg}</div>";
+    private static function len(string $s): int
+    {
+        return function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
+    }
+
+    private static function cut(string $s, int $chars): string
+    {
+        return function_exists('mb_substr') ? mb_substr($s, 0, $chars, 'UTF-8') : substr($s, 0, $chars);
     }
 }

@@ -10,6 +10,15 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Chart: multi-series line charts.** `line` now draws every `->series()`, and a
+  `null` value leaves a gap (e.g. year-to-date against last year's full year).
+- **Chart: `horizontal-bar` type** (alias `hbar`) for ranked lists with long labels;
+  values are labelled at the bar tip and the chart grows to fit its rows.
+- **Chart: `->title()`, `->valueFormat($prefix, $suffix)`, `->smooth()` and
+  `->legend('top'|'bottom'|'none')`.** Axis ticks are rounded to clean, compact
+  numbers (`$1.5K`); tooltips show full values (`$1,500`).
+- Chart demo: a sales-dashboard example (stacked revenue, YTD vs last year,
+  products per month, week-to-date tabs).
 - **`m.ajax()` sends `FormData`, `URLSearchParams` and `Blob` bodies as-is**, so file
   uploads no longer need a hand-written `XMLHttpRequest`. The browser sets the
   multipart `Content-Type`; CSRF and `X-Requested-With` headers are still added.

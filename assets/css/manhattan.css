@@ -189,9 +189,16 @@
 
 /* === Chart Component === */
 .m-chart {
+    --m-chart-surface: #fff;
     display: block;
     width: 100%;
     color: #2c3e50;
+}
+
+.m-chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
 
 .m-chart-legend {
@@ -215,6 +222,17 @@
     height: 10px;
     border-radius: 3px;
     display: inline-block;
+}
+
+.m-chart-swatch-line {
+    width: 14px;
+    height: 3px;
+    border-radius: 2px;
+}
+
+.m-chart-svg + .m-chart-legend {
+    margin: 8px 0 0;
+    justify-content: center;
 }
 
 .m-chart-svg {
@@ -247,13 +265,36 @@
     stroke-width: 1;
 }
 
-.m-chart-bar,
+.m-chart-value {
+    font-size: 11px;
+    fill: currentColor;
+    font-variant-numeric: tabular-nums;
+}
+
+.m-chart-line {
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+/* Surface ring keeps points legible where lines cross */
 .m-chart-point {
+    stroke: var(--m-chart-surface);
+    stroke-width: 2;
+    pointer-events: none;
+}
+
+/* Invisible, larger hover target over each line point */
+.m-chart-hit {
+    fill: transparent;
     cursor: pointer;
 }
 
-.m-chart-bar:hover,
-.m-chart-point:hover {
+.m-chart-bar {
+    cursor: pointer;
+}
+
+.m-chart-bar:hover {
     opacity: 0.85;
 }
 
