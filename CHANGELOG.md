@@ -10,6 +10,13 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **DataGrid: `->groupBy($field)`** starts a grid grouped by a field, which need
+  not be a visible column. Without `->groupable()` there is no drop zone, so the
+  grouping is fixed — e.g. order lines shown one group per order.
+- **DataGrid: `->groupTemplate($html)`** renders each group header from the
+  group's first row (`{field}`, escaped as in column templates) plus `{_count}`,
+  replacing the plain "value (count)" label. The expand/collapse toggle is kept,
+  so a header can carry its own links and buttons.
 - **Chart: multi-series line charts.** `line` now draws every `->series()`, and a
   `null` value leaves a gap (e.g. year-to-date against last year's full year).
 - **Chart: `horizontal-bar` type** (alias `hbar`) for ranked lists with long labels;
@@ -39,6 +46,9 @@ Manhattan uses [Semantic Versioning](https://semver.org/).
   `path` repository can require `^1.x@dev` (see VERSIONING.md).
 
 ### Fixed
+- **DataGrid: collapsing a group took two clicks.** Groups start open with no
+  recorded state, and the toggle negated that `undefined` to `true` — open again.
+  The first click now collapses.
 - **`m.dialog` was defined twice** (`window.js` and `dialog.js`), and the second file
   loaded silently replaced the first. Bundles that load components alphabetically got
   the `window.js` copy, which has no `prompt()`. The `window.js` copy is removed;

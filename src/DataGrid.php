@@ -67,6 +67,8 @@ final class DataGrid extends Component
     private bool $isResizable   = false;
     private bool $isReorderable = false;
     private bool $isGroupable   = false;
+    private ?string $groupField    = null;
+    private ?string $groupTemplate = null;
     private bool $isSelectable  = false;
     private bool $showToolbar   = false;
     private bool $isFilterable  = false;
@@ -237,6 +239,34 @@ final class DataGrid extends Component
     public function groupable(): self
     {
         $this->isGroupable = true;
+        return $this;
+    }
+
+    /**
+     * Start grouped by this field. The field does not need to be a visible
+     * column — pass a key every row carries (e.g. an order id) to show rows as
+     * fixed groups. Works with or without ->groupable(); without it there is
+     * no drop zone, so the grouping is fixed.
+     */
+    public function groupBy(string $field): self
+    {
+        $this->groupField = $field;
+        return $this;
+    }
+
+    /**
+     * HTML for each group header, replacing the default "value (count)" label.
+     *
+     * {field} placeholders are filled from the group's first row and
+     * HTML-escaped, as in column templates; {_count} is the number of rows in
+     * the group. The expand/collapse toggle is kept, so the template can hold
+     * links and buttons of its own.
+     *
+     * Example: '<strong>#{order_id}</strong> {customer} <span>{_count} items</span>'
+     */
+    public function groupTemplate(string $html): self
+    {
+        $this->groupTemplate = $html;
         return $this;
     }
 
@@ -429,6 +459,8 @@ HTML;
             'resizable'   => $this->isResizable,
             'reorderable' => $this->isReorderable,
             'groupable'   => $this->isGroupable,
+            'groupBy'       => $this->groupField,
+            'groupTemplate' => $this->groupTemplate,
             'selectable'  => $this->isSelectable,
             'filterable'  => $this->isFilterable,
             'extraParams' => $this->extraParams ?: null,

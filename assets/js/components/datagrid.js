@@ -199,7 +199,7 @@
         this._page       = 1;
         this._sortField  = null;
         this._sortDir    = 'asc';             // 'asc' | 'desc'
-        this._groupField = null;
+        this._groupField = config.groupBy || null;  // ->groupBy() starts grouped
         this._groupOpen  = {};               // groupValue -> bool
         this._loading    = false;
         this._selectedRow = null;
@@ -242,6 +242,7 @@
         // Group drop zone
         if (cfg.groupable) {
             el.appendChild(this._buildGroupZone());
+            if (this._groupField) { this._updateGroupZoneLabel(); }
         }
 
         // Wrapper (handles fixed-height + scroll)
@@ -899,21 +900,32 @@
             var groupTd = document.createElement('td');
             groupTd.colSpan = self.columns.length;
             var arrow = isOpen ? 'fa-chevron-down' : 'fa-chevron-right';
-            groupTd.innerHTML =
-                '<button type="button" class="m-datagrid-group-toggle">' +
+            var toggle = '<button type="button" class="m-datagrid-group-toggle" aria-expanded="' + isOpen + '">' +
                 m.icon(arrow) +
-                '</button>' +
-                '<span class="m-datagrid-group-label">' + escHtml(groupKey) + '</span>' +
-                ' <span class="m-datagrid-group-count">(' + groups[groupKey].length + ')</span>';
+                '</button>';
+            if (self.config.groupTemplate) {
+                // Custom header: {field} from the group's first row (escaped), {_count} = rows.
+                var ctx = utils.extend({}, groups[groupKey][0], { _count: groups[groupKey].length });
+                groupTr.classList.add('m-datagrid-group-header-custom');
+                groupTd.innerHTML = '<div class="m-datagrid-group-inner">' + toggle +
+                    '<div class="m-datagrid-group-content">' + applyTemplate(self.config.groupTemplate, ctx) + '</div>' +
+                    '</div>';
+            } else {
+                groupTd.innerHTML = toggle +
+                    '<span class="m-datagrid-group-label">' + escHtml(groupKey) + '</span>' +
+                    ' <span class="m-datagrid-group-count">(' + groups[groupKey].length + ')</span>';
+            }
             groupTr.appendChild(groupTd);
             tbody.appendChild(groupTr);
 
             // Toggle expand/collapse
             groupTd.querySelector('.m-datagrid-group-toggle').addEventListener('click', function () {
-                self._groupOpen[groupKey] = !self._groupOpen[groupKey];
+                // Groups start open (undefined), so the first click must close.
+                self._groupOpen[groupKey] = self._groupOpen[groupKey] === false;
                 var btn = this;
                 var nowOpen = self._groupOpen[groupKey];
                 btn.innerHTML = m.icon(nowOpen ? 'fa-chevron-down' : 'fa-chevron-right');
+                btn.setAttribute('aria-expanded', String(nowOpen));
                 var sibs = [];
                 var next = groupTr.nextSibling;
                 while (next && !next.classList.contains('m-datagrid-group-header')) {
@@ -939,19 +951,7 @@
         if (field) {
             this._groupField = field;
             this._page       = 1;
-            // Update group zone label
-            if (this._dom.groupZoneLabel) {
-                var col = this.columns.find(function (c) { return c.field === field; });
-                this._dom.groupZoneLabel.innerHTML =
-                    '<span class="m-datagrid-group-chip">' +
-                    escHtml(col ? col.title : field) +
-                    '<button type="button" class="m-datagrid-group-chip-remove" title="Remove grouping">' +
-                    m.icon('fa-times') + '</button>' +
-                    '</span> Drop another column to change grouping';
-                var self = this;
-                this._dom.groupZoneLabel.querySelector('.m-datagrid-group-chip-remove')
-                    .addEventListener('click', function () { self.clearGroup(); });
-            }
+            this._updateGroupZoneLabel();
         }
         if (this.config.remote) {
             this.refresh();
@@ -960,6 +960,21 @@
             this._renderBody();
             this._renderPager();
         }
+    };
+
+    DataGrid.prototype._updateGroupZoneLabel = function () {
+        if (!this._dom.groupZoneLabel || !this._groupField) { return; }
+        var self  = this;
+        var field = this._groupField;
+        var col   = (this.config.columns || []).find(function (c) { return c.field === field; });
+        this._dom.groupZoneLabel.innerHTML =
+            '<span class="m-datagrid-group-chip">' +
+            escHtml(col ? col.title : field) +
+            '<button type="button" class="m-datagrid-group-chip-remove" title="Remove grouping">' +
+            m.icon('fa-times') + '</button>' +
+            '</span> Drop another column to change grouping';
+        this._dom.groupZoneLabel.querySelector('.m-datagrid-group-chip-remove')
+            .addEventListener('click', function () { self.clearGroup(); });
     };
 
     DataGrid.prototype.clearGroup = function () {

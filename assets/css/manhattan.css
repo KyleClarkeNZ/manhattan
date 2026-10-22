@@ -4254,6 +4254,25 @@ body::-webkit-scrollbar-thumb:hover {
 .m-datagrid-group-toggle:hover { color: #2196F3; }
 .m-datagrid-group-count { color: #7f8c8d; font-weight: 400; font-size: 0.8rem; }
 
+/* ->groupTemplate(): toggle on the left, the template fills the rest.
+   The template's own layout (links, buttons, a right-aligned total) sits in
+   .m-datagrid-group-content, which is a flex row so `margin-left: auto`
+   pushes trailing items to the right edge. */
+.m-datagrid-group-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+}
+.m-datagrid-group-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+}
+
 /* Empty / error state */
 .m-datagrid-empty {
     text-align: center;

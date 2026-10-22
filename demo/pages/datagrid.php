@@ -70,6 +70,38 @@
             ->sortable() ?>
     </div>
 
+    <h3>Fixed Groups with a Header Template</h3>
+    <p class="m-demo-desc"><code>->groupBy('order_id')</code> starts the grid grouped by a field that is not
+        a visible column, with no drop zone. <code>->groupTemplate()</code> renders each header from the group's
+        first row — <code>{field}</code> values are escaped, <code>{_count}</code> is the row count — so a header
+        can carry its own links and buttons. Groups start expanded; the chevron collapses them.</p>
+    <div class="m-demo-row">
+        <?php
+        $orderLines = [
+            ['order_id' => 1042, 'customer' => 'Aroha Ngata',  'placed' => '22 Oct 2026 09:14', 'order_total' => '$96.00',  'item' => 'Kōwhai Tūī',      'size' => 'A3', 'qty' => 1, 'line_total' => '$45.00'],
+            ['order_id' => 1042, 'customer' => 'Aroha Ngata',  'placed' => '22 Oct 2026 09:14', 'order_total' => '$96.00',  'item' => 'Greeting card set', 'size' => '',   'qty' => 3, 'line_total' => '$51.00'],
+            ['order_id' => 1041, 'customer' => 'Sam O\'Brien', 'placed' => '21 Oct 2026 17:52', 'order_total' => '$180.00', 'item' => 'Snail Splash',     'size' => 'A2', 'qty' => 2, 'line_total' => '$180.00'],
+            ['order_id' => 1040, 'customer' => 'Mei Chen',     'placed' => '20 Oct 2026 11:03', 'order_total' => '$32.00',  'item' => 'Coaster',          'size' => '',   'qty' => 4, 'line_total' => '$32.00'],
+        ];
+        ?>
+        <?= $m->dataGrid('demo-grid-orders')
+            ->columns([
+                ['field' => 'item',       'title' => 'Item'],
+                ['field' => 'size',       'title' => 'Size',  'width' => 70],
+                ['field' => 'qty',        'title' => 'Qty',   'width' => 60, 'align' => 'right'],
+                ['field' => 'line_total', 'title' => 'Total', 'width' => 90, 'align' => 'right'],
+            ])
+            ->dataSource($orderLines)
+            ->groupBy('order_id')
+            ->groupTemplate(
+                '<strong>#{order_id}</strong> {customer}'
+                . '<span class="m-datagrid-group-count">{placed} · {_count} items</span>'
+                . '<span style="margin-left:auto">{order_total}</span>'
+                . '<a class="m-button m-button-outline m-button-sm" href="#order-{order_id}">View</a>'
+            )
+            ->striped() ?>
+    </div>
+
     <div class="m-demo-output" id="datagrid-output">Interact with a grid to see output...</div>
 
     <?= demoCodeTabs(
@@ -105,7 +137,15 @@
 
 // Groupable grid
 <?= $m->dataGrid(\'grouped\')
-    ->columns([...])->dataSource($data)->groupable() ?>',
+    ->columns([...])->dataSource($data)->groupable() ?>
+
+// Fixed groups (one per order) with a custom header
+<?= $m->dataGrid(\'orders\')
+    ->columns([...])            // the line-item columns
+    ->dataSource($orderLines)   // one row per line, each carrying its order\'s fields
+    ->groupBy(\'order_id\')
+    ->groupTemplate(\'<strong>#{order_id}</strong> {customer} \'
+        . \'<span style="margin-left:auto">{order_total}</span>\') ?>',
         '// Get grid instance
 var grid = m.dataGrid(\'myGrid\');
 
@@ -153,7 +193,9 @@ grid.destroy();'
     ['->sortable()', '', 'Enable column sorting.'],
     ['->resizable()', '', 'Enable column resize.'],
     ['->reorderable()', '', 'Enable column drag-reorder.'],
-    ['->groupable()', '', 'Enable row grouping by column.'],
+    ['->groupable()', '', 'Enable row grouping by column: shows a drop zone to drag a column header onto.'],
+    ['->groupBy($field)', 'string', 'Start grouped by <code>$field</code> (default: ungrouped). The field need not be a visible column. Without <code>->groupable()</code> there is no drop zone, so the grouping is fixed. Note that <code>->pageable()</code> pages by row, not by group.'],
+    ['->groupTemplate($html)', 'string', 'Group header HTML, replacing the default <em>value (count)</em> label. <code>{field}</code> comes from the group\'s first row (escaped); <code>{_count}</code> is the row count. The expand/collapse toggle is kept.'],
     ['->selectable()', '', 'Enable single-row selection.'],
     ['->filterable()', '', 'Add column filter inputs.'],
     ['->extraParams($params)', 'array', 'Extra params sent with every remote request.'],
